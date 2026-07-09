@@ -162,16 +162,68 @@ const MASTERY_CONFIG = {
     }
 };
 
+let activeFilter = 'all';
+
+function getLandmarkMastery(lm) {
+    if (!lm || !lm.moves || lm.moves.length === 0) return 0;
+    let totalScore = 0;
+    lm.moves.forEach(m => {
+        const mastery = m.mastery || 'learning';
+        if (mastery === 'mastered') totalScore += 100;
+        else if (mastery === 'familiar') totalScore += 50;
+    });
+    return Math.round((totalScore / (lm.moves.length * 100)) * 100);
+}
+
+function getFilteredLandmarkIndices() {
+    return LANDMARKS.map((lm, idx) => {
+        const mastery = getLandmarkMastery(lm);
+        let range = 'low';
+        if (mastery >= 75) range = 'high';
+        else if (mastery >= 40) range = 'med';
+        
+        return { idx, range };
+    }).filter(item => {
+        if (activeFilter === 'all') return true;
+        return item.range === activeFilter;
+    }).map(item => item.idx);
+}
+
+function applyFilter(filterVal) {
+    activeFilter = filterVal;
+    
+    const buttons = {
+        all: document.getElementById('filterAllBtn'),
+        low: document.getElementById('filterLowBtn'),
+        med: document.getElementById('filterMedBtn'),
+        high: document.getElementById('filterHighBtn')
+    };
+    
+    Object.keys(buttons).forEach(key => {
+        const btn = buttons[key];
+        if (!btn) return;
+        if (key === filterVal) {
+            btn.className = "py-1 text-[9px] font-bold uppercase rounded transition-all bg-blue-600 text-white shadow-sm border border-blue-500/10";
+        } else {
+            btn.className = "py-1 text-[9px] font-bold uppercase rounded transition-all text-slate-400 hover:text-slate-100 hover:bg-slate-900/40";
+        }
+    });
+
+    renderSidebar();
+
+    const filtered = getFilteredLandmarkIndices();
+    if (filtered.length > 0) {
+        if (!filtered.includes(currentLandmarkIdx)) {
+            selectMove(filtered[0], 0);
+        }
+    }
+}
+
 let currentLandmarkIdx = 0;
 let currentMoveIdx = 0;
 let beatIdx = 0;
 let isPaused = true;
 let isRandomMode = false;
-let isShuffleMoves = false;
-let isSpiralMode = false;
-let spiralPhase = 'idle'; // 'retrieval', 'consolidation', 'encoding'
-let spiralQueue = []; // Array of {lIdx, mIdx} or just lIdx
-let movePermutation = []; // For intra-chunk shuffling
 
 // Scheduler state
 let schedulerIntervalId = null;
@@ -205,20 +257,15 @@ function scheduler() {
     while (nextBeatTime < DanceAudio.getCurrentTime() + scheduleAheadTime) {
         scheduleBeat(schedBeatIdx, nextBeatTime);
         
-        const actualMoveIdx = getActualMoveIdx(schedMoveIdx);
-        const landmark = LANDMARKS[schedLandmarkIdx];
-        const move = landmark.moves[actualMoveIdx];
-
         // Push the beat to visual queue
         beatsQueue.push({
             beat: schedBeatIdx,
             time: nextBeatTime,
-            moveIdx: actualMoveIdx,
-            logicalMoveIdx: schedMoveIdx, // For linear progression tracking
+            moveIdx: schedMoveIdx,
             landmarkIdx: schedLandmarkIdx,
-            landmarkColor: landmark.color,
-            moveName: move.name,
-            beatsTotal: move.beats || 4
+            landmarkColor: LANDMARKS[schedLandmarkIdx].color,
+            moveName: LANDMARKS[schedLandmarkIdx].moves[schedMoveIdx].name,
+            beatsTotal: LANDMARKS[schedLandmarkIdx].moves[schedMoveIdx].beats || 4
         });
         
         advanceBeat(secondsPerBeat);
@@ -236,40 +283,26 @@ function advanceBeat(secondsPerBeat) {
     if (schedBeatIdx >= 4) {
         schedBeatIdx = 0;
         
-        const landmark = LANDMARKS[schedLandmarkIdx];
-        const movesCount = landmark.moves.length;
-
-        if (schedMoveIdx >= movesCount - 1) {
-            if (isSpiralMode) {
-                advanceSpiral();
-            } else if (isRandomMode) {
+        if (schedMoveIdx >= LANDMARKS[schedLandmarkIdx].moves.length - 1) {
+            if (isRandomMode) {
                 schedHoldingForRandom = true;
             } else {
-                schedLandmarkIdx = (schedLandmarkIdx + 1) % LANDMARKS.length;
+                const filtered = getFilteredLandmarkIndices();
+                const currentFilteredPos = filtered.indexOf(schedLandmarkIdx);
+                if (currentFilteredPos !== -1 && filtered.length > 0) {
+                    const nextFilteredPos = (currentFilteredPos + 1) % filtered.length;
+                    schedLandmarkIdx = filtered[nextFilteredPos];
+                } else if (filtered.length > 0) {
+                    schedLandmarkIdx = filtered[0];
+                } else {
+                    schedLandmarkIdx = (schedLandmarkIdx + 1) % LANDMARKS.length;
+                }
                 schedMoveIdx = 0;
-                if (isShuffleMoves) generateMovePermutation(schedLandmarkIdx);
             }
         } else {
             schedMoveIdx++;
         }
     }
-}
-
-function generateMovePermutation(lIdx) {
-    const count = LANDMARKS[lIdx].moves.length;
-    movePermutation = Array.from({length: count}, (_, i) => i);
-    // Fisher-Yates shuffle
-    for (let i = count - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [movePermutation[i], movePermutation[j]] = [movePermutation[j], movePermutation[i]];
-    }
-}
-
-function getActualMoveIdx(mIdx) {
-    if (isShuffleMoves && movePermutation.length > 0) {
-        return movePermutation[mIdx] ?? mIdx;
-    }
-    return mIdx;
 }
 
 function triggerVisualBeatFeedback(playedBeat) {
@@ -280,16 +313,24 @@ function triggerVisualBeatFeedback(playedBeat) {
 
     let displayLandmarkIdx = playedBeat.landmarkIdx;
     let displayMoveIdx = playedBeat.moveIdx;
-    let logicalMoveIdx = playedBeat.logicalMoveIdx;
 
-    // Show next move early
+    // Show next move early on the tap (beat index 3)
     if (playedBeat.beat >= playedBeat.beatsTotal - 2) {
         const lm = LANDMARKS[displayLandmarkIdx];
-        if (logicalMoveIdx < lm.moves.length - 1) {
-            displayMoveIdx = getActualMoveIdx(logicalMoveIdx + 1);
-        } else if (!isRandomMode && !isSpiralMode) {
-            displayLandmarkIdx = (displayLandmarkIdx + 1) % LANDMARKS.length;
-            displayMoveIdx = 0; // Note: this doesn't preview shuffle for next landmark perfectly but it's close enough for HUD
+        if (displayMoveIdx < lm.moves.length - 1) {
+            displayMoveIdx++;
+        } else if (!isRandomMode) {
+            const filtered = getFilteredLandmarkIndices();
+            const currentFilteredPos = filtered.indexOf(displayLandmarkIdx);
+            if (currentFilteredPos !== -1 && filtered.length > 0) {
+                const nextFilteredPos = (currentFilteredPos + 1) % filtered.length;
+                displayLandmarkIdx = filtered[nextFilteredPos];
+            } else if (filtered.length > 0) {
+                displayLandmarkIdx = filtered[0];
+            } else {
+                displayLandmarkIdx = (displayLandmarkIdx + 1) % LANDMARKS.length;
+            }
+            displayMoveIdx = 0;
         }
     }
 
@@ -302,19 +343,14 @@ function triggerVisualBeatFeedback(playedBeat) {
         
         updateHUD();
         renderSidebar();
-        updateMoveDisplay();
+        updateMoveDisplay(false);
     }
 
-    // Check if we just completed the landmark
-    const isLastMove = playedBeat.logicalMoveIdx === LANDMARKS[playedBeat.landmarkIdx].moves.length - 1;
+    // Check if we just completed the landmark in random mode!
+    const isLastMove = playedBeat.moveIdx === LANDMARKS[playedBeat.landmarkIdx].moves.length - 1;
     const isLastBeatOfMove = playedBeat.beat === playedBeat.beatsTotal - 1;
-    
-    if (isLastMove && isLastBeatOfMove) {
-        if (isSpiralMode) {
-            // Handled by advanceSpiral
-        } else if (isRandomMode) {
-            triggerRandomCountdown();
-        }
+    if (isRandomMode && isLastMove && isLastBeatOfMove) {
+        triggerRandomCountdown();
     }
 }
 
@@ -329,127 +365,24 @@ function draw() {
     requestAnimationFrame(draw);
 }
 
-function startSpiralRoutine() {
-    isSpiralMode = true;
-    isRandomMode = false;
-    spiralPhase = 'retrieval';
-    
-    // Categorize landmarks by aggregate mastery
-    const mastered = [];
-    const familiar = [];
-    const learning = [];
-    
-    LANDMARKS.forEach((lm, idx) => {
-        let score = 0;
-        lm.moves.forEach(m => {
-            if (m.mastery === 'mastered') score += 1;
-            else if (m.mastery === 'familiar') score += 0.5;
-        });
-        const ratio = score / lm.moves.length;
-        if (ratio > 0.8) mastered.push(idx);
-        else if (ratio > 0.3) familiar.push(idx);
-        else learning.push(idx);
-    });
-
-    // Build the queue: 3 Mastered (Retrieval), 2 Familiar (Consolidation), 1 Learning (Encoding)
-    spiralQueue = [];
-    
-    // Shuffled Mastered
-    const shuffMastered = mastered.sort(() => Math.random() - 0.5).slice(0, 3);
-    shuffMastered.forEach(idx => spiralQueue.push({lIdx: idx, phase: 'retrieval'}));
-    
-    // Shuffled Familiar
-    const shuffFamiliar = familiar.sort(() => Math.random() - 0.5).slice(0, 2);
-    shuffFamiliar.forEach(idx => spiralQueue.push({lIdx: idx, phase: 'consolidation'}));
-    
-    // Shuffled Learning
-    const shuffLearning = learning.sort(() => Math.random() - 0.5).slice(0, 1);
-    shuffLearning.forEach(idx => spiralQueue.push({lIdx: idx, phase: 'encoding'}));
-
-    if (spiralQueue.length === 0) {
-        alert("Not enough mastery data to start spiral. Practice some moves first!");
-        isSpiralMode = false;
-        return;
-    }
-
-    document.getElementById('spiralBtn').classList.add('bg-indigo-600', 'text-white');
-    document.getElementById('spiralBtn').classList.remove('bg-indigo-900/40', 'text-indigo-300');
-    
-    // Start first one
-    const first = spiralQueue.shift();
-    spiralPhase = first.phase;
-    selectMove(first.lIdx, 0);
-    if (isShuffleMoves) generateMovePermutation(first.lIdx);
-    
-    isPaused = false;
-    startScheduler();
-}
-
-function advanceSpiral() {
-    if (spiralQueue.length > 0) {
-        schedHoldingForRandom = true; // Pause briefly
-        const next = spiralQueue.shift();
-        spiralPhase = next.phase;
-        
-        // Show overlay with phase info
-        triggerSpiralTransition(next.lIdx, next.phase);
-    } else {
-        isSpiralMode = false;
-        isPaused = true;
-        document.getElementById('spiralBtn').classList.remove('bg-indigo-600', 'text-white');
-        document.getElementById('spiralBtn').classList.add('bg-indigo-900/40', 'text-indigo-300');
-        alert("Retrieval Spiral Routine Completed!");
-    }
-}
-
-function triggerSpiralTransition(lIdx, phase) {
-    startOverlay.classList.remove('hidden');
-    document.getElementById('overlayContent').classList.add('hidden');
-    const cdDisplay = document.getElementById('countdownDisplay');
-    cdDisplay.classList.remove('hidden');
-
-    const phaseNames = {
-        retrieval: "Phase 1: Retrieval (Review)",
-        consolidation: "Phase 2: Consolidation (Expansion)",
-        encoding: "Phase 3: Encoding (New Chunks)"
-    };
-
-    const lm = LANDMARKS[lIdx];
-    document.getElementById('nextChunkName').textContent = lm.title;
-    document.getElementById('nextChunkName').style.color = lm.color;
-    document.getElementById('nextChunkAnchor').textContent = `${phaseNames[phase]} | ${lm.anchor}`;
-
-    let count = 5;
-    const timerEl = document.getElementById('timerCircle');
-    timerEl.textContent = count;
-
-    const cdInterval = setInterval(() => {
-        count--;
-        timerEl.textContent = count;
-        if (count <= 0) {
-            clearInterval(cdInterval);
-            startOverlay.classList.add('hidden');
-            selectMove(lIdx, 0);
-            if (isShuffleMoves) generateMovePermutation(lIdx);
-            isPaused = false;
-            startScheduler();
-        }
-    }, 1000);
-}
 function triggerRandomCountdown() {
     isPaused = true;
     if (schedulerIntervalId) clearInterval(schedulerIntervalId);
     beatsQueue = [];
     schedHoldingForRandom = false;
     
-    // Defensive safeguard to prevent infinite loop if LANDMARKS length is 1
-    if (LANDMARKS.length > 1) {
+    // Defensive safeguard to select from filtered landmarks list
+    const filtered = getFilteredLandmarkIndices();
+    if (filtered.length > 1) {
         const lastIdx = currentVisualLandmarkIdx;
         let nextIdx = currentVisualLandmarkIdx;
         while (nextIdx === lastIdx) {
-            nextIdx = Math.floor(Math.random() * LANDMARKS.length);
+            const randPos = Math.floor(Math.random() * filtered.length);
+            nextIdx = filtered[randPos];
         }
         currentVisualLandmarkIdx = nextIdx;
+    } else if (filtered.length === 1) {
+        currentVisualLandmarkIdx = filtered[0];
     } else {
         currentVisualLandmarkIdx = 0;
     }
@@ -590,11 +523,28 @@ function updateMoveDisplay() {
 
 function renderSidebar() {
     landmarkList.innerHTML = '';
+    const filteredIndices = getFilteredLandmarkIndices();
+    
+    if (filteredIndices.length === 0) {
+        landmarkList.innerHTML = `
+            <div class="p-6 bg-slate-950/45 rounded-xl border border-slate-850 text-slate-400 text-center flex flex-col items-center justify-center gap-2">
+                <svg class="w-8 h-8 text-amber-500/80 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                <p class="font-bold text-slate-300">No chunks in this range!</p>
+                <p class="text-[10px] text-slate-500">No landmarks match the selected mastery range.</p>
+            </div>
+        `;
+        return;
+    }
+
     LANDMARKS.forEach((lm, lIdx) => {
+        if (!filteredIndices.includes(lIdx)) return;
+        
         const section = document.createElement('div');
         section.id = `lm-section-${lIdx}`;
         section.className = `p-3 rounded-xl transition-all duration-300 ${lIdx === currentLandmarkIdx ? 'landmark-active' : 'opacity-30 hover:opacity-75'}`;
         section.style.color = lm.color;
+        
+        const masteryPct = getLandmarkMastery(lm);
         
         let movesHtml = '';
         for (let mIdx = 0; mIdx < lm.moves.length; mIdx += 2) {
@@ -610,7 +560,7 @@ function renderSidebar() {
                 return `
                     <div id="m-${lIdx}-${idx}" class="text-[11px] px-2 py-1.5 rounded transition-all flex items-center justify-between gap-2 group ${isCurrent ? 'move-active' : 'hover:bg-slate-900/30'}">
                         <span class="truncate flex-1 py-0.5 font-bold ${config.textColor}" data-lidx="${lIdx}" data-midx="${idx}" ${hintTooltip}>
-                            ${m.name} <span class="opacity-60 text-[9px] font-mono">(${m.beats}🥁)</span>
+                            ${m.name}
                         </span>
                         <button class="shrink-0 text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded border ${config.badgeColor} hover:brightness-125 active:scale-95 transition-all" data-action="cycle" data-lidx="${lIdx}" data-midx="${idx}">
                             ${config.text}
@@ -631,7 +581,14 @@ function renderSidebar() {
             <div class="flex items-start justify-between mb-2">
                 <div class="cursor-pointer group-hover/lm:brightness-125 flex-1" data-action="select" data-lidx="${lIdx}" data-midx="0">
                     <div class="text-[9px] font-black uppercase tracking-wider mb-1">${lIdx === currentLandmarkIdx ? '👉 Current ' : ''}Landmark ${lIdx + 1}</div>
-                    <div class="text-xs font-bold text-slate-200 pr-2">${lm.title}</div>
+                    <div class="text-xs font-bold text-slate-200 pr-2 flex flex-col gap-1">
+                        <span class="truncate max-w-[180px]">${lm.title}</span>
+                        <span class="self-start text-[9px] font-mono px-1.5 py-0.5 rounded ${
+                            masteryPct >= 75 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+                            masteryPct >= 40 ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' :
+                            'bg-red-500/10 text-red-400 border border-red-500/20'
+                        }">${masteryPct}% Mastery</span>
+                    </div>
                 </div>
                 <div class="flex flex-col gap-1 shrink-0">
                     <button class="text-slate-500 hover:text-white bg-slate-950/50 hover:bg-slate-800 border border-slate-800 rounded px-2 py-1 transition-colors" data-action="scroll-prev" data-lidx="${lIdx}" title="Scroll to previous landmark">
@@ -677,9 +634,17 @@ function cycleMastery(lIdx, mIdx, event) {
         move.mastery = 'familiar';
     }
     saveMasteryState();
-    renderSidebar();
-    updateMasteryStats();
-    updateMasteryProgress();
+    
+    let filtered = getFilteredLandmarkIndices();
+    if (filtered.length === 0) {
+        applyFilter('all');
+    } else if (!filtered.includes(currentLandmarkIdx)) {
+        selectMove(filtered[0], 0);
+    } else {
+        renderSidebar();
+        updateMasteryStats();
+        updateMasteryProgress();
+    }
 }
 
 function saveMasteryState() {
@@ -746,11 +711,14 @@ document.getElementById('bigStartBtn').onclick = () => {
     isPaused = false;
     beatIdx = 0;
     currentMoveIdx = 0;
-    currentLandmarkIdx = 0;
+    
+    const filtered = getFilteredLandmarkIndices();
+    const startLIdx = filtered.length > 0 ? filtered[0] : 0;
+    currentLandmarkIdx = startLIdx;
 
     schedBeatIdx = 0;
     schedMoveIdx = 0;
-    schedLandmarkIdx = 0;
+    schedLandmarkIdx = startLIdx;
     beatsQueue = [];
 
     updateHUD();
@@ -799,22 +767,6 @@ document.getElementById('modeToggle').onclick = () => {
     document.getElementById('modeBadge').textContent = isRandomMode ? "Random" : "Sequential";
     document.getElementById('modeName').textContent = isRandomMode ? "Randomized Landmark Drills" : "Linear Sequence Training";
     document.getElementById('modeToggle').textContent = isRandomMode ? "Switch to Linear" : "Randomize Chunks";
-};
-
-document.getElementById('shuffleToggle').onchange = (e) => {
-    isShuffleMoves = e.target.checked;
-    if (isShuffleMoves) generateMovePermutation(schedLandmarkIdx);
-};
-
-document.getElementById('spiralBtn').onclick = () => {
-    if (isSpiralMode) {
-        isSpiralMode = false;
-        document.getElementById('spiralBtn').classList.remove('bg-indigo-600', 'text-white');
-        document.getElementById('spiralBtn').classList.add('bg-indigo-900/40', 'text-indigo-300');
-    } else {
-        DanceAudio.init();
-        startSpiralRoutine();
-    }
 };
 
 document.getElementById('bpmSlider').oninput = (e) => {
@@ -965,6 +917,17 @@ window.onload = () => {
     updateMoveDisplay();
     requestAnimationFrame(draw);
 
+    // Wire up filter buttons
+    const filterAllBtn = document.getElementById('filterAllBtn');
+    const filterLowBtn = document.getElementById('filterLowBtn');
+    const filterMedBtn = document.getElementById('filterMedBtn');
+    const filterHighBtn = document.getElementById('filterHighBtn');
+
+    if (filterAllBtn) filterAllBtn.onclick = () => applyFilter('all');
+    if (filterLowBtn) filterLowBtn.onclick = () => applyFilter('low');
+    if (filterMedBtn) filterMedBtn.onclick = () => applyFilter('med');
+    if (filterHighBtn) filterHighBtn.onclick = () => applyFilter('high');
+
     // Event Delegation for Landmark List
     if (landmarkList) {
         landmarkList.addEventListener('click', (e) => {
@@ -985,15 +948,21 @@ window.onload = () => {
             } else if (scrollPrev) {
                 e.stopPropagation();
                 const lIdx = parseInt(scrollPrev.dataset.lidx, 10);
-                if (lIdx > 0) {
-                    const prevEl = document.getElementById(`lm-section-${lIdx - 1}`);
+                const filtered = getFilteredLandmarkIndices();
+                const currentPos = filtered.indexOf(lIdx);
+                if (currentPos > 0) {
+                    const prevLIdx = filtered[currentPos - 1];
+                    const prevEl = document.getElementById(`lm-section-${prevLIdx}`);
                     if (prevEl) prevEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }
             } else if (scrollNext) {
                 e.stopPropagation();
                 const lIdx = parseInt(scrollNext.dataset.lidx, 10);
-                if (lIdx < LANDMARKS.length - 1) {
-                    const nextEl = document.getElementById(`lm-section-${lIdx + 1}`);
+                const filtered = getFilteredLandmarkIndices();
+                const currentPos = filtered.indexOf(lIdx);
+                if (currentPos !== -1 && currentPos < filtered.length - 1) {
+                    const nextLIdx = filtered[currentPos + 1];
+                    const nextEl = document.getElementById(`lm-section-${nextLIdx}`);
                     if (nextEl) nextEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }
             }

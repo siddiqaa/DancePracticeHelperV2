@@ -75,7 +75,7 @@ window.DanceAudio = {
         osc.stop(time + 0.1);
     },
 
-    playBasicTone(time, isAccent) {
+    playBasicTone(time, isAccent, volume = 0.1) {
         if (!this.ctx) return;
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
@@ -83,7 +83,7 @@ window.DanceAudio = {
         gain.connect(this.ctx.destination);
         osc.frequency.value = isAccent ? 880 : 440;
         gain.gain.setValueAtTime(0, time);
-        gain.gain.linearRampToValueAtTime(0.1, time + 0.01);
+        gain.gain.linearRampToValueAtTime(volume, time + 0.01);
         gain.gain.exponentialRampToValueAtTime(0.001, time + 0.1);
         osc.start(time); 
         osc.stop(time + 0.1);
@@ -120,6 +120,7 @@ window.DanceAudio = {
             return;
         }
 
-        this.playBasicTone(time, isAccent);
+        const volume = isAccent ? 0.1 : 0.4;
+        this.playBasicTone(time, isAccent, volume);
     }
 };
