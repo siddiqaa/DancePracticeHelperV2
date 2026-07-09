@@ -1,0 +1,11 @@
+{
+  "name": "dance-practice-helper",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node build.js",
+    "build": "node build.js",
+    "lint": "echo 'No lint step required'"
+  },
+  "dependencies": {}
+}
