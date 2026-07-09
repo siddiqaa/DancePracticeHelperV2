@@ -108,6 +108,10 @@
 
     </div>
 
+    <!-- Active Dance Styles Grid -->
+    <div id="masteryDashboardContainer" class="mb-12"></div>
+
+
 
 
 
@@ -125,6 +129,163 @@
     </div>
   </footer>
 
+  <script>
+    function renderGlobalDashboard() {
+      const container = document.getElementById('masteryDashboardContainer');
+      if (!container) return;
+
+      const bachataSaved = localStorage.getItem('bachata_mastery_state');
+      let bachataTotal = 24;
+      let bachataMastered = 0;
+      let bachataFamiliar = 0;
+      let bachataLearning = 24;
+
+      if (bachataSaved) {
+        try {
+          const state = JSON.parse(bachataSaved);
+          const allMoves = Object.values(state).flat();
+          if (allMoves.length > 0) {
+            bachataTotal = allMoves.length;
+            bachataMastered = allMoves.filter(m => m === 'mastered').length;
+            bachataFamiliar = allMoves.filter(m => m === 'familiar').length;
+            bachataLearning = allMoves.filter(m => !m || m === 'learning').length;
+          }
+        } catch(e) {
+          console.error(e);
+        }
+      }
+
+      const wcsSaved = localStorage.getItem('wcs_mastery_state');
+      let wcsTotal = 20;
+      let wcsMastered = 0;
+      let wcsFamiliar = 0;
+      let wcsLearning = 20;
+
+      if (wcsSaved) {
+        try {
+          const state = JSON.parse(wcsSaved);
+          const allMoves = Object.values(state).flat();
+          if (allMoves.length > 0) {
+            wcsTotal = allMoves.length;
+            wcsMastered = allMoves.filter(m => m === 'mastered').length;
+            wcsFamiliar = allMoves.filter(m => m === 'familiar').length;
+            wcsLearning = allMoves.filter(m => !m || m === 'learning').length;
+          }
+        } catch(e) {
+          console.error(e);
+        }
+      }
+
+      const totalMoves = bachataTotal + wcsTotal;
+      const totalMastered = bachataMastered + wcsMastered;
+      const totalFamiliar = bachataFamiliar + wcsFamiliar;
+      
+      const totalScore = (bachataMastered * 100 + bachataFamiliar * 50) + (wcsMastered * 100 + wcsFamiliar * 50);
+      const maxScore = totalMoves * 100;
+      const overallPercentage = maxScore > 0 ? Math.round((totalScore / maxScore) * 100) : 0;
+
+      let motivation = "Ready to hit the dance floor? Select a style below to begin your timing drills.";
+      if (overallPercentage > 0 && overallPercentage < 30) {
+        motivation = "Off to a strong start! Even 5 minutes of focused metronome practice builds great muscle memory.";
+      } else if (overallPercentage >= 30 && overallPercentage < 75) {
+        motivation = "Excellent progress! You're locking down advanced cues and rhythm. Keep drills repetitive!";
+      } else if (overallPercentage >= 75) {
+        motivation = "Sensational memorization! Your landmarks are incredibly crisp. Go shine on the social floor!";
+      }
+
+      container.innerHTML = `
+        <div class="bg-slate-900 border border-slate-850/80 rounded-2xl p-6 sm:p-8 shadow-xl">
+          <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-6">
+            <div>
+              <h3 class="text-xs font-bold text-indigo-400 tracking-wider uppercase mb-1">Your Practice Status</h3>
+              <h2 class="text-2xl font-black text-white tracking-tight">Global Mastery Dashboard</h2>
+            </div>
+            
+            ${(bachataSaved || wcsSaved) ? `
+              <button onclick="resetGlobalProgress()" class="text-[10px] font-bold text-slate-500 hover:text-red-400 border border-slate-800/80 hover:border-red-950 px-2.5 py-1.5 rounded-lg bg-slate-950 transition-colors uppercase">
+                Reset Progress
+              </button>
+            ` : ''}
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center border-b border-slate-850/50 pb-6 mb-6">
+            <div class="flex items-center gap-4 col-span-2">
+              <div class="h-16 w-16 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-xl font-black shadow-lg shadow-indigo-950/40 shrink-0">
+                ${overallPercentage}%
+              </div>
+              <div class="space-y-1.5 w-full">
+                <div class="flex justify-between text-xs font-bold text-slate-400">
+                  <span>Overall Memorization Score</span>
+                  <span>${totalMastered} of ${totalMoves} Mastered</span>
+                </div>
+                <div class="w-full bg-slate-950 h-3 rounded-full border border-slate-850/50 overflow-hidden p-[2px]">
+                  <div class="bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 h-full rounded-full transition-all duration-1000" style="width: ${overallPercentage}%"></div>
+                </div>
+              </div>
+            </div>
+            <div class="bg-slate-950/50 border border-slate-850/40 rounded-xl p-4 text-xs text-slate-400 leading-relaxed">
+              <span class="font-extrabold text-white block mb-0.5">🧠 Practice Tip:</span>
+              ${motivation}
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div class="space-y-3 p-4 bg-slate-950/40 rounded-xl border border-slate-850/40">
+              <div class="flex justify-between items-center">
+                <span class="text-xs font-black text-blue-400 uppercase tracking-wider">Bachata Drills</span>
+                <span class="text-xs font-mono text-slate-400">${Math.round((bachataMastered * 100 + bachataFamiliar * 50) / (bachataTotal * 100) * 100) || 0}%</span>
+              </div>
+              <div class="grid grid-cols-3 gap-2 text-center text-[10px] font-bold">
+                <div class="bg-emerald-950/30 border border-emerald-900/30 text-emerald-400 px-2 py-1.5 rounded">
+                  <div class="text-xs font-black">${bachataMastered}</div>
+                  Mastered
+                </div>
+                <div class="bg-blue-950/30 border border-blue-900/30 text-blue-400 px-2 py-1.5 rounded">
+                  <div class="text-xs font-black">${bachataFamiliar}</div>
+                  Familiar
+                </div>
+                <div class="bg-slate-900 border border-slate-800 text-slate-400 px-2 py-1.5 rounded">
+                  <div class="text-xs font-black">${bachataLearning}</div>
+                  Learning
+                </div>
+              </div>
+            </div>
+
+            <div class="space-y-3 p-4 bg-slate-950/40 rounded-xl border border-slate-850/40">
+              <div class="flex justify-between items-center">
+                <span class="text-xs font-black text-purple-400 uppercase tracking-wider">West Coast Swing</span>
+                <span class="text-xs font-mono text-slate-400">${Math.round((wcsMastered * 100 + wcsFamiliar * 50) / (wcsTotal * 100) * 100) || 0}%</span>
+              </div>
+              <div class="grid grid-cols-3 gap-2 text-center text-[10px] font-bold">
+                <div class="bg-emerald-950/30 border border-emerald-900/30 text-emerald-400 px-2 py-1.5 rounded">
+                  <div class="text-xs font-black">${wcsMastered}</div>
+                  Mastered
+                </div>
+                <div class="bg-purple-950/30 border border-purple-900/30 text-purple-400 px-2 py-1.5 rounded">
+                  <div class="text-xs font-black">${wcsFamiliar}</div>
+                  Familiar
+                </div>
+                <div class="bg-slate-900 border border-slate-800 text-slate-400 px-2 py-1.5 rounded">
+                  <div class="text-xs font-black">${wcsLearning}</div>
+                  Learning
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function resetGlobalProgress() {
+      if (confirm("Are you sure you want to reset all your dance landmark practice and mastery stats? This will return all moves to 'learning' status.")) {
+        localStorage.removeItem('bachata_mastery_state');
+        localStorage.removeItem('wcs_mastery_state');
+        renderGlobalDashboard();
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', renderGlobalDashboard);
+  </script>
 
 </body>
 </html>

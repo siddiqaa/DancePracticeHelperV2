@@ -4,11 +4,15 @@ import path from 'path';
 const filesToCopy = [
   'index.html',
   'chunked_bachata.html',
-  'chunked_wcs.html'
+  'chunked_wcs.html',
+  'chunked_bachata.js',
+  'chunked_bachata.css',
+  'chunked_wcs.js',
+  'chunked_wcs.css',
+  'common_audio.js'
 ];
 
 const directoriesToCopy = [
-  'archive'
 ];
 
 const distDir = './dist';

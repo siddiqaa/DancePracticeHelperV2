@@ -3,9 +3,11 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "node build.js",
+    "dev": "node build.js && serve dist -l 3000",
     "build": "node build.js",
     "lint": "echo 'No lint step required'"
   },
-  "dependencies": {}
+  "devDependencies": {
+    "serve": "^14.2.6"
+  }
 }

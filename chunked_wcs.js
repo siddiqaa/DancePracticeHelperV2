@@ -75,114 +75,341 @@ const LANDMARKS = [
 
 const ORIGINAL_LANDMARKS = JSON.parse(JSON.stringify(LANDMARKS));
 
+// Centralized configuration for mastery states
+const MASTERY_CONFIG = {
+    learning: {
+        text: 'Learning',
+        textColor: 'text-red-400',
+        badgeColor: 'bg-red-500/10 border-red-500/30 text-red-400',
+        diffColor: 'text-red-400 bg-red-400/10 border-red-400/20'
+    },
+    familiar: {
+        text: 'Familiar',
+        textColor: 'text-amber-400',
+        badgeColor: 'bg-amber-500/10 border-amber-500/30 text-amber-400',
+        diffColor: 'text-amber-400 bg-amber-400/10 border-amber-400/20'
+    },
+    mastered: {
+        text: 'Mastered',
+        textColor: 'text-emerald-400',
+        badgeColor: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400',
+        diffColor: 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20'
+    }
+};
+
 let currentLandmarkIdx = 0;
 let lastLandmarkIdx = -1;
 let currentMoveIdx = 0;
 let beatIdx = 0;
 let isPaused = true;
 let isRandomMode = false;
-let anchorAccentEnabled = true;
-let intervalId = null;
-let audioCtx = null;
+let isShuffleMoves = false;
+let isSpiralMode = false;
+let spiralPhase = 'idle';
+let spiralQueue = [];
+let movePermutation = [];
 
-const display = document.getElementById('displayContainer');
-const dotContainer = document.getElementById('dotContainer');
+// Scheduler state
+let schedulerIntervalId = null;
+let schedLandmarkIdx = 0;
+let schedMoveIdx = 0;
+let schedBeatIdx = 0;
+let nextBeatTime = 0.0;
+const lookahead = 25.0; // How frequently to call scheduler (ms)
+const scheduleAheadTime = 0.1; // How far ahead to schedule audio (sec)
+let schedHoldingForRandom = false;
+
+// Queue of scheduled beats
+let beatsQueue = [];
+
+// Visual state
+let currentVisualLandmarkIdx = 0;
+let currentVisualMoveIdx = 0;
+let currentVisualBeatIdx = 0;
+let lastRenderedLandmarkIdx = -1;
+let lastRenderedMoveIdx = -1;
+
 const landmarkList = document.getElementById('landmarkList');
 const startOverlay = document.getElementById('startOverlay');
 const overlayContent = document.getElementById('overlayContent');
 const countdownDisplay = document.getElementById('countdownDisplay');
 
-function initAudio() {
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if (audioCtx.state === 'suspended') audioCtx.resume();
+function playScheduledBeat(num, time, landmarkIdx, moveIdx) {
+    const currentMove = LANDMARKS[landmarkIdx].moves[moveIdx];
+    DanceAudio.playWCSBeat(time, num, currentMove.beats, true);
 }
 
-function playBeat(num) {
-    if (!audioCtx || isPaused) return;
-    const isEven = (num + 1) % 2 === 0;
+function scheduler() {
+    if (isPaused || schedHoldingForRandom) return;
 
-    const currentMove = LANDMARKS[currentLandmarkIdx].moves[currentMoveIdx];
-    const isAnchorBeat = anchorAccentEnabled && (num >= currentMove.beats - 2);
+    const bpm = parseInt(document.getElementById('speedSlider').value);
+    const secondsPerBeat = 60.0 / bpm;
 
-    if (isAnchorBeat) {
-        // High-pitched woodblock/bell accent for Anchor (beats 5-6 or 7-8)
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(987.77, audioCtx.currentTime); // Crisp B5 pitch chime
-        osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.08);
+    while (nextBeatTime < DanceAudio.getCurrentTime() + scheduleAheadTime) {
+        const actualMoveIdx = getActualMoveIdx(schedMoveIdx);
+        const landmark = LANDMARKS[schedLandmarkIdx];
+        const currentMove = landmark.moves[actualMoveIdx];
 
-        gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
+        scheduleBeat(schedBeatIdx, nextBeatTime, schedLandmarkIdx, actualMoveIdx);
+        
+        // Push the beat to visual queue
+        beatsQueue.push({
+            beat: schedBeatIdx,
+            time: nextBeatTime,
+            moveIdx: actualMoveIdx,
+            logicalMoveIdx: schedMoveIdx,
+            landmarkIdx: schedLandmarkIdx,
+            landmarkColor: landmark.color,
+            moveName: currentMove.name,
+            beatsTotal: currentMove.beats
+        });
+        
+        advanceBeat(secondsPerBeat);
+    }
+}
 
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.08);
+function scheduleBeat(beatNumber, time, landmarkIdx, moveIdx) {
+    playScheduledBeat(beatNumber, time, landmarkIdx, moveIdx);
+}
+
+function advanceBeat(secondsPerBeat) {
+    nextBeatTime += secondsPerBeat;
+    
+    schedBeatIdx++;
+    const currentMove = LANDMARKS[schedLandmarkIdx].moves[getActualMoveIdx(schedMoveIdx)];
+    if (schedBeatIdx >= currentMove.beats) {
+        schedBeatIdx = 0;
+        
+        const landmark = LANDMARKS[schedLandmarkIdx];
+        const movesCount = landmark.moves.length;
+
+        if (schedMoveIdx >= movesCount - 1) {
+            if (isSpiralMode) {
+                advanceSpiral();
+            } else if (isRandomMode) {
+                schedHoldingForRandom = true;
+            } else {
+                schedLandmarkIdx = (schedLandmarkIdx + 1) % LANDMARKS.length;
+                schedMoveIdx = 0;
+                if (isShuffleMoves) generateMovePermutation(schedLandmarkIdx);
+            }
+        } else {
+            schedMoveIdx++;
+        }
+    }
+}
+
+function generateMovePermutation(lIdx) {
+    const count = LANDMARKS[lIdx].moves.length;
+    movePermutation = Array.from({length: count}, (_, i) => i);
+    for (let i = count - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [movePermutation[i], movePermutation[j]] = [movePermutation[j], movePermutation[i]];
+    }
+}
+
+function getActualMoveIdx(mIdx) {
+    if (isShuffleMoves && movePermutation.length > 0) {
+        return movePermutation[mIdx] ?? mIdx;
+    }
+    return mIdx;
+}
+
+function triggerVisualBeatFeedback(playedBeat) {
+    currentVisualLandmarkIdx = playedBeat.landmarkIdx;
+    currentVisualMoveIdx = playedBeat.moveIdx;
+    currentVisualBeatIdx = playedBeat.beat;
+    beatIdx = playedBeat.beat;
+
+    let displayLandmarkIdx = playedBeat.landmarkIdx;
+    let displayMoveIdx = playedBeat.moveIdx;
+    let logicalMoveIdx = playedBeat.logicalMoveIdx;
+
+    // Show next move early during the anchor (last 2 beats)
+    if (playedBeat.beat >= playedBeat.beatsTotal - 2) {
+        const lm = LANDMARKS[displayLandmarkIdx];
+        if (logicalMoveIdx < lm.moves.length - 1) {
+            displayMoveIdx = getActualMoveIdx(logicalMoveIdx + 1);
+        } else if (!isRandomMode && !isSpiralMode) {
+            displayLandmarkIdx = (displayLandmarkIdx + 1) % LANDMARKS.length;
+            displayMoveIdx = 0;
+        }
     }
 
-    if (isEven) {
-        // Snare Sound (Even Beats)
-        const bufferSize = audioCtx.sampleRate * 0.1;
-        const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-        const data = buffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) { data[i] = Math.random() * 2 - 1; }
+    currentLandmarkIdx = displayLandmarkIdx;
+    currentMoveIdx = displayMoveIdx;
 
-        const noise = audioCtx.createBufferSource();
-        noise.buffer = buffer;
-        const noiseFilter = audioCtx.createBiquadFilter();
-        noiseFilter.type = 'highpass';
-        noiseFilter.frequency.value = 1000;
+    if (displayMoveIdx !== lastRenderedMoveIdx || displayLandmarkIdx !== lastRenderedLandmarkIdx) {
+        lastRenderedMoveIdx = displayMoveIdx;
+        lastRenderedLandmarkIdx = displayLandmarkIdx;
+        
+        updateHUD();
+        renderSidebar();
+        updateMoveDisplay(false);
+    }
 
-        const noiseGain = audioCtx.createGain();
-        noiseGain.gain.setValueAtTime(0.08, audioCtx.currentTime);
-        noiseGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+    // Check if we just completed the landmark
+    const isLastMove = playedBeat.logicalMoveIdx === LANDMARKS[playedBeat.landmarkIdx].moves.length - 1;
+    const isLastBeatOfMove = playedBeat.beat === playedBeat.beatsTotal - 1;
 
-        noise.connect(noiseFilter);
-        noiseFilter.connect(noiseGain);
-        noiseGain.connect(audioCtx.destination);
-        noise.start();
+    if (isLastMove && isLastBeatOfMove) {
+        if (isSpiralMode) {
+            // Handled by advanceSpiral
+        } else if (isRandomMode) {
+            triggerRandomCountdown();
+        }
+    }
+}
+
+function draw() {
+    if (DanceAudio.isReady()) {
+        const currentTime = DanceAudio.getCurrentTime();
+        while (beatsQueue.length && beatsQueue[0].time <= currentTime) {
+            const playedBeat = beatsQueue.shift();
+            triggerVisualBeatFeedback(playedBeat);
+        }
+    }
+    requestAnimationFrame(draw);
+}
+
+function startSpiralRoutine() {
+    isSpiralMode = true;
+    isRandomMode = false;
+    spiralPhase = 'retrieval';
+    
+    const mastered = [];
+    const familiar = [];
+    const learning = [];
+    
+    LANDMARKS.forEach((lm, idx) => {
+        let score = 0;
+        lm.moves.forEach(m => {
+            if (m.mastery === 'mastered') score += 1;
+            else if (m.mastery === 'familiar') score += 0.5;
+        });
+        const ratio = score / lm.moves.length;
+        if (ratio > 0.8) mastered.push(idx);
+        else if (ratio > 0.3) familiar.push(idx);
+        else learning.push(idx);
+    });
+
+    spiralQueue = [];
+    const shuffMastered = mastered.sort(() => Math.random() - 0.5).slice(0, 3);
+    shuffMastered.forEach(idx => spiralQueue.push({lIdx: idx, phase: 'retrieval'}));
+    
+    const shuffFamiliar = familiar.sort(() => Math.random() - 0.5).slice(0, 2);
+    shuffFamiliar.forEach(idx => spiralQueue.push({lIdx: idx, phase: 'consolidation'}));
+    
+    const shuffLearning = learning.sort(() => Math.random() - 0.5).slice(0, 1);
+    shuffLearning.forEach(idx => spiralQueue.push({lIdx: idx, phase: 'encoding'}));
+
+    if (spiralQueue.length === 0) {
+        alert("Not enough mastery data to start spiral. Practice some moves first!");
+        isSpiralMode = false;
+        return;
+    }
+
+    document.getElementById('spiralBtn').classList.add('bg-indigo-600', 'text-white');
+    document.getElementById('spiralBtn').classList.remove('bg-indigo-900/40', 'text-indigo-300');
+    
+    const first = spiralQueue.shift();
+    spiralPhase = first.phase;
+    selectMove(first.lIdx, 0);
+    if (isShuffleMoves) generateMovePermutation(first.lIdx);
+    
+    isPaused = false;
+    startScheduler();
+}
+
+function advanceSpiral() {
+    if (spiralQueue.length > 0) {
+        schedHoldingForRandom = true;
+        const next = spiralQueue.shift();
+        spiralPhase = next.phase;
+        triggerSpiralTransition(next.lIdx, next.phase);
     } else {
-        // Kick Sound (Odd Beats)
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(120, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.1);
-
-        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
-
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.1);
+        isSpiralMode = false;
+        isPaused = true;
+        document.getElementById('spiralBtn').classList.remove('bg-indigo-600', 'text-white');
+        document.getElementById('spiralBtn').classList.add('bg-indigo-900/40', 'text-indigo-300');
+        alert("Retrieval Spiral Routine Completed!");
     }
 }
 
+function triggerSpiralTransition(lIdx, phase) {
+    startOverlay.classList.remove('hidden');
+    overlayContent.classList.add('hidden');
+    countdownDisplay.classList.remove('hidden');
+
+    const phaseNames = {
+        retrieval: "Phase 1: Retrieval (Review)",
+        consolidation: "Phase 2: Consolidation (Expansion)",
+        encoding: "Phase 3: Encoding (New Chunks)"
+    };
+
+    const lm = LANDMARKS[lIdx];
+    const nameEl = document.getElementById('nextChunkName');
+    nameEl.textContent = lm.title;
+    nameEl.style.color = lm.color;
+    document.getElementById('nextChunkAnchor').textContent = `${phaseNames[phase]} | ${lm.anchor}`;
+
+    let count = 5;
+    const timerEl = document.getElementById('timerCircle');
+    timerEl.textContent = count;
+
+    const countInterval = setInterval(() => {
+        count--;
+        timerEl.textContent = count;
+        if (count <= 0) {
+            clearInterval(countInterval);
+            startOverlay.classList.add('hidden');
+            selectMove(lIdx, 0);
+            if (isShuffleMoves) generateMovePermutation(lIdx);
+            isPaused = false;
+            startScheduler();
+        }
+    }, 1000);
+}
 function triggerRandomCountdown() {
     isPaused = true;
-    clearInterval(intervalId);
+    if (schedulerIntervalId) clearInterval(schedulerIntervalId);
+    beatsQueue = [];
+    schedHoldingForRandom = false;
 
-    lastLandmarkIdx = currentLandmarkIdx;
-    let nextIdx;
-    do {
-        nextIdx = Math.floor(Math.random() * LANDMARKS.length);
-    } while (nextIdx === lastLandmarkIdx && LANDMARKS.length > 1);
+    // Defensive safeguard to prevent infinite loop if LANDMARKS length is 1
+    if (LANDMARKS.length > 1) {
+        lastLandmarkIdx = currentVisualLandmarkIdx;
+        let nextIdx;
+        do {
+            nextIdx = Math.floor(Math.random() * LANDMARKS.length);
+        } while (nextIdx === lastLandmarkIdx);
+        currentVisualLandmarkIdx = nextIdx;
+    } else {
+        currentVisualLandmarkIdx = 0;
+    }
 
-    currentLandmarkIdx = nextIdx;
-    currentMoveIdx = 0;
-    beatIdx = 0;
+    currentVisualMoveIdx = 0;
+    currentVisualBeatIdx = 0;
+
+    // Reset visual legacy globals immediately
+    currentLandmarkIdx = currentVisualLandmarkIdx;
+    currentMoveIdx = currentVisualMoveIdx;
+    beatIdx = currentVisualBeatIdx;
+
+    // Reset scheduler state to match
+    schedLandmarkIdx = currentVisualLandmarkIdx;
+    schedMoveIdx = currentVisualMoveIdx;
+    schedBeatIdx = currentVisualBeatIdx;
 
     updateHUD();
     renderSidebar();
-    updateMoveDisplay();
+    updateMoveDisplay(false);
 
     startOverlay.classList.remove('hidden');
     overlayContent.classList.add('hidden');
     countdownDisplay.classList.remove('hidden');
 
-    const lm = LANDMARKS[currentLandmarkIdx];
+    const lm = LANDMARKS[currentVisualLandmarkIdx];
     const nameEl = document.getElementById('nextChunkName');
     nameEl.textContent = lm.title;
     nameEl.style.color = lm.color;
@@ -199,107 +426,53 @@ function triggerRandomCountdown() {
             clearInterval(countInterval);
             startOverlay.classList.add('hidden');
             isPaused = false;
-            startTimer();
+            startScheduler();
         }
     }, 1000);
-}
-
-function handleTick() {
-    if (isPaused) return;
-
-    const currentMove = LANDMARKS[currentLandmarkIdx].moves[currentMoveIdx];
-    const dots = dotContainer.querySelectorAll('.beat-dot');
-
-    // 1. Audio and Visual Feedback for the CURRENT beat
-    playBeat(beatIdx);
-
-    dots.forEach((d, i) => {
-        if (i === beatIdx) {
-            d.style.backgroundColor = LANDMARKS[currentLandmarkIdx].color;
-            d.style.borderColor = LANDMARKS[currentLandmarkIdx].color;
-            d.style.transform = 'scale(1.35)';
-            d.style.opacity = '1';
-            d.style.boxShadow = `0 0 15px ${LANDMARKS[currentLandmarkIdx].color}`;
-        } else {
-            d.style.backgroundColor = '#1e293b'; // slate-800
-            d.style.borderColor = '#334155'; // slate-700
-            d.style.transform = 'scale(1)';
-            d.style.opacity = '0.4';
-            d.style.boxShadow = 'none';
-        }
-    });
-
-    // 2. Prep for Next Beat
-    beatIdx++;
-
-    // 3. Move/Landmark Transition logic
-    if (beatIdx >= currentMove.beats) {
-        beatIdx = 0;
-
-        if (currentMoveIdx >= LANDMARKS[currentLandmarkIdx].moves.length - 1) {
-            if (isRandomMode) {
-                triggerRandomCountdown();
-                return;
-            } else {
-                currentLandmarkIdx = (currentLandmarkIdx + 1) % LANDMARKS.length;
-                currentMoveIdx = 0;
-                updateHUD();
-                renderSidebar();
-            }
-        } else {
-            currentMoveIdx++;
-        }
-
-        // Update dots on next layout cycle to ensure the "last beat" dot visibility is seen
-        setTimeout(() => {
-            updateMoveDisplay(false);
-        }, 50);
-    }
 }
 
 function renderSidebar() {
     landmarkList.innerHTML = '';
     LANDMARKS.forEach((lm, lIdx) => {
         const section = document.createElement('div');
+        section.id = `lm-section-${lIdx}`;
         section.className = `p-3 rounded-xl transition-all duration-300 ${lIdx === currentLandmarkIdx ? 'landmark-active' : 'opacity-30 hover:opacity-75'}`;
         section.style.color = lm.color;
         
         const movesHtml = lm.moves.map((m, mIdx) => {
             const mastery = m.mastery || 'learning';
-            let badgeColor = '';
-            let badgeText = '';
-            let masteryTextColor = '';
-            if (mastery === 'mastered') {
-                badgeColor = 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400';
-                badgeText = 'Mastered';
-                masteryTextColor = 'text-emerald-400';
-            } else if (mastery === 'familiar') {
-                badgeColor = 'bg-amber-500/10 border-amber-500/30 text-amber-400';
-                badgeText = 'Familiar';
-                masteryTextColor = 'text-amber-400';
-            } else {
-                badgeColor = 'bg-red-500/10 border-red-500/30 text-red-400';
-                badgeText = 'Learning';
-                masteryTextColor = 'text-red-400';
-            }
+            const config = MASTERY_CONFIG[mastery] || MASTERY_CONFIG.learning;
             
             const isCurrent = (lIdx === currentLandmarkIdx && mIdx === currentMoveIdx);
+            const hintTooltip = m.hint ? `title="${m.hint}"` : '';
             
             return `
                 <div id="m-${lIdx}-${mIdx}" class="text-[11px] px-2 py-1.5 rounded transition-all flex items-center justify-between gap-2 group ${isCurrent ? 'move-active' : 'hover:bg-slate-900/30'}">
-                    <span class="truncate cursor-pointer flex-1 py-0.5 hover:brightness-125 font-bold ${masteryTextColor}" onclick="selectMove(${lIdx}, ${mIdx})">
+                    <span class="truncate flex-1 py-0.5 font-bold ${config.textColor}" data-lidx="${lIdx}" data-midx="${mIdx}" ${hintTooltip}>
                         ${m.name} <span class="opacity-60 text-[9px] font-mono">(${m.beats}🥁)</span>
                     </span>
-                    <button onclick="cycleMastery(${lIdx}, ${mIdx}, event)" class="shrink-0 text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded border ${badgeColor} hover:brightness-125 active:scale-95 transition-all">
-                        ${badgeText}
+                    <button class="shrink-0 text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded border ${config.badgeColor} hover:brightness-125 active:scale-95 transition-all" data-action="cycle" data-lidx="${lIdx}" data-midx="${mIdx}">
+                        ${config.text}
                     </button>
                 </div>
             `;
         }).join('');
 
         section.innerHTML = `
-            <div class="text-[9px] font-black uppercase tracking-wider mb-1">${lIdx === currentLandmarkIdx ? '👉 Current ' : ''}Landmark ${lIdx + 1}</div>
-            <div class="text-xs font-bold text-slate-200 mb-2 truncate">${lm.title}</div>
+            <div class="flex items-start justify-between mb-2">
+                <div class="cursor-pointer group-hover/lm:brightness-125 flex-1" data-action="select" data-lidx="${lIdx}" data-midx="0">
+                    <div class="text-[9px] font-black uppercase tracking-wider mb-1">${lIdx === currentLandmarkIdx ? '👉 Current ' : ''}Landmark ${lIdx + 1}</div>
+                    <div class="text-xs font-bold text-slate-200 pr-2">${lm.title}</div>
+                </div>
+                <div class="flex flex-col gap-1 shrink-0">
+                    <button class="text-slate-500 hover:text-white bg-slate-950/50 hover:bg-slate-800 border border-slate-800 rounded px-2 py-1 transition-colors" data-action="scroll-prev" data-lidx="${lIdx}" title="Scroll to previous landmark">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 15l7-7 7 7"></path></svg>
+                    </button>
+                    <button class="text-slate-500 hover:text-white bg-slate-950/50 hover:bg-slate-800 border border-slate-800 rounded px-2 py-1 transition-colors" data-action="scroll-next" data-lidx="${lIdx}" title="Scroll to next landmark">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                </div>
+            </div>
             <div class="space-y-0.5">
                 ${movesHtml}
             </div>
@@ -312,6 +485,13 @@ function selectMove(lIdx, mIdx) {
     currentLandmarkIdx = lIdx;
     currentMoveIdx = mIdx;
     beatIdx = 0;
+
+    schedLandmarkIdx = lIdx;
+    schedMoveIdx = mIdx;
+    schedBeatIdx = 0;
+    beatsQueue = [];
+    if (DanceAudio.isReady()) nextBeatTime = DanceAudio.getCurrentTime();
+
     updateHUD();
     renderSidebar();
     updateMoveDisplay(true);
@@ -330,6 +510,7 @@ function cycleMastery(lIdx, mIdx, event) {
     saveMasteryState();
     renderSidebar();
     updateMasteryStats();
+    updateMasteryProgress();
 }
 
 function saveMasteryState() {
@@ -410,6 +591,29 @@ function updateHUD() {
             linkContainer.appendChild(a);
         });
     }
+
+    updateMasteryProgress();
+}
+
+function updateMasteryProgress() {
+    const lm = LANDMARKS[currentLandmarkIdx];
+    if (!lm) return;
+    let totalScore = 0;
+    lm.moves.forEach(m => {
+        const mastery = m.mastery || 'learning';
+        if (mastery === 'mastered') totalScore += 100;
+        else if (mastery === 'familiar') totalScore += 50;
+    });
+    const maxScore = lm.moves.length * 100;
+    const percentage = maxScore > 0 ? Math.round((totalScore / maxScore) * 100) : 0;
+    
+    const progressPct = document.getElementById('sessionProgressPct');
+    const progressBar = document.getElementById('sessionProgressBar');
+    if (progressPct && progressBar) {
+        progressPct.textContent = `${percentage}%`;
+        progressBar.style.width = `${percentage}%`;
+        progressBar.style.backgroundImage = `linear-gradient(to right, ${lm.color}, #a78bfa)`;
+    }
 }
 
 function updateMoveDisplay(shouldRestartInterval = true) {
@@ -417,45 +621,33 @@ function updateMoveDisplay(shouldRestartInterval = true) {
     const move = landmark.moves[currentMoveIdx];
 
     const mastery = move.mastery || 'learning';
-    let masteryColorClass = '';
-    if (mastery === 'mastered') {
-        masteryColorClass = 'text-emerald-400';
-    } else if (mastery === 'familiar') {
-        masteryColorClass = 'text-amber-400';
-    } else {
-        masteryColorClass = 'text-red-400';
-    }
+    const config = MASTERY_CONFIG[mastery] || MASTERY_CONFIG.learning;
+
+    let hintHtml = move.hint ? `<div class="text-xl mt-2 text-center font-bold tracking-widest text-amber-300 bg-amber-950/60 border border-amber-500/30 px-4 py-1.5 rounded-xl shadow-lg shadow-amber-900/20" style="font-variant: small-caps;">${move.hint}</div>` : '';
 
     let nextMoveNameHtml = "End of landmark list";
 
     if (currentMoveIdx < landmark.moves.length - 1) {
         const nextMove = landmark.moves[currentMoveIdx + 1];
         const nextMastery = nextMove.mastery || 'learning';
-        let nextMasteryColorClass = '';
-        if (nextMastery === 'mastered') {
-            nextMasteryColorClass = 'text-emerald-400';
-        } else if (nextMastery === 'familiar') {
-            nextMasteryColorClass = 'text-amber-400';
-        } else {
-            nextMasteryColorClass = 'text-red-400';
-        }
-        nextMoveNameHtml = `<span class="${nextMasteryColorClass} font-bold">${nextMove.name}</span>`;
+        const nextConfig = MASTERY_CONFIG[nextMastery] || MASTERY_CONFIG.learning;
+        nextMoveNameHtml = `<span class="${nextConfig.textColor} font-bold">${nextMove.name}</span>`;
     }
 
-    // Update dots
-    dotContainer.innerHTML = Array(move.beats).fill(0).map(() =>
-        `<div class="beat-dot w-4.5 h-4.5 rounded-full bg-slate-950 border border-slate-850 shadow-[inset_0_1.5px_3px_rgba(0,0,0,0.8)]"></div>`
-    ).join('');
+    
 
     // Update Text Displays
     const currentLabelEl = document.getElementById('currentMoveLabel');
     const nextLabelEl = document.getElementById('nextMoveLabel');
 
     if (currentLabelEl && nextLabelEl) {
-        currentLabelEl.innerHTML = `<span class="animate-label ${isPaused ? 'paused-anim' : ''} flex items-center justify-center gap-4">
-    <span class="text-purple-400 font-black text-2xl md:text-3xl px-3 py-1 rounded bg-purple-950/40 border border-purple-900/30 flex items-center gap-1">${move.beats}🥁</span>
-    <span class="text-3xl md:text-5xl font-black ${masteryColorClass} tracking-tight">${move.name}</span>
-</span>`;
+        currentLabelEl.innerHTML = `<div class="animate-label ${isPaused ? 'paused-anim' : ''} flex flex-col items-center justify-center gap-1">
+            <div class="flex items-center gap-4">
+                <span class="text-purple-400 font-black text-2xl md:text-3xl px-3 py-1 rounded bg-purple-950/40 border border-purple-900/30 flex items-center gap-1">${move.beats}🥁</span>
+                <span class="text-3xl md:text-5xl font-black ${config.textColor} tracking-tight text-center">${move.name}</span>
+            </div>
+            ${hintHtml}
+        </div>`;
 
         nextLabelEl.className = "text-xs md:text-sm font-bold text-slate-400 mt-4 uppercase tracking-wider px-4 py-2 rounded-xl bg-slate-950/60 border border-slate-850/80 shadow-sm flex items-center gap-2";
         nextLabelEl.innerHTML = `<span class="text-slate-500 font-extrabold text-[10px]">UP NEXT:</span> ${nextMoveNameHtml}`;
@@ -475,24 +667,35 @@ function updateMoveDisplay(shouldRestartInterval = true) {
         }
     }
 
-    if (shouldRestartInterval && !isPaused) startTimer();
+    if (shouldRestartInterval && !isPaused) startScheduler();
 }
 
-function startTimer() {
-    if (intervalId) clearInterval(intervalId);
-    const bpm = parseInt(document.getElementById('speedSlider').value);
-    const beatInterval = 60000 / bpm;
-
-    handleTick();
-    intervalId = setInterval(handleTick, beatInterval);
+function startScheduler() {
+    if (schedulerIntervalId) clearInterval(schedulerIntervalId);
+    beatsQueue = [];
+    schedHoldingForRandom = false;
+    if (DanceAudio.isReady()) {
+        nextBeatTime = DanceAudio.getCurrentTime() + 0.05;
+    }
+    schedulerIntervalId = setInterval(scheduler, lookahead);
 }
 
 document.getElementById('bigStartBtn').onclick = () => {
-    initAudio();
+    DanceAudio.init();
     startOverlay.classList.add('hidden');
     isPaused = false;
+    beatIdx = 0;
+    currentMoveIdx = 0;
+    currentLandmarkIdx = 0;
+
+    schedBeatIdx = 0;
+    schedMoveIdx = 0;
+    schedLandmarkIdx = 0;
+    beatsQueue = [];
+
     updateHUD();
-    updateMoveDisplay();
+    renderSidebar();
+    updateMoveDisplay(true);
 };
 
 document.getElementById('modeToggle').onclick = () => {
@@ -500,49 +703,56 @@ document.getElementById('modeToggle').onclick = () => {
     document.getElementById('modeBadge').textContent = isRandomMode ? "Random" : "Sequential";
     document.getElementById('modeName').textContent = isRandomMode ? "Randomized Landmark Drills" : "Linear Sequence Training";
     document.getElementById('modeToggle').textContent = isRandomMode ? "Switch to Linear" : "Randomize Chunks";
-    if (isRandomMode && !isPaused) triggerRandomCountdown();
 };
 
 document.getElementById('playPauseBtn').onclick = (e) => {
+    DanceAudio.init();
     isPaused = !isPaused;
     e.target.textContent = isPaused ? "Resume" : "Pause";
     if (isPaused) {
-        clearInterval(intervalId);
+        if (schedulerIntervalId) clearInterval(schedulerIntervalId);
+        beatsQueue = [];
     } else {
-        initAudio();
-        startTimer();
+        schedLandmarkIdx = currentLandmarkIdx;
+        schedMoveIdx = currentMoveIdx;
+        schedBeatIdx = beatIdx;
+        startScheduler();
     }
     updateMoveDisplay(false);
 };
 
 document.getElementById('panicBtn').onclick = () => {
+    if (schedulerIntervalId) clearInterval(schedulerIntervalId);
     beatIdx = 0;
     currentMoveIdx = 0;
-    updateMoveDisplay();
+    schedBeatIdx = 0;
+    schedMoveIdx = 0;
+    beatsQueue = [];
+    if (DanceAudio.isReady()) nextBeatTime = DanceAudio.getCurrentTime();
+    updateMoveDisplay(true);
+};
+
+document.getElementById('shuffleToggle').onchange = (e) => {
+    isShuffleMoves = e.target.checked;
+    if (isShuffleMoves) generateMovePermutation(schedLandmarkIdx);
+};
+
+document.getElementById('spiralBtn').onclick = () => {
+    if (isSpiralMode) {
+        isSpiralMode = false;
+        document.getElementById('spiralBtn').classList.remove('bg-indigo-600', 'text-white');
+        document.getElementById('spiralBtn').classList.add('bg-indigo-900/40', 'text-indigo-300');
+    } else {
+        DanceAudio.init();
+        startSpiralRoutine();
+    }
 };
 
 document.getElementById('speedSlider').oninput = (e) => {
     document.getElementById('bpmValue').textContent = e.target.value + ' BPM';
+    if (!isPaused) startScheduler();
 };
 
-document.getElementById('speedSlider').onchange = () => {
-    if (!isPaused) startTimer();
-};
-
-// Anchor Accent Sound Toggle
-const anchorSoundBtn = document.getElementById('anchorSoundBtn');
-if (anchorSoundBtn) {
-    anchorSoundBtn.onclick = () => {
-        anchorAccentEnabled = !anchorAccentEnabled;
-        if (anchorAccentEnabled) {
-            anchorSoundBtn.innerHTML = `<span id="anchorSoundStatusDot" class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Anchor Accent Sound: ON`;
-            anchorSoundBtn.className = "col-span-2 py-3 bg-slate-950 hover:bg-slate-900 text-slate-300 hover:text-white font-bold rounded-xl shadow-md border border-slate-850/60 transition flex items-center justify-center gap-2.5 text-xs uppercase tracking-wider active:scale-[0.98]";
-        } else {
-            anchorSoundBtn.innerHTML = `<span id="anchorSoundStatusDot" class="w-2 h-2 rounded-full bg-slate-600"></span> Anchor Accent Sound: OFF`;
-            anchorSoundBtn.className = "col-span-2 py-3 bg-slate-950/40 hover:bg-slate-950 text-slate-500 hover:text-slate-400 font-bold rounded-xl shadow-md border border-slate-850/40 transition flex items-center justify-center gap-2.5 text-xs uppercase tracking-wider active:scale-[0.98]";
-        }
-    };
-}
 
 // Reset Mastery Stats Handler
 const resetMasteryBtn = document.getElementById('resetMasteryBtn');
@@ -588,14 +798,14 @@ if (syncModalBackdrop) syncModalBackdrop.onclick = closeSyncModal;
 if (viewDiffBtn && viewFullCodeBtn && diffContent && codeContent) {
     viewDiffBtn.onclick = () => {
         viewDiffBtn.className = "px-3 py-1.5 text-xs font-bold rounded-lg bg-purple-600 text-white shadow transition";
-        viewFullCodeBtn.className = "px-3 py-1.5 text-xs font-bold rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white transition";
+        viewFullCodeBtn.className = "px-3 py-1.5 text-xs font-bold rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-750 hover:text-white transition";
         diffContent.classList.remove('hidden');
         codeContent.classList.add('hidden');
     };
     
     viewFullCodeBtn.onclick = () => {
         viewFullCodeBtn.className = "px-3 py-1.5 text-xs font-bold rounded-lg bg-purple-600 text-white shadow transition";
-        viewDiffBtn.className = "px-3 py-1.5 text-xs font-bold rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white transition";
+        viewDiffBtn.className = "px-3 py-1.5 text-xs font-bold rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-750 hover:text-white transition";
         codeContent.classList.remove('hidden');
         diffContent.classList.add('hidden');
     };
@@ -604,12 +814,12 @@ if (viewDiffBtn && viewFullCodeBtn && diffContent && codeContent) {
 function generateDiffAndCode() {
     if (!changesList || !rawCodeArea) return;
     
-    // Find differences
+    // Find differences using optional chaining for defensive coding
     const diffs = [];
     LANDMARKS.forEach((lm, lIdx) => {
         lm.moves.forEach((m, mIdx) => {
             const currentMastery = m.mastery || 'learning';
-            const originalMastery = ORIGINAL_LANDMARKS[lIdx].moves[mIdx].mastery || 'learning';
+            const originalMastery = ORIGINAL_LANDMARKS[lIdx]?.moves?.[mIdx]?.mastery || 'learning';
             if (currentMastery !== originalMastery) {
                 diffs.push({
                     landmarkTitle: lm.title,
@@ -632,15 +842,9 @@ function generateDiffAndCode() {
             </div>
         `;
     } else {
-        const masteryLabels = {
-            learning: { text: "Learning", color: "text-red-400 bg-red-400/10 border-red-400/20" },
-            familiar: { text: "Familiar", color: "text-amber-400 bg-amber-400/10 border-amber-400/20" },
-            mastered: { text: "Mastered", color: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20" }
-        };
-        
         changesList.innerHTML = diffs.map(d => {
-            const fromLabel = masteryLabels[d.from] || { text: d.from, color: "text-slate-400" };
-            const toLabel = masteryLabels[d.to] || { text: d.to, color: "text-slate-400" };
+            const fromConfig = MASTERY_CONFIG[d.from] || MASTERY_CONFIG.learning;
+            const toConfig = MASTERY_CONFIG[d.to] || MASTERY_CONFIG.learning;
             
             return `
                 <div class="p-3 bg-slate-950/40 border border-slate-850/80 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -652,9 +856,9 @@ function generateDiffAndCode() {
                         <div class="text-xs font-bold text-white">${d.moveName}</div>
                     </div>
                     <div class="flex items-center gap-2 text-[10px] font-mono shrink-0">
-                        <span class="px-2 py-0.5 rounded border ${fromLabel.color}">${fromLabel.text}</span>
+                        <span class="px-2 py-0.5 rounded border ${fromConfig.diffColor}">${fromConfig.text}</span>
                         <span class="text-slate-500 font-bold">&rarr;</span>
-                        <span class="px-2 py-0.5 rounded border ${toLabel.color} font-black">${toLabel.text}</span>
+                        <span class="px-2 py-0.5 rounded border ${toConfig.diffColor} font-black">${toConfig.text}</span>
                     </div>
                 </div>
             `;
@@ -683,10 +887,47 @@ if (copyCodeBtn && rawCodeArea) {
     };
 }
 
+
 window.onload = () => {
     loadMasteryState();
     updateMasteryStats();
     updateHUD();
     renderSidebar();
     updateMoveDisplay(false);
+    requestAnimationFrame(draw);
+
+    // Event Delegation for Landmark List
+    if (landmarkList) {
+        landmarkList.addEventListener('click', (e) => {
+            const selectTarget = e.target.closest('[data-action="select"]');
+            const cycleTarget = e.target.closest('[data-action="cycle"]');
+            const scrollPrev = e.target.closest('[data-action="scroll-prev"]');
+            const scrollNext = e.target.closest('[data-action="scroll-next"]');
+            
+            if (selectTarget) {
+                const lIdx = parseInt(selectTarget.dataset.lidx, 10);
+                const mIdx = parseInt(selectTarget.dataset.midx, 10);
+                selectMove(lIdx, mIdx);
+            } else if (cycleTarget) {
+                e.stopPropagation();
+                const lIdx = parseInt(cycleTarget.dataset.lidx, 10);
+                const mIdx = parseInt(cycleTarget.dataset.midx, 10);
+                cycleMastery(lIdx, mIdx);
+            } else if (scrollPrev) {
+                e.stopPropagation();
+                const lIdx = parseInt(scrollPrev.dataset.lidx, 10);
+                if (lIdx > 0) {
+                    const prevEl = document.getElementById(`lm-section-${lIdx - 1}`);
+                    if (prevEl) prevEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            } else if (scrollNext) {
+                e.stopPropagation();
+                const lIdx = parseInt(scrollNext.dataset.lidx, 10);
+                if (lIdx < LANDMARKS.length - 1) {
+                    const nextEl = document.getElementById(`lm-section-${lIdx + 1}`);
+                    if (nextEl) nextEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }
+        });
+    }
 };
