@@ -5,9 +5,11 @@
   "scripts": {
     "dev": "node build.js && serve dist -l 3000",
     "build": "node build.js",
-    "lint": "echo 'No lint step required'"
+    "lint": "echo 'No lint step required'",
+    "test": "playwright test"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.1",
     "serve": "^14.2.6"
   }
 }

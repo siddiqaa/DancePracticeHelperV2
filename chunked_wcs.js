@@ -1,127 +1,16 @@
-const LANDMARKS = [
-    {
-        title: "Basic + Variations",
-        anchor: "Push → Passes x2 -> Whip",
-        color: "#ef4444",
-        moves: [
-            { name: "Sugar Push", beats: 6, mastery: "mastered" },
-            { name: "Left Side Pass", beats: 6, mastery: "mastered" },
-            { name: "Right Side Pass with Turn", beats: 6, mastery: "familiar" },
-            { name: "Sugar Tuck", beats: 6, mastery: "familiar" },
-            { name: "Left Side Pass with Free Spin", beats: 6, mastery: "learning" },
-            { name: "Right Side Pass with Outside Turn", beats: 6, mastery: "learning" },
-            { name: "Sugar Tuck Elbow Catch", beats: 6, mastery: "learning" },
-            { name: "Right Side Pass with Follow Hand on Leader Left Shoulder Turn 5&6", beats: 6, mastery: "learning" },
-            { name: "Sugar Tuck with Both Hands", beats: 6, mastery: "learning" },
-            { name: "Left Side Turning Pass Both Hands Led by Leader Left Hand", beats: 6, mastery: "learning" },
-            { name: "Right side pass popout", beats: 6, mastery: "familiar" },
-            { name: "Right turn catch and spin follow left arm", beats: 6, mastery: "learning" }
-        ],
-        links: ["https://youtu.be/vx1wmjgR124", "https://youtu.be/EvvVBMtRnLY", "https://youtu.be/YuIWjdriiq4", "https://www.youtube.com/watch?v=8b-S82Eio-4"]
-    },
-    {
-        title: "Whips",
-        anchor: "Reverse double whip - Basket whip",
-        color: "#8b5cf6",
-        moves: [
-            { name: "Sugar Push", beats: 6, mastery: "mastered" },
-            { name: "Basic Whip", beats: 8, mastery: "mastered" },
-            { name: "Right Side Pass into Closed", beats: 6, mastery: "mastered" },
-            { name: "Reverse Whip / Double Spin", beats: 8, mastery: "familiar" },
-            { name: "Sugar Push", beats: 6, mastery: "mastered" },
-            { name: "Basket Whip", beats: 8, mastery: "familiar" },
-            { name: "Sugar Push", beats: 6, mastery: "mastered" },
-            { name: "Whip With Lead Turn", beats: 8, mastery: "learning" },
-            { name: "Roll into Sweetheart With Reverse Whip Exit", beats: 8, mastery: "learning" },
-            { name: "Open Whip", beats: 8, mastery: "familiar" },
-            { name: "Open Whip with Back to Back Turn", beats: 8, mastery: "learning" },
-            { name: "Fakeout Whip into Sling Shot", beats: 6, mastery: "learning" },
-            { name: "Sling Shot x 2 with Sugar Tuck Exit", beats: 10, mastery: "learning" },
-            { name: "Side by side reverse whip", beats: 8, mastery: "learning" }
-        ],
-        links: ["https://youtube.com/shorts/4QJ0rxolzjA", "https://youtu.be/xnN3mVDTE90", "https://youtu.be/I8sCZE2OTJY", "https://youtu.be/wuyuGL2iE4U", "https://youtu.be/4sNSm3r2zAc"]
-    },
-    {
-        title: "Roll-in and Outs",
-        anchor: "Roll in and out -> Sway catch",
-        color: "#10b981",
-        moves: [
-            { name: "Sugar Push", beats: 6, mastery: "mastered" },
-            { name: "Left Side Roll-in / Out", beats: 6, mastery: "familiar" },
-            { name: "Sway (Hand on Hip)", beats: 6, mastery: "familiar" },
-            { name: "Inside Turn Exit", beats: 6, mastery: "familiar" },
-            { name: "Sugar Push", beats: 6, mastery: "mastered" },
-            { name: "Roll-in and Out into Hammerlock (Both Hands)", beats: 6, mastery: "learning" },
-            { name: "Windmill into Side-to-Side Ring around Center", beats: 6, mastery: "learning" },
-            { name: "Left Side Roll-in / Out", beats: 6, mastery: "familiar" },
-            { name: "Hand over my head sugar push", beats: 6, mastery: "learning" },
-            { name: "Roll in/out", beats: 6, mastery: "familiar" },
-            { name: "Left side pass free-spin", beats: 6, mastery: "familiar" },
-            { name: "Roll in/out by lowering right hand", beats: 6, mastery: "learning" }
-        ],
-        links: ["https://youtu.be/0RpK_Cm1sNk", "https://youtu.be/8A1IRTHhADo", "https://youtu.be/hFcQmH6ixEE"]
-    },
-    {
-        title: "Slow Moves",
-        anchor: "Slow Tuck Side Step",
-        color: "#eab308",
-        moves: [
-            { name: "Sugar Push", beats: 6, mastery: "mastered" },
-            { name: "Sugar Tuck Slow Step Side", beats: 8, mastery: "learning" }
-        ],
-        links: ["https://youtu.be/FdUcgrjn6Rs"]
-    }
-];
+const ORIGINAL_WCS_LANDMARKS = JSON.parse(JSON.stringify(WCS_LANDMARKS));
 
-const ORIGINAL_LANDMARKS = JSON.parse(JSON.stringify(LANDMARKS));
-
-// Centralized configuration for mastery states
-const MASTERY_CONFIG = {
-    learning: {
-        text: 'Learning',
-        textColor: 'text-red-400',
-        badgeColor: 'bg-red-500/10 border-red-500/30 text-red-400',
-        diffColor: 'text-red-400 bg-red-400/10 border-red-400/20'
-    },
-    familiar: {
-        text: 'Familiar',
-        textColor: 'text-amber-400',
-        badgeColor: 'bg-amber-500/10 border-amber-500/30 text-amber-400',
-        diffColor: 'text-amber-400 bg-amber-400/10 border-amber-400/20'
-    },
-    mastered: {
-        text: 'Mastered',
-        textColor: 'text-emerald-400',
-        badgeColor: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400',
-        diffColor: 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20'
-    }
-};
+// Reference shared mastery config and filtering logic
+// MASTERY_CONFIG is already globally declared in common_practice.js
 
 let activeFilter = 'all';
 
-function getLandmarkMastery(lm) {
-    if (!lm || !lm.moves || lm.moves.length === 0) return 0;
-    let totalScore = 0;
-    lm.moves.forEach(m => {
-        const mastery = m.mastery || 'learning';
-        if (mastery === 'mastered') totalScore += 100;
-        else if (mastery === 'familiar') totalScore += 50;
-    });
-    return Math.round((totalScore / (lm.moves.length * 100)) * 100);
+function localGetLandmarkMastery(lm) {
+    return window.getLandmarkMastery(lm);
 }
 
-function getFilteredLandmarkIndices() {
-    return LANDMARKS.map((lm, idx) => {
-        const mastery = getLandmarkMastery(lm);
-        let range = 'low';
-        if (mastery >= 75) range = 'high';
-        else if (mastery >= 40) range = 'med';
-        
-        return { idx, range };
-    }).filter(item => {
-        if (activeFilter === 'all') return true;
-        return item.range === activeFilter;
-    }).map(item => item.idx);
+function localGetFilteredLandmarkIndices() {
+    return window.getFilteredLandmarkIndices(WCS_LANDMARKS, activeFilter);
 }
 
 function applyFilter(filterVal) {
@@ -138,7 +27,7 @@ function applyFilter(filterVal) {
         const btn = buttons[key];
         if (!btn) return;
         if (key === filterVal) {
-            btn.className = "py-1 text-[9px] font-bold uppercase rounded transition-all bg-purple-600 text-white shadow-sm border border-purple-500/10";
+            btn.className = "py-1 text-[9px] font-bold uppercase rounded transition-all bg-indigo-600 text-white shadow-sm border border-indigo-500/10";
         } else {
             btn.className = "py-1 text-[9px] font-bold uppercase rounded transition-all text-slate-400 hover:text-slate-100 hover:bg-slate-900/40";
         }
@@ -146,7 +35,7 @@ function applyFilter(filterVal) {
 
     renderSidebar();
 
-    const filtered = getFilteredLandmarkIndices();
+    const filtered = localGetFilteredLandmarkIndices();
     if (filtered.length > 0) {
         if (!filtered.includes(currentLandmarkIdx)) {
             selectMove(filtered[0], 0);
@@ -187,7 +76,7 @@ const overlayContent = document.getElementById('overlayContent');
 const countdownDisplay = document.getElementById('countdownDisplay');
 
 function playScheduledBeat(num, time, landmarkIdx, moveIdx) {
-    const currentMove = LANDMARKS[landmarkIdx].moves[moveIdx];
+    const currentMove = WCS_LANDMARKS[landmarkIdx].moves[moveIdx];
     DanceAudio.playWCSBeat(time, num, currentMove.beats, true);
 }
 
@@ -201,13 +90,13 @@ function scheduler() {
         scheduleBeat(schedBeatIdx, nextBeatTime, schedLandmarkIdx, schedMoveIdx);
         
         // Push the beat to visual queue
-        const currentMove = LANDMARKS[schedLandmarkIdx].moves[schedMoveIdx];
+        const currentMove = WCS_LANDMARKS[schedLandmarkIdx].moves[schedMoveIdx];
         beatsQueue.push({
             beat: schedBeatIdx,
             time: nextBeatTime,
             moveIdx: schedMoveIdx,
             landmarkIdx: schedLandmarkIdx,
-            landmarkColor: LANDMARKS[schedLandmarkIdx].color,
+            landmarkColor: WCS_LANDMARKS[schedLandmarkIdx].color,
             moveName: currentMove.name,
             beatsTotal: currentMove.beats
         });
@@ -224,15 +113,15 @@ function advanceBeat(secondsPerBeat) {
     nextBeatTime += secondsPerBeat;
     
     schedBeatIdx++;
-    const currentMove = LANDMARKS[schedLandmarkIdx].moves[schedMoveIdx];
+    const currentMove = WCS_LANDMARKS[schedLandmarkIdx].moves[schedMoveIdx];
     if (schedBeatIdx >= currentMove.beats) {
         schedBeatIdx = 0;
         
-        if (schedMoveIdx >= LANDMARKS[schedLandmarkIdx].moves.length - 1) {
+        if (schedMoveIdx >= WCS_LANDMARKS[schedLandmarkIdx].moves.length - 1) {
             if (isRandomMode) {
                 schedHoldingForRandom = true;
             } else {
-                const filtered = getFilteredLandmarkIndices();
+                const filtered = localGetFilteredLandmarkIndices();
                 const currentFilteredPos = filtered.indexOf(schedLandmarkIdx);
                 if (currentFilteredPos !== -1 && filtered.length > 0) {
                     const nextFilteredPos = (currentFilteredPos + 1) % filtered.length;
@@ -240,7 +129,7 @@ function advanceBeat(secondsPerBeat) {
                 } else if (filtered.length > 0) {
                     schedLandmarkIdx = filtered[0];
                 } else {
-                    schedLandmarkIdx = (schedLandmarkIdx + 1) % LANDMARKS.length;
+                    schedLandmarkIdx = (schedLandmarkIdx + 1) % WCS_LANDMARKS.length;
                 }
                 schedMoveIdx = 0;
             }
@@ -261,11 +150,11 @@ function triggerVisualBeatFeedback(playedBeat) {
 
     // Show next move early during the anchor (last 2 beats)
     if (playedBeat.beat >= playedBeat.beatsTotal - 2) {
-        const lm = LANDMARKS[displayLandmarkIdx];
+        const lm = WCS_LANDMARKS[displayLandmarkIdx];
         if (displayMoveIdx < lm.moves.length - 1) {
             displayMoveIdx++;
         } else if (!isRandomMode) {
-            const filtered = getFilteredLandmarkIndices();
+            const filtered = localGetFilteredLandmarkIndices();
             const currentFilteredPos = filtered.indexOf(displayLandmarkIdx);
             if (currentFilteredPos !== -1 && filtered.length > 0) {
                 const nextFilteredPos = (currentFilteredPos + 1) % filtered.length;
@@ -273,7 +162,7 @@ function triggerVisualBeatFeedback(playedBeat) {
             } else if (filtered.length > 0) {
                 displayLandmarkIdx = filtered[0];
             } else {
-                displayLandmarkIdx = (displayLandmarkIdx + 1) % LANDMARKS.length;
+                displayLandmarkIdx = (displayLandmarkIdx + 1) % WCS_LANDMARKS.length;
             }
             displayMoveIdx = 0;
         }
@@ -292,7 +181,7 @@ function triggerVisualBeatFeedback(playedBeat) {
     }
 
     // Check if we just completed the landmark in random mode!
-    const isLastMove = playedBeat.moveIdx === LANDMARKS[playedBeat.landmarkIdx].moves.length - 1;
+    const isLastMove = playedBeat.moveIdx === WCS_LANDMARKS[playedBeat.landmarkIdx].moves.length - 1;
     const isLastBeatOfMove = playedBeat.beat === playedBeat.beatsTotal - 1;
     if (isRandomMode && isLastMove && isLastBeatOfMove) {
         triggerRandomCountdown();
@@ -317,7 +206,7 @@ function triggerRandomCountdown() {
     schedHoldingForRandom = false;
 
     // Defensive safeguard to select from filtered landmarks list
-    const filtered = getFilteredLandmarkIndices();
+    const filtered = localGetFilteredLandmarkIndices();
     if (filtered.length > 1) {
         lastLandmarkIdx = currentVisualLandmarkIdx;
         let nextIdx;
@@ -353,7 +242,7 @@ function triggerRandomCountdown() {
     overlayContent.classList.add('hidden');
     countdownDisplay.classList.remove('hidden');
 
-    const lm = LANDMARKS[currentVisualLandmarkIdx];
+    const lm = WCS_LANDMARKS[currentVisualLandmarkIdx];
     const nameEl = document.getElementById('nextChunkName');
     nameEl.textContent = lm.title;
     nameEl.style.color = lm.color;
@@ -377,7 +266,7 @@ function triggerRandomCountdown() {
 
 function renderSidebar() {
     landmarkList.innerHTML = '';
-    const filteredIndices = getFilteredLandmarkIndices();
+    const filteredIndices = localGetFilteredLandmarkIndices();
     
     if (filteredIndices.length === 0) {
         landmarkList.innerHTML = `
@@ -390,7 +279,7 @@ function renderSidebar() {
         return;
     }
 
-    LANDMARKS.forEach((lm, lIdx) => {
+    WCS_LANDMARKS.forEach((lm, lIdx) => {
         if (!filteredIndices.includes(lIdx)) return;
         
         const section = document.createElement('div');
@@ -398,7 +287,7 @@ function renderSidebar() {
         section.className = `p-3 rounded-xl transition-all duration-300 ${lIdx === currentLandmarkIdx ? 'landmark-active' : 'opacity-30 hover:opacity-75'}`;
         section.style.color = lm.color;
         
-        const masteryPct = getLandmarkMastery(lm);
+        const masteryPct = localGetLandmarkMastery(lm);
         
         const movesHtml = lm.moves.map((m, mIdx) => {
             const mastery = m.mastery || 'learning';
@@ -467,7 +356,7 @@ function selectMove(lIdx, mIdx) {
 
 function cycleMastery(lIdx, mIdx, event) {
     if (event) event.stopPropagation();
-    const move = LANDMARKS[lIdx].moves[mIdx];
+    const move = WCS_LANDMARKS[lIdx].moves[mIdx];
     if (move.mastery === 'mastered') {
         move.mastery = 'learning';
     } else if (move.mastery === 'familiar') {
@@ -475,9 +364,9 @@ function cycleMastery(lIdx, mIdx, event) {
     } else {
         move.mastery = 'familiar';
     }
-    saveMasteryState();
+    localSaveMasteryState();
     
-    let filtered = getFilteredLandmarkIndices();
+    let filtered = localGetFilteredLandmarkIndices();
     if (filtered.length === 0) {
         applyFilter('all');
     } else if (!filtered.includes(currentLandmarkIdx)) {
@@ -489,48 +378,19 @@ function cycleMastery(lIdx, mIdx, event) {
     }
 }
 
-function saveMasteryState() {
-    const state = {};
-    LANDMARKS.forEach((lm) => {
-        state[lm.title] = lm.moves.map(m => m.mastery);
-    });
-    localStorage.setItem('wcs_mastery_state', JSON.stringify(state));
+function localSaveMasteryState() {
+    window.saveMasteryState('wcs_mastery_state', WCS_LANDMARKS);
 }
 
-function loadMasteryState() {
-    const saved = localStorage.getItem('wcs_mastery_state');
-    if (saved) {
-        try {
-            const state = JSON.parse(saved);
-            LANDMARKS.forEach((lm) => {
-                if (state[lm.title]) {
-                    lm.moves.forEach((m, mIdx) => {
-                        if (state[lm.title][mIdx]) {
-                            m.mastery = state[lm.title][mIdx];
-                        }
-                    });
-                }
-            });
-        } catch (e) {
-            console.error("Error loading mastery state", e);
-        }
-    }
+function localLoadMasteryState() {
+    window.loadMasteryState('wcs_mastery_state', WCS_LANDMARKS);
 }
 
 function updateMasteryStats() {
-    let total = 0;
-    let mastered = 0;
-    LANDMARKS.forEach(lm => {
-        lm.moves.forEach(m => {
-            total++;
-            if (m.mastery === 'mastered') {
-                mastered++;
-            }
-        });
-    });
+    const stats = window.getMasteryStats(WCS_LANDMARKS);
     const statsEl = document.getElementById('masteryStatsCount');
     if (statsEl) {
-        statsEl.textContent = `Mastered: ${mastered}/${total}`;
+        statsEl.textContent = `Mastered: ${stats.mastered}/${stats.total}`;
     }
 }
 
@@ -538,7 +398,7 @@ window.selectMove = selectMove;
 window.cycleMastery = cycleMastery;
 
 function updateHUD() {
-    const lm = LANDMARKS[currentLandmarkIdx];
+    const lm = WCS_LANDMARKS[currentLandmarkIdx];
     const hud = document.getElementById('landmarkHUD');
     hud.style.borderColor = lm.color;
 
@@ -555,14 +415,14 @@ function updateHUD() {
     const linkContainer = document.getElementById('tutorialLinks');
     linkContainer.innerHTML = '';
     if (lm.links && lm.links.length > 0) {
-        lm.links.forEach((url, i) => {
+        lm.links.forEach(([url, label]) => {
             const a = document.createElement('a');
             a.href = url;
             a.target = "_blank";
             a.className = "flex items-center gap-1.5 px-3 py-1.5 bg-slate-950 hover:bg-slate-900 text-slate-300 hover:text-white text-[10px] font-bold rounded-lg transition-colors border border-slate-850/80 uppercase shadow-sm";
             a.innerHTML = `
-                <svg class="w-3 h-3 text-purple-400" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"></path></svg>
-                Tutorial ${i + 1}
+                <svg class="w-3 h-3 text-indigo-400" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"></path></svg>
+                ${label}
             `;
             linkContainer.appendChild(a);
         });
@@ -572,7 +432,7 @@ function updateHUD() {
 }
 
 function updateMasteryProgress() {
-    const lm = LANDMARKS[currentLandmarkIdx];
+    const lm = WCS_LANDMARKS[currentLandmarkIdx];
     if (!lm) return;
     let totalScore = 0;
     lm.moves.forEach(m => {
@@ -593,7 +453,7 @@ function updateMasteryProgress() {
 }
 
 function updateMoveDisplay(shouldRestartInterval = true) {
-    const landmark = LANDMARKS[currentLandmarkIdx];
+    const landmark = WCS_LANDMARKS[currentLandmarkIdx];
     const move = landmark.moves[currentMoveIdx];
 
     const mastery = move.mastery || 'learning';
@@ -619,7 +479,7 @@ function updateMoveDisplay(shouldRestartInterval = true) {
     if (currentLabelEl && nextLabelEl) {
         currentLabelEl.innerHTML = `<div class="animate-label ${isPaused ? 'paused-anim' : ''} flex flex-col items-center justify-center gap-1">
             <div class="flex items-center gap-4">
-                <span class="text-purple-400 font-black text-2xl md:text-3xl px-3 py-1 rounded bg-purple-950/40 border border-purple-900/30 flex items-center gap-1">${move.beats}🥁</span>
+                <span class="text-indigo-400 font-black text-2xl md:text-3xl px-3 py-1 rounded bg-indigo-950/40 border border-indigo-900/30 flex items-center gap-1">${move.beats}🥁</span>
                 <span class="text-3xl md:text-5xl font-black ${config.textColor} tracking-tight text-center">${move.name}</span>
             </div>
             ${hintHtml}
@@ -659,11 +519,11 @@ function startScheduler() {
 document.getElementById('bigStartBtn').onclick = () => {
     DanceAudio.init();
     startOverlay.classList.add('hidden');
-    isPaused = false;
+    isPaused = true;
     beatIdx = 0;
     currentMoveIdx = 0;
     
-    const filtered = getFilteredLandmarkIndices();
+    const filtered = localGetFilteredLandmarkIndices();
     const startLIdx = filtered.length > 0 ? filtered[0] : 0;
     currentLandmarkIdx = startLIdx;
 
@@ -674,7 +534,13 @@ document.getElementById('bigStartBtn').onclick = () => {
 
     updateHUD();
     renderSidebar();
-    updateMoveDisplay(true);
+    updateMoveDisplay(false);
+
+    // Ensure play/pause button matches the paused state
+    const playPauseBtn = document.getElementById('playPauseBtn');
+    if (playPauseBtn) {
+        playPauseBtn.textContent = "Resume";
+    }
 };
 
 document.getElementById('modeToggle').onclick = () => {
@@ -687,11 +553,19 @@ document.getElementById('modeToggle').onclick = () => {
 document.getElementById('playPauseBtn').onclick = (e) => {
     DanceAudio.init();
     isPaused = !isPaused;
-    e.target.textContent = isPaused ? "Resume" : "Pause";
+
     if (isPaused) {
+        e.currentTarget.innerHTML = `
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path></svg>
+            Resume
+        `;
         if (schedulerIntervalId) clearInterval(schedulerIntervalId);
         beatsQueue = [];
     } else {
+        e.currentTarget.innerHTML = `
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>
+            Pause
+        `;
         schedLandmarkIdx = currentLandmarkIdx;
         schedMoveIdx = currentMoveIdx;
         schedBeatIdx = beatIdx;
@@ -719,13 +593,31 @@ document.getElementById('speedSlider').oninput = (e) => {
 
 // Reset Mastery Stats Handler
 const resetMasteryBtn = document.getElementById('resetMasteryBtn');
-if (resetMasteryBtn) {
+const resetModal = document.getElementById('resetModal');
+const closeResetModalBtn = document.getElementById('closeResetModalBtn');
+const cancelResetBtn = document.getElementById('cancelResetBtn');
+const confirmResetBtn = document.getElementById('confirmResetBtn');
+const resetModalBackdrop = document.getElementById('resetModalBackdrop');
+
+function closeResetModal() {
+    if (resetModal) resetModal.classList.add('hidden');
+}
+
+if (resetMasteryBtn && resetModal) {
     resetMasteryBtn.onclick = () => {
-        if (confirm("Reset all mastery levels back to default hardcoded values?")) {
+        resetModal.classList.remove('hidden');
+    };
+    
+    [closeResetModalBtn, cancelResetBtn, resetModalBackdrop].forEach(el => {
+        if (el) el.onclick = closeResetModal;
+    });
+
+    if (confirmResetBtn) {
+        confirmResetBtn.onclick = () => {
             localStorage.removeItem('wcs_mastery_state');
             window.location.reload();
-        }
-    };
+        };
+    }
 }
 
 // Sync Code Modal Management
@@ -760,14 +652,14 @@ if (syncModalBackdrop) syncModalBackdrop.onclick = closeSyncModal;
 
 if (viewDiffBtn && viewFullCodeBtn && diffContent && codeContent) {
     viewDiffBtn.onclick = () => {
-        viewDiffBtn.className = "px-3 py-1.5 text-xs font-bold rounded-lg bg-purple-600 text-white shadow transition";
+        viewDiffBtn.className = "px-3 py-1.5 text-xs font-bold rounded-lg bg-indigo-600 text-white shadow transition";
         viewFullCodeBtn.className = "px-3 py-1.5 text-xs font-bold rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-750 hover:text-white transition";
         diffContent.classList.remove('hidden');
         codeContent.classList.add('hidden');
     };
     
     viewFullCodeBtn.onclick = () => {
-        viewFullCodeBtn.className = "px-3 py-1.5 text-xs font-bold rounded-lg bg-purple-600 text-white shadow transition";
+        viewFullCodeBtn.className = "px-3 py-1.5 text-xs font-bold rounded-lg bg-indigo-600 text-white shadow transition";
         viewDiffBtn.className = "px-3 py-1.5 text-xs font-bold rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-750 hover:text-white transition";
         codeContent.classList.remove('hidden');
         diffContent.classList.add('hidden');
@@ -778,22 +670,7 @@ function generateDiffAndCode() {
     if (!changesList || !rawCodeArea) return;
     
     // Find differences using optional chaining for defensive coding
-    const diffs = [];
-    LANDMARKS.forEach((lm, lIdx) => {
-        lm.moves.forEach((m, mIdx) => {
-            const currentMastery = m.mastery || 'learning';
-            const originalMastery = ORIGINAL_LANDMARKS[lIdx]?.moves?.[mIdx]?.mastery || 'learning';
-            if (currentMastery !== originalMastery) {
-                diffs.push({
-                    landmarkTitle: lm.title,
-                    landmarkColor: lm.color,
-                    moveName: m.name,
-                    from: originalMastery,
-                    to: currentMastery
-                });
-            }
-        });
-    });
+    const diffs = window.getDiffs(WCS_LANDMARKS, ORIGINAL_WCS_LANDMARKS);
     
     // Render diff list
     if (diffs.length === 0) {
@@ -829,7 +706,7 @@ function generateDiffAndCode() {
     }
     
     // Generate raw formatted code
-    const formattedCode = `const LANDMARKS = ${JSON.stringify(LANDMARKS, null, 4)};`;
+    const formattedCode = `const LANDMARKS = ${JSON.stringify(WCS_LANDMARKS, null, 4)};`;
     rawCodeArea.textContent = formattedCode;
 }
 
@@ -852,7 +729,7 @@ if (copyCodeBtn && rawCodeArea) {
 
 
 window.onload = () => {
-    loadMasteryState();
+    localLoadMasteryState();
     updateMasteryStats();
     updateHUD();
     renderSidebar();
@@ -890,7 +767,7 @@ window.onload = () => {
             } else if (scrollPrev) {
                 e.stopPropagation();
                 const lIdx = parseInt(scrollPrev.dataset.lidx, 10);
-                const filtered = getFilteredLandmarkIndices();
+                const filtered = localGetFilteredLandmarkIndices();
                 const currentPos = filtered.indexOf(lIdx);
                 if (currentPos > 0) {
                     const prevLIdx = filtered[currentPos - 1];
@@ -900,7 +777,7 @@ window.onload = () => {
             } else if (scrollNext) {
                 e.stopPropagation();
                 const lIdx = parseInt(scrollNext.dataset.lidx, 10);
-                const filtered = getFilteredLandmarkIndices();
+                const filtered = localGetFilteredLandmarkIndices();
                 const currentPos = filtered.indexOf(lIdx);
                 if (currentPos !== -1 && currentPos < filtered.length - 1) {
                     const nextLIdx = filtered[currentPos + 1];

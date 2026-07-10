@@ -6,10 +6,12 @@ const filesToCopy = [
   'chunked_bachata.html',
   'chunked_wcs.html',
   'chunked_bachata.js',
-  'chunked_bachata.css',
   'chunked_wcs.js',
-  'chunked_wcs.css',
-  'common_audio.js'
+  'style.css',
+  'common_audio.js',
+  'common_practice.js',
+  'bachata_data.js',
+  'wcs_data.js'
 ];
 
 const directoriesToCopy = [
