@@ -37,3 +37,7 @@ The application features a "Randomized Landmark Drills" mode (`isRandomMode`).
 - **Aesthetic Theme**: Maintain the "Slate Dark" aesthetic across all tools. Use Tailwind CSS utility classes, focusing heavily on `slate-950` backgrounds, `slate-850`/`slate-800` borders, and high-contrast text (`slate-100`/`slate-400`).
 - **Visual Hierarchy & Mastery Configurations**: Use `MASTERY_CONFIG` (mapping 'learning' to `slate-400`, 'familiar' to `amber-400`, 'mastered' to `emerald-400`) to color-code UI text, borders, and progress bars.
 - **Animations**: Prefer lightweight CSS transitions (`active-move-animate`, `bg-opacity` fades) for HUD updates. Avoid heavy JS-based animations.
+
+## 7. Testing & Development Dependencies
+- **Playwright**: Playwright is used for end-to-end testing and must be listed as a `devDependencies` in `package.json`.
+- **Browser Binaries**: After installing dependencies, ensure the required browser binaries are installed by running `npx playwright install`. This is necessary for running tests in headful/headless environments.

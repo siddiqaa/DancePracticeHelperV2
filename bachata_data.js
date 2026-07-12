@@ -40,7 +40,7 @@ const BACHATA_LANDMARKS = [
             { name: "Basic", beats: 4, mastery: "mastered" },
             { name: "Basic", beats: 4, mastery: "mastered" },
             { name: "Inside turn both hands connected", beats: 4, mastery: "learning", hint: "Move top of my RIGHT fingers to bottom of her RIGHT elbow" },
-            { name: "Flip her left hand, catch and send back → hammerlock", beats: 4, mastery: "learning", hint: "2 arm moves here: let go of my RIGHT arm to big sweep her straight RIGHT arm out then flip it back to catch with your left" },
+            { name: "Flip her left hand, catch and send back → hammerlock", beats: 4, mastery: "learning", hint: "2 arm moves here: let go of my RIGHT arm to big sweep her straight RIGHT arm UP and out then flip it back to catch with your left" },
             { name: "Unwind hammer lock", beats: 4, mastery: "learning" }
         ],
         links: [
@@ -57,7 +57,7 @@ const BACHATA_LANDMARKS = [
             { name: "Basic", beats: 4, mastery: "mastered" },
             { name: "Basic", beats: 4, mastery: "mastered" },
             { name: "Enter pretzel (Var 1)", beats: 4, mastery: "learning", hint: "She faces 12 o'clock, I face 3 o'clock" },
-            { name: "Pretzel Var 1 exit", beats: 4, mastery: "learning", hint: "Lower MY LEFT, unwind her using MY RIGHT / (I face 12 o'clock / she faces 6 o'clock - both go towards 3 o'clock)"},
+            { name: "Pretzel Var 1 exit", beats: 4, mastery: "learning", hint: "Lower MY LEFT, unwind her using MY RIGHT / (I face 12 o'clock / she faces 6 o'clock - both go towards 3 o'clock)" },
             { name: "Inside turn (L lead on R shoulder)", beats: 4, mastery: "learning" },
             { name: "Basic", beats: 4, mastery: "mastered" },
             { name: "Basic", beats: 4, mastery: "mastered" },
@@ -84,7 +84,9 @@ const BACHATA_LANDMARKS = [
             { name: "My Inside Turn → Closed Position", beats: 4, mastery: "mastered" },
             { name: "Closed basic", beats: 4, mastery: "mastered" },
             { name: "Closed basic", beats: 4, mastery: "mastered" },
+            { name: "Closed basic", beats: 4, mastery: "mastered" },
             { name: "Closed 360", beats: 4, mastery: "mastered" },
+            { name: "Closed basic", beats: 4, mastery: "mastered" },
             { name: "Closed basic", beats: 4, mastery: "mastered" },
             { name: "Hesitation slide", beats: 4, mastery: "mastered" },
             { name: "Hesitation slide", beats: 4, mastery: "mastered" },
@@ -127,7 +129,10 @@ const BACHATA_LANDMARKS = [
             { name: "Basic", beats: 4, mastery: "mastered" },
             { name: "Basic", beats: 4, mastery: "mastered" }
         ],
-        links: []
+        links: [
+            ["https://www.youtube.com/watch?v=GOquywBjMEI", "10 Sensual"],
+            ["https://www.youtube.com/watch?v=WXxoP-Qk3vs", "5 Sensual"]
+        ]
     },
     {
         title: "Shoulder Blade Finale",
@@ -137,7 +142,7 @@ const BACHATA_LANDMARKS = [
             { name: "Basic", beats: 4, mastery: "mastered" },
             { name: "Basic", beats: 4, mastery: "mastered" },
             { name: "Inside turn → hammerlock", beats: 4, mastery: "learning" },
-            { name: "Switch places", beats: 4, mastery: "learning" },
+            { name: "Switch places", beats: 4, mastery: "learning", hint: "Start step around with your right foot and end with tap on your left foot"},
             { name: "Hands to shoulder blades", beats: 4, mastery: "learning" },
             { name: "Raise hands overhead", beats: 4, mastery: "learning" },
             { name: "Inside turn led from hip", beats: 4, mastery: "learning" },

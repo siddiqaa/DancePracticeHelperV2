@@ -48,6 +48,7 @@ let currentMoveIdx = 0;
 let beatIdx = 0;
 let isPaused = true;
 let isRandomMode = false;
+let isLoopMode = false;
 
 // Scheduler state
 let schedulerIntervalId = null;
@@ -110,6 +111,8 @@ function advanceBeat(secondsPerBeat) {
         if (schedMoveIdx >= BACHATA_LANDMARKS[schedLandmarkIdx].moves.length - 1) {
             if (isRandomMode) {
                 schedHoldingForRandom = true;
+            } else if (isLoopMode) {
+                schedMoveIdx = 0;
             } else {
                 const filtered = localGetFilteredLandmarkIndices();
                 const currentFilteredPos = filtered.indexOf(schedLandmarkIdx);
@@ -143,6 +146,8 @@ function triggerVisualBeatFeedback(playedBeat) {
         const lm = BACHATA_LANDMARKS[displayLandmarkIdx];
         if (displayMoveIdx < lm.moves.length - 1) {
             displayMoveIdx++;
+        } else if (isLoopMode) {
+            displayMoveIdx = 0;
         } else if (!isRandomMode) {
             const filtered = localGetFilteredLandmarkIndices();
             const currentFilteredPos = filtered.indexOf(displayLandmarkIdx);
@@ -569,6 +574,10 @@ document.getElementById('modeToggle').onclick = () => {
     document.getElementById('modeBadge').textContent = isRandomMode ? "Random" : "Sequential";
     document.getElementById('modeName').textContent = isRandomMode ? "Randomized Landmark Drills" : "Linear Sequence Training";
     document.getElementById('modeToggle').textContent = isRandomMode ? "Switch to Linear" : "Randomize Chunks";
+};
+
+document.getElementById('loopToggle').onchange = (e) => {
+    isLoopMode = e.target.checked;
 };
 
 document.getElementById('bpmSlider').oninput = (e) => {
