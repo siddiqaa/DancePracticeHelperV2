@@ -464,7 +464,7 @@ function updateMoveDisplay(shouldRestartInterval = true) {
     const mastery = move.mastery || 'learning';
     const config = MASTERY_CONFIG[mastery] || MASTERY_CONFIG.learning;
 
-    let hintHtml = move.hint ? `<div class="text-xl mt-2 text-center font-bold tracking-widest text-amber-300 bg-amber-950/60 border border-amber-500/30 px-4 py-1.5 rounded-xl shadow-lg shadow-amber-900/20" style="font-variant: small-caps;">${move.hint}</div>` : '';
+    let hintHtml = move.hint ? `<div class="text-xs sm:text-sm mt-2 text-center font-bold tracking-wider sm:tracking-widest text-amber-300 bg-amber-950/60 border border-amber-500/30 px-3 py-1 sm:px-4 sm:py-1.5 rounded-xl shadow-lg shadow-amber-900/20" style="font-variant: small-caps;">${move.hint}</div>` : '';
 
     let nextMoveNameHtml = "End of landmark list";
 
@@ -482,10 +482,10 @@ function updateMoveDisplay(shouldRestartInterval = true) {
     const nextLabelEl = document.getElementById('nextMoveLabel');
 
     if (currentLabelEl && nextLabelEl) {
-        currentLabelEl.innerHTML = `<div class="animate-label ${isPaused ? 'paused-anim' : ''} flex flex-col items-center justify-center gap-1">
-            <div class="flex items-center gap-4">
-                <span class="text-indigo-400 font-black text-2xl md:text-3xl px-3 py-1 rounded bg-indigo-950/40 border border-indigo-900/30 flex items-center gap-1">${move.beats}🥁</span>
-                <span class="text-3xl md:text-5xl font-black ${config.textColor} tracking-tight text-center">${move.name}</span>
+        currentLabelEl.innerHTML = `<div class="animate-label ${isPaused ? 'paused-anim' : ''} flex flex-col items-center justify-center gap-2">
+            <div class="flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
+                <span class="text-indigo-400 font-black text-xl sm:text-2xl md:text-3xl px-3 py-1 rounded bg-indigo-950/40 border border-indigo-900/30 flex items-center gap-1">${move.beats}🥁</span>
+                <span class="text-xl sm:text-3xl md:text-5xl font-black ${config.textColor} tracking-tight text-center leading-tight">${move.name}</span>
             </div>
             ${hintHtml}
         </div>`;

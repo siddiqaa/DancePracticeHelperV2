@@ -36,8 +36,8 @@
         <div id="countdownDisplay" class="hidden text-center p-8 w-full max-w-lg relative">
             <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-indigo-500/10 blur-[100px] rounded-full pointer-events-none"></div>
             <h2 class="text-indigo-400 text-xs font-black uppercase tracking-widest mb-4">Visualize Anchor</h2>
-            <div id="nextChunkName" class="text-white text-4xl font-extrabold mb-3 uppercase tracking-tight"></div>
-            <div id="nextChunkAnchor" class="text-slate-400 text-lg mb-10 italic max-w-md mx-auto leading-relaxed"></div>
+            <div id="nextChunkName" class="text-white text-2xl sm:text-3xl md:text-4xl font-extrabold mb-3 uppercase tracking-tight"></div>
+            <div id="nextChunkAnchor" class="text-slate-400 text-sm sm:text-base md:text-lg mb-6 sm:mb-10 italic max-w-md mx-auto leading-relaxed"></div>
             <div class="relative w-36 h-36 flex items-center justify-center mx-auto bg-slate-900/60 rounded-full border border-slate-800 shadow-[0_0_30px_rgba(99,102,241,0.1)]">
                 <div id="timerCircle" class="text-white text-6xl font-black tracking-tighter">5</div>
             </div>
@@ -94,10 +94,10 @@
                         <span class="text-[9px] font-black uppercase text-slate-500 tracking-wider">Practice Filter</span>
                     </div>
                     <div class="grid grid-cols-4 gap-0.5 bg-slate-950/70 p-0.5 rounded-lg border border-slate-850/80">
-                        <button id="filterAllBtn" class="py-1 text-[9px] font-bold uppercase rounded transition-all bg-indigo-600 text-white shadow-sm border border-indigo-500/10" data-range="all">All</button>
-                        <button id="filterLowBtn" class="py-1 text-[9px] font-bold uppercase rounded transition-all text-slate-400 hover:text-slate-200" data-range="low">Low</button>
-                        <button id="filterMedBtn" class="py-1 text-[9px] font-bold uppercase rounded transition-all text-slate-400 hover:text-slate-200" data-range="med">Med</button>
-                        <button id="filterHighBtn" class="py-1 text-[9px] font-bold uppercase rounded transition-all text-slate-400 hover:text-slate-200" data-range="high">High</button>
+                        <button id="filterAllBtn" class="py-1.5 text-[9px] font-bold uppercase rounded transition-all bg-indigo-600 text-white shadow-sm border border-indigo-500/10" data-range="all">All</button>
+                        <button id="filterLowBtn" class="py-1.5 text-[9px] font-bold uppercase rounded transition-all text-slate-400 hover:text-slate-200" data-range="low">Low</button>
+                        <button id="filterMedBtn" class="py-1.5 text-[9px] font-bold uppercase rounded transition-all text-slate-400 hover:text-slate-200" data-range="med">Med</button>
+                        <button id="filterHighBtn" class="py-1.5 text-[9px] font-bold uppercase rounded transition-all text-slate-400 hover:text-slate-200" data-range="high">High</button>
                     </div>
                 </div>
             </div>
@@ -106,7 +106,7 @@
 
         <!-- Main Controller -->
         <section class="flex-1 flex flex-col gap-6">
-            <div id="landmarkHUD" class="bg-slate-900/40 backdrop-blur-md rounded-2xl p-6 border border-slate-850 border-l-4 transition-all duration-500 shadow-xl">
+            <div id="landmarkHUD" class="bg-slate-900/40 backdrop-blur-md rounded-2xl p-4 sm:p-6 border border-slate-850 border-l-4 transition-all duration-500 shadow-xl">
                 <div class="flex flex-col md:flex-row justify-between items-start gap-4">
                     <div class="flex-1">
                         <div class="flex items-center gap-3">
@@ -133,10 +133,10 @@
             </div>
 
             <div
-                class="bg-slate-900/40 backdrop-blur-md rounded-2xl border border-slate-850 p-6 md:p-8 flex-1 flex flex-col items-center justify-center relative overflow-hidden shadow-2xl">
+                class="bg-slate-900/40 backdrop-blur-md rounded-2xl border border-slate-850 p-4 sm:p-6 md:p-8 flex-1 flex flex-col items-center justify-center relative overflow-hidden shadow-2xl">
                 <!-- Current move display stage -->
                 <div id="displayContainer"
-                    class="flex flex-col items-center justify-center text-center px-4 mb-10 h-44 w-full relative">
+                    class="flex flex-col items-center justify-center text-center px-4 mb-10 min-h-[11rem] md:h-44 py-2 sm:py-4 w-full relative">
                     <!-- Smooth visual pulse effect behind the text (High ROI suggestion) -->
                     <div id="currentMoveLabel" class="text-4xl md:text-5xl font-black leading-tight text-white tracking-tight drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]"></div>
                     <div id="nextMoveLabel"
