@@ -305,7 +305,7 @@ function updateMoveDisplay() {
     const mastery = move.mastery || 'learning';
     const config = MASTERY_CONFIG[mastery] || MASTERY_CONFIG.learning;
 
-    let hintHtml = move.hint ? `<div class="text-xl mt-2 text-center font-bold tracking-widest text-amber-300 bg-amber-950/60 border border-amber-500/30 px-4 py-1.5 rounded-xl shadow-lg shadow-amber-900/20" style="font-variant: small-caps;">${move.hint}</div>` : '';
+    let hintHtml = move.hint ? `<div class="text-sm mt-2 text-center font-bold tracking-widest text-amber-300 bg-amber-950/60 border border-amber-500/30 px-4 py-1.5 rounded-xl shadow-lg shadow-amber-900/20" style="font-variant: small-caps;">${move.hint}</div>` : '';
 
     let nextMoveNameHtml = "End of landmark list";
 
