@@ -122,5 +122,28 @@ window.DanceAudio = {
 
         const volume = isAccent ? 0.1 : 0.4;
         this.playBasicTone(time, isAccent, volume);
+    },
+
+    playSalsaBeat(time, beatNumber, anchorAccentEnabled) {
+        if (!this.ctx) return;
+        
+        // Salsa On 1 typically accents the 1 and 5
+        // beatNumber is 0-7 for an 8-beat phrase
+        const isAccent = (beatNumber === 0 || beatNumber === 4);
+        const isPause = (beatNumber === 3 || beatNumber === 7);
+
+        if (isAccent && anchorAccentEnabled) {
+            this.playChime(time);
+            return;
+        }
+
+        if (isPause) {
+            // Making the 4 and 8 clearly audible as requested
+            this.playBasicTone(time, false, 0.25);
+            return;
+        }
+
+        const volume = isAccent ? 0.5 : 0.3;
+        this.playBasicTone(time, isAccent, volume);
     }
 };

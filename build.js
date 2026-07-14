@@ -7,11 +7,14 @@ const filesToCopy = [
   'chunked_wcs.html',
   'chunked_bachata.js',
   'chunked_wcs.js',
+  'chunked_salsa.js',
+  'chunked_salsa.html',
   'style.css',
   'common_audio.js',
   'common_practice.js',
   'bachata_data.js',
-  'wcs_data.js'
+  'wcs_data.js',
+  'salsa_data.js'
 ];
 
 const directoriesToCopy = [

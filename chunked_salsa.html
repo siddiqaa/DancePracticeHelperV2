@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salsa Landmark Memorizer</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col items-center p-4 md:p-6 font-sans relative overflow-x-hidden selection:bg-indigo-500/30 selection:text-indigo-200">
+
+    <!-- Ambient glows -->
+    <div class="absolute top-0 left-1/4 w-[500px] h-[500px] ambient-glow-1 rounded-full pointer-events-none -z-10"></div>
+    <div class="absolute bottom-10 right-1/4 w-[600px] h-[600px] ambient-glow-2 rounded-full pointer-events-none -z-10"></div>
+
+    <!-- Start/Countdown Overlay -->
+    <div id="startOverlay"
+        class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-950/98 backdrop-blur-xl">
+        <div id="overlayContent" class="text-center p-8 max-w-md w-full relative">
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-indigo-600/10 blur-[80px] rounded-full pointer-events-none"></div>
+            <div class="w-20 h-20 bg-gradient-to-tr from-indigo-600 to-red-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-[0_0_40px_rgba(239,68,68,0.3)] border border-red-400/20">
+                <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                </svg>
+            </div>
+            <h1 class="text-white text-3xl font-black mb-2 tracking-tight uppercase">Salsa Landmarks</h1>
+            <p class="text-slate-400 text-sm mb-8 tracking-wide font-medium">Interactive Memory Chain & Metronome Drill</p>
+            <button id="bigStartBtn"
+                class="w-full py-5 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white text-lg font-bold rounded-2xl shadow-xl hover:shadow-red-500/10 transform transition active:scale-[0.98] border border-red-400/20">
+                Begin Practice Session
+            </button>
+        </div>
+        <div id="countdownDisplay" class="hidden text-center p-8 w-full max-w-lg relative">
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-red-500/10 blur-[100px] rounded-full pointer-events-none"></div>
+            <h2 class="text-red-400 text-xs font-black uppercase tracking-widest mb-4">Visualize Anchor</h2>
+            <div id="nextChunkName" class="text-white text-2xl sm:text-3xl md:text-4xl font-extrabold mb-3 uppercase tracking-tight"></div>
+            <div id="nextChunkAnchor" class="text-slate-400 text-sm sm:text-base md:text-lg mb-6 sm:mb-10 italic max-w-md mx-auto leading-relaxed"></div>
+            <div class="relative w-36 h-36 flex items-center justify-center mx-auto bg-slate-900/60 rounded-full border border-slate-800 shadow-[0_0_30px_rgba(239,68,68,0.1)]">
+                <div id="timerCircle" class="text-white text-6xl font-black tracking-tighter">5</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation / Header Bar -->
+    <header class="w-full max-w-6xl flex flex-col sm:flex-row items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-900">
+        <div class="flex items-center gap-4">
+            <a href="index.html" class="flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-white bg-slate-900/50 hover:bg-slate-900 px-3 py-2 rounded-xl border border-slate-800/80 transition">
+                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Dashboard
+            </a>
+            <div>
+                <h1 class="text-lg font-bold text-white tracking-tight flex items-center gap-2">
+                    Salsa On 1
+                    <span class="text-[10px] text-red-400 font-mono tracking-widest px-2 py-0.5 rounded bg-red-950/40 border border-red-900/40 uppercase">LA Style</span>
+                </h1>
+            </div>
+        </div>
+        <div class="flex items-center gap-3">
+            <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+            <span class="text-xs text-slate-400 font-medium tracking-wider">Practice Assist Tool</span>
+        </div>
+    </header>
+
+    <div class="w-full max-w-6xl flex flex-col-reverse md:flex-row gap-6 mt-4">
+        <!-- Sidebar -->
+        <section
+            class="w-full md:w-80 bg-slate-900/40 backdrop-blur-md rounded-2xl border border-slate-850 flex flex-col h-fit md:h-[82vh] overflow-hidden shadow-2xl">
+            <div class="p-4 border-b border-slate-850/80 bg-slate-900/60 rounded-t-2xl flex flex-col gap-2.5">
+                <div class="flex justify-between items-center w-full">
+                    <h3 class="text-xs font-black uppercase tracking-wider text-slate-400">The Memory Chain</h3>
+                    <span id="modeBadge"
+                        class="text-[9px] bg-red-950/50 border border-red-800/40 text-red-300 px-2.5 py-1 rounded-md font-extrabold uppercase tracking-wider">Sequential</span>
+                </div>
+                <!-- Mastery Tracking Stats -->
+                <div class="flex items-center justify-between text-[10px] text-slate-400 border-t border-slate-850/60 pt-2 font-mono">
+                    <span class="flex items-center gap-1.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span id="masteryStatsCount">Mastered: 0/0</span>
+                    </span>
+                    <div class="flex gap-3">
+                        <button id="showDiffBtn" class="text-[9px] text-red-400 hover:text-red-300 transition uppercase font-sans font-bold">Sync Code</button>
+                        <button id="resetMasteryBtn" class="text-[9px] text-slate-500 hover:text-red-400 transition uppercase font-sans font-bold">Reset</button>
+                    </div>
+                </div>
+                <!-- Filtering bar -->
+                <div class="flex flex-col gap-1 border-t border-slate-850/60 pt-2 font-sans">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-[9px] font-black uppercase text-slate-500 tracking-wider">Practice Filter</span>
+                    </div>
+                    <div class="grid grid-cols-4 gap-0.5 bg-slate-950/70 p-0.5 rounded-lg border border-slate-850/80">
+                        <button id="filterAllBtn" class="py-1.5 text-[9px] font-bold uppercase rounded transition-all bg-red-600 text-white shadow-sm border border-red-500/10" data-range="all">All</button>
+                        <button id="filterLowBtn" class="py-1.5 text-[9px] font-bold uppercase rounded transition-all text-slate-400 hover:text-slate-200" data-range="low">Low</button>
+                        <button id="filterMedBtn" class="py-1.5 text-[9px] font-bold uppercase rounded transition-all text-slate-400 hover:text-slate-200" data-range="med">Med</button>
+                        <button id="filterHighBtn" class="py-1.5 text-[9px] font-bold uppercase rounded transition-all text-slate-400 hover:text-slate-200" data-range="high">High</button>
+                    </div>
+                </div>
+            </div>
+            <div id="landmarkList" class="overflow-y-auto flex-1 p-3 space-y-4 max-h-[400px] md:max-h-none"></div>
+        </section>
+
+        <!-- Main Controller -->
+        <section class="flex-1 flex flex-col gap-6">
+            <div id="landmarkHUD" class="bg-slate-900/40 backdrop-blur-md rounded-2xl p-4 sm:p-6 border border-slate-850 border-l-4 transition-all duration-500 shadow-xl">
+                <div class="flex flex-col md:flex-row justify-between items-start gap-4">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-3">
+                            <span id="landmarkTag"
+                                class="px-3 py-1 rounded-full text-white text-[9px] font-black uppercase tracking-wider shrink-0 shadow-sm">L-1</span>
+                            <span id="landmarkTitle"
+                                class="text-xs font-bold uppercase text-slate-400 tracking-widest truncate">Salsa Landmark</span>
+                        </div>
+                        <h2 id="landmarkAnchor" class="text-xl md:text-2xl font-bold text-slate-100 mt-2.5 leading-tight italic">
+                            Loading Landmark...</h2>
+                    </div>
+                    <div id="tutorialLinks" class="flex flex-wrap gap-2 pt-1 md:pt-0"></div>
+                </div>
+                <div class="mt-4 pt-4 border-t border-slate-850/60">
+                    <div class="flex justify-between items-center text-[9px] font-black uppercase text-slate-400 tracking-wider mb-2">
+                        <span>Current Landmark Mastery Progress</span>
+                        <span id="sessionProgressPct" class="text-red-400">0%</span>
+                    </div>
+                    <div class="w-full bg-slate-950 h-2 rounded-full overflow-hidden border border-slate-850/50">
+                        <div id="sessionProgressBar" class="h-full bg-gradient-to-r from-red-500 to-orange-500 rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div
+                class="bg-slate-900/40 backdrop-blur-md rounded-2xl border border-slate-850 p-4 sm:p-6 md:p-8 flex-1 flex flex-col items-center justify-center relative overflow-hidden shadow-2xl">
+                <!-- Current move display stage -->
+                <div id="displayContainer"
+                    class="flex flex-col items-center justify-center text-center px-4 mb-10 min-h-[11rem] md:h-44 py-2 sm:py-4 w-full relative">
+                    <div id="currentMoveLabel" class="text-4xl md:text-5xl font-black leading-tight text-white tracking-tight drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]"></div>
+                    <div id="nextMoveLabel"
+                        class="text-xs md:text-sm font-bold text-red-400 mt-6 uppercase tracking-widest opacity-90"></div>
+                </div>
+
+
+                <!-- Controls Layout -->
+                <div class="w-full max-w-md grid grid-cols-2 gap-4">
+                    <button id="playPauseBtn"
+                        class="py-4 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl shadow-lg hover:shadow-red-500/20 active:scale-[0.98] transition flex items-center justify-center gap-2 text-sm uppercase tracking-wider">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path></svg>
+                        Resume
+                    </button>
+                    <button id="panicBtn"
+                        class="py-4 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl shadow-md active:scale-[0.98] transition border border-slate-700/80 flex items-center justify-center gap-2 text-sm uppercase tracking-wider">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 8H17" /></svg>
+                        Reset Loop
+                    </button>
+                    <div class="col-span-2 flex items-center justify-between p-4 bg-slate-950/80 border border-slate-850 text-slate-300 rounded-xl">
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <input type="checkbox" id="loopToggle" class="w-4 h-4 rounded border-slate-700 bg-slate-900 text-red-500 focus:ring-red-500">
+                            <span class="text-sm font-medium text-slate-200 hover:text-red-300 transition-colors">🔁 Repeat current chunk</span>
+                        </label>
+                    </div>
+
+                    <div class="col-span-2 flex items-center justify-between p-4 bg-slate-950/80 border border-slate-850 text-white rounded-xl">
+                        <div class="flex-1">
+                            <p class="text-[10px] font-black uppercase text-slate-400 tracking-wider">Drill Mode</p>
+                            <p id="modeName" class="font-extrabold text-sm text-red-300">Linear Sequence</p>
+                        </div>
+                        <button id="modeToggle"
+                            class="px-4 py-2.5 bg-red-600/30 hover:bg-red-600/45 text-red-300 border border-red-500/20 rounded-lg text-[10px] font-black uppercase hover:text-white tracking-wider active:scale-[0.98] transition">
+                            Randomize Chunks
+                        </button>
+                    </div>
+
+                    <!-- Tempo slider -->
+                    <div class="col-span-2 bg-slate-950/45 p-4 rounded-xl border border-slate-850/60">
+                        <div class="flex justify-between text-xs font-bold text-slate-400 mb-2.5 uppercase tracking-wider">
+                            <span>Tempo (BPM)</span>
+                            <span id="bpmValue" class="text-red-400 font-black">160 BPM</span>
+                        </div>
+                        <input type="range" id="bpmSlider" min="120" max="220" step="1" value="160"
+                            class="w-full h-2 bg-slate-900 rounded-lg appearance-none cursor-pointer accent-red-500 border border-slate-800">
+                    </div>
+                </div>
+
+            </div>
+        </section>
+    </div>
+
+    <!-- Reset Confirmation Modal -->
+    <div id="resetModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div id="resetModalBackdrop" class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"></div>
+        <div class="relative w-full max-w-sm bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl flex flex-col overflow-hidden transform transition-all scale-100">
+            <div class="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
+                <div class="flex items-center gap-2">
+                    <div class="w-2 h-2 rounded-full bg-red-400"></div>
+                    <h3 class="text-sm font-black text-white uppercase tracking-wider">Confirm Reset</h3>
+                </div>
+                <button id="closeResetModalBtn" class="text-slate-400 hover:text-white text-lg p-1.5 hover:bg-slate-800 rounded-lg transition">&times;</button>
+            </div>
+            <div class="p-6">
+                <p class="text-sm text-slate-300">Are you sure you want to reset all mastery levels back to their default values? This action cannot be undone.</p>
+            </div>
+            <div class="p-4 border-t border-slate-800 bg-slate-950/20 flex justify-end gap-3">
+                <button id="cancelResetBtn" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl transition">Cancel</button>
+                <button id="confirmResetBtn" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-xs font-bold rounded-xl transition shadow-lg shadow-red-500/20">Reset Mastery</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sync Progress Modal -->
+    <div id="syncModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div id="syncModalBackdrop" class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"></div>
+        <div class="relative w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] animate-in fade-in zoom-in-95 duration-200">
+            <div class="p-5 border-b border-slate-800 bg-slate-950/40 flex justify-between items-center">
+                <div>
+                    <h3 class="text-sm font-black uppercase tracking-wider text-slate-200">Sync Hardcoded Code</h3>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Use this diff / patch to update your default values in <code class="text-red-400 font-mono">chunked_salsa.js</code></p>
+                </div>
+                <button id="closeSyncModalBtn" class="text-slate-400 hover:text-white text-lg p-1.5 hover:bg-slate-800 rounded-lg transition">&times;</button>
+            </div>
+            <div class="p-5 overflow-y-auto space-y-4 flex-1">
+                <p class="text-xs text-slate-300 leading-relaxed">
+                    Below are the differences between your active training progress (stored in your browser) and the hardcoded levels in the <code class="text-red-400 font-mono">chunked_salsa.js</code> file.
+                </p>
+                <div class="flex gap-2 border-b border-slate-800 pb-3">
+                    <button id="viewDiffBtn" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-red-600 text-white shadow transition">List of Changes</button>
+                    <button id="viewFullCodeBtn" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-slate-850 text-slate-300 hover:bg-slate-800 hover:text-white transition">Full Javascript Array</button>
+                </div>
+                <div id="diffContent" class="space-y-3">
+                    <div id="changesList" class="space-y-2 max-h-[40vh] overflow-y-auto text-xs"></div>
+                </div>
+                <div id="codeContent" class="hidden space-y-3">
+                    <div class="flex justify-between items-center bg-slate-950 px-4 py-2 rounded-t-xl border border-slate-850">
+                        <span class="text-[10px] font-mono text-slate-400">chunked_salsa.js (LANDMARKS Array)</span>
+                        <button id="copyCodeBtn" class="text-[10px] font-bold text-red-400 hover:text-red-300 transition flex items-center gap-1">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg>
+                            Copy Array
+                        </button>
+                    </div>
+                    <pre class="bg-slate-950 p-4 rounded-b-xl border-b border-x border-slate-850 text-[10px] font-mono text-slate-300 overflow-x-auto max-h-[40vh] whitespace-pre-wrap select-all" id="rawCodeArea"></pre>
+                </div>
+            </div>
+            <div class="p-4 border-t border-slate-800 bg-slate-950/20 flex justify-end">
+                <button id="closeSyncModalBtn2" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl transition">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="common_audio.js"></script>
+    <script src="common_practice.js"></script>
+    <script src="salsa_data.js"></script>
+    <script src="chunked_salsa.js"></script>
+</body>
+
+</html>

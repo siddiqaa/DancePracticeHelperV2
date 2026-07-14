@@ -14,6 +14,9 @@ test.describe('Dashboard (Home Page)', () => {
     
     const wcsLink = page.locator('a[href="chunked_wcs.html"]');
     await expect(wcsLink).toBeVisible();
+
+    const salsaLink = page.locator('a[href="chunked_salsa.html"]');
+    await expect(salsaLink).toBeVisible();
   });
 });
 
@@ -364,5 +367,82 @@ test.describe('Bachata - Additional Comprehensive Tests', () => {
     
     const newTitle = await page.locator('#landmarkTitle').innerText();
     expect(newTitle).not.toBeNull();
+  });
+});
+
+test.describe('Salsa Practice Tool', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/chunked_salsa.html');
+  });
+
+  test('initial UI load and starting the practice session', async ({ page }) => {
+    await expect(page.locator('h1', { hasText: 'Salsa' }).first()).toBeVisible();
+    
+    const beginButton = page.locator('#bigStartBtn');
+    await expect(beginButton).toBeVisible();
+    await beginButton.click();
+    
+    const playPauseBtn = page.locator('#playPauseBtn');
+    await expect(playPauseBtn).toHaveText(/Resume/i);
+  });
+
+  test('changing BPM with slider', async ({ page }) => {
+    await page.locator('#bigStartBtn').click();
+    
+    const bpmSlider = page.locator('#bpmSlider');
+    const bpmValue = page.locator('#bpmValue');
+    
+    const initialBpm = await bpmValue.innerText();
+    
+    await bpmSlider.evaluate((node) => {
+      node.value = '180';
+      node.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    
+    const newBpm = await bpmValue.innerText();
+    expect(newBpm).not.toBe(initialBpm);
+    expect(newBpm).toContain('180');
+  });
+  
+  test('mastery state persistence in localStorage', async ({ page }) => {
+    await page.locator('#bigStartBtn').click();
+    
+    await page.evaluate(() => {
+      const state = { "Fundamentals": ["mastered", "mastered", "mastered"] };
+      localStorage.setItem('salsa_mastery_state', JSON.stringify(state));
+    });
+    
+    await page.reload();
+    await page.locator('#bigStartBtn').click();
+    
+    const stateInStorage = await page.evaluate(() => localStorage.getItem('salsa_mastery_state'));
+    expect(stateInStorage).toContain('mastered');
+  });
+  
+  test('cycling mastery state in salsa updates UI', async ({ page }) => {
+    await page.locator('#bigStartBtn').click();
+    
+    const firstCycleBtn = page.locator('[data-action="cycle"]').first();
+    await expect(firstCycleBtn).toBeVisible();
+    
+    const initialText = await firstCycleBtn.innerText();
+    await firstCycleBtn.click();
+    
+    await page.waitForTimeout(100);
+    const newText = await firstCycleBtn.innerText();
+    expect(newText).not.toBe(initialText);
+  });
+  
+  test('clicking a salsa move updates the HUD', async ({ page }) => {
+    await page.locator('#bigStartBtn').click();
+    
+    await page.waitForSelector('#landmarkList');
+    
+    const firstMoveNode = page.locator('#landmarkList [data-lidx="0"][data-midx="0"]').first();
+    await expect(firstMoveNode).toBeVisible();
+    await firstMoveNode.click({ force: true });
+    
+    const hudCurrentMove = page.locator('#currentMoveLabel');
+    await expect(hudCurrentMove).not.toBeEmpty();
   });
 });

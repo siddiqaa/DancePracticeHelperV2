@@ -1,6 +1,6 @@
 {
   "name": "Dance Practice Helper",
-  "description": "An interactive tool for memorizing dance landmarks and timing for Bachata and West Coast Swing",
+  "description": "An interactive tool for memorizing dance landmarks and timing for Bachata, West Coast Swing, and Salsa On 1",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
