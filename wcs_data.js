@@ -23,15 +23,15 @@ const WCS_LANDMARKS = [
 
         ],
         links: [
-            ["https://youtu.be/vx1wmjgR124", "WCS Online 11 Patterns"],
-            ["https://youtu.be/EvvVBMtRnLY?si=F08TOCBJR_J8xtTD&t=84", "Double Hand ST with Popout"],
-            ["https://youtu.be/EvvVBMtRnLY?si=_Rj4e-RG_5INEWQz&t=167", "ST Elbow Catch with Double Spin"],
-            ["https://youtu.be/8b-S82Eio-4", "ST & Guide / Sugar Waist Catch and Spin Back / Drama Sugar Push"],
-            ["https://youtu.be/_maSWuiWhcE", "ST Ring Around the Rosie / ST Catch and Reverse Spin"],
-            ["https://youtu.be/x61CN8EPdcY", "ST Tuck Arm Rock Play"],
-            ["https://youtu.be/wuyuGL2iE4U", "Fakeout Whip into Slingshot"],
-            ["https://youtu.be/FdUcgrjn6Rs", "Sugar Tuck Slow Side + Leader Turn + Left Side Free Spin"],
-            ["https://youtu.be/SxfmpYhmL6o?t=20s", "Sugar Tuck With Follow Turn to Leader Right Side Variations"]
+            { id: 1, url: "https://youtu.be/vx1wmjgR124", label: "WCS Online 11 Patterns" },
+            { id: 2, url: "https://youtu.be/EvvVBMtRnLY?si=F08TOCBJR_J8xtTD&t=84", label: "Double Hand ST with Popout" },
+            { id: 3, url: "https://youtu.be/EvvVBMtRnLY?si=_Rj4e-RG_5INEWQz&t=167", label: "ST Elbow Catch with Double Spin" },
+            { id: 4, url: "https://youtu.be/8b-S82Eio-4", label: "ST & Guide / Sugar Waist Catch and Spin Back / Drama Sugar Push" },
+            { id: 5, url: "https://youtu.be/_maSWuiWhcE", label: "ST Ring Around the Rosie / ST Catch and Reverse Spin" },
+            { id: 6, url: "https://youtu.be/x61CN8EPdcY", label: "ST Tuck Arm Rock Play" },
+            { id: 7, url: "https://youtu.be/wuyuGL2iE4U", label: "Fakeout Whip into Slingshot" },
+            { id: 8, url: "https://youtu.be/FdUcgrjn6Rs", label: "Sugar Tuck Slow Side + Leader Turn + Left Side Free Spin" },
+            { id: 9, url: "https://youtu.be/SxfmpYhmL6o?t=20s", label: "Sugar Tuck With Follow Turn to Leader Right Side Variations" }
         ]
     },
     {
@@ -50,13 +50,13 @@ const WCS_LANDMARKS = [
 
         ],
         links: [
-            ["https://youtu.be/HYaWbVi3xWk", "SP into Closed position side tap and LSP turn send out"],
-            ["https://youtu.be/vx1wmjgR124", "WCS Online 11 Patterns"],
-            ["https://www.youtube.com/watch?v=Ae9OTEZ60yY", "Telemark with Inside Turns"],
-            ["https://www.youtube.com/watch?v=YuIWjdriiq4&t=90s", "LSP Hammer Roll-in / Roll-out"],
-            ["https://youtu.be/8A1IRTHhADo?t=50s", "LSP Hammer Double Hand Roll-in / Roll-out"],
-            ["https://youtu.be/0RpK_Cm1sNk", "LSP Right Hand Led Roll-In/Out"],
-            ["https://youtu.be/0RpK_Cm1sNk?t=36s", "LSP Right Hand Led Roll-In/Out with Catch and Follow Turn"]
+            { id: 1, url: "https://youtu.be/HYaWbVi3xWk", label: "SP into Closed position side tap and LSP turn send out" },
+            { id: 2, url: "https://youtu.be/vx1wmjgR124", label: "WCS Online 11 Patterns" },
+            { id: 3, url: "https://www.youtube.com/watch?v=Ae9OTEZ60yY", label: "Telemark with Inside Turns" },
+            { id: 4, url: "https://www.youtube.com/watch?v=YuIWjdriiq4&t=90s", label: "LSP Hammer Roll-in / Roll-out" },
+            { id: 5, url: "https://youtu.be/8A1IRTHhADo?t=50s", label: "LSP Hammer Double Hand Roll-in / Roll-out" },
+            { id: 6, url: "https://youtu.be/0RpK_Cm1sNk", label: "LSP Right Hand Led Roll-In/Out" },
+            { id: 7, url: "https://youtu.be/0RpK_Cm1sNk?t=36s", label: "LSP Right Hand Led Roll-In/Out with Catch and Follow Turn" }
         ]
     },
     {
@@ -71,9 +71,9 @@ const WCS_LANDMARKS = [
             { name: "Reverse Whip / Double Spin", beats: 8, mastery: "familiar" },
         ],
         links: [
-            ["https://youtu.be/YuIWjdriiq4", "Right Side Pass with Lead Turn / Left Side Hammer Roll-in / Roll-out"],
-            ["https://youtube.com/shorts/4QJ0rxolzjA", "Right Side Pass into Closed with Double Spin"],
-            ["https://youtu.be/vx1wmjgR124", "WCS Online 11 Patterns"]
+            { id: 1, url: "https://youtu.be/YuIWjdriiq4", label: "Right Side Pass with Lead Turn / Left Side Hammer Roll-in / Roll-out" },
+            { id: 2, url: "https://youtube.com/shorts/4QJ0rxolzjA", label: "Right Side Pass into Closed with Double Spin" },
+            { id: 3, url: "https://youtu.be/vx1wmjgR124", label: "WCS Online 11 Patterns" }
         ]
     },
     {
@@ -89,8 +89,8 @@ const WCS_LANDMARKS = [
 
         ],
         links: [
-            ["https://youtu.be/xnN3mVDTE90", "RSP Into Closed Whip with Lead Turn / LSP into Sweetheart / Whip Exits"],
-            ["https://youtu.be/q80NN7oEYL4?t=85s", "Basket Whip with Outside Turn"]
+            { id: 1, url: "https://youtu.be/xnN3mVDTE90", label: "RSP Into Closed Whip with Lead Turn / LSP into Sweetheart / Whip Exits" },
+            { id: 2, url: "https://youtu.be/q80NN7oEYL4?t=85s", label: "Basket Whip with Outside Turn" }
         ]
     },
     {
@@ -105,10 +105,10 @@ const WCS_LANDMARKS = [
             { name: "Open Whip Follow Left Arm 2", beats: 8, mastery: "learning" },
         ],
         links: [
-            ["https://youtu.be/I8sCZE2OTJY", "Base Open Whip"],
-            ["https://youtu.be/I8sCZE2OTJY&t=75s", "Open Whip with Inside Turn"],
-            ["https://youtu.be/I8sCZE2OTJY&t=110s", "Open Whip with Back to Back Turn"],
-            ["https://youtu.be/4sNSm3r2zAc", "Open Whip Follow Left Arm"]
+            { id: 1, url: "https://youtu.be/I8sCZE2OTJY", label: "Base Open Whip" },
+            { id: 2, url: "https://youtu.be/I8sCZE2OTJY&t=75s", label: "Open Whip with Inside Turn" },
+            { id: 3, url: "https://youtu.be/I8sCZE2OTJY&t=110s", label: "Open Whip with Back to Back Turn" },
+            { id: 4, url: "https://youtu.be/4sNSm3r2zAc", label: "Open Whip Follow Left Arm" }
         ]
     },
     {
@@ -122,10 +122,10 @@ const WCS_LANDMARKS = [
 
         ],
         links: [
-            ["https://youtu.be/q80NN7oEYL4?t=25s", "Reverse Whip"],
-            ["https://youtu.be/q80NN7oEYL4?t=37s", "Wren Reverse Whip with Lead Cross the Slot"],
-            ["https://youtu.be/PIuJGK59rmg?t=60s", "Mike Reverse Whip with Lead Cross the Slot"],
-            ["https://youtu.be/q80NN7oEYL4?t=50s", "Reverse Whip with Lead Turn Along"]
+            { id: 1, url: "https://youtu.be/q80NN7oEYL4?t=25s", label: "Reverse Whip" },
+            { id: 2, url: "https://youtu.be/q80NN7oEYL4?t=37s", label: "Wren Reverse Whip with Lead Cross the Slot" },
+            { id: 3, url: "https://youtu.be/PIuJGK59rmg?t=60s", label: "Mike Reverse Whip with Lead Cross the Slot" },
+            { id: 4, url: "https://youtu.be/q80NN7oEYL4?t=50s", label: "Reverse Whip with Lead Turn Along" }
         ]
     },
     {
@@ -136,7 +136,7 @@ const WCS_LANDMARKS = [
             { name: "Cha with Spin Exit", beats: 8, mastery: "learning" }
         ],
         links: [
-            ["https://youtu.be/wuyuGL2iE4U?t=80s", "Cha Cha with Side by Side and Spin"]
+            { id: 1, url: "https://youtu.be/wuyuGL2iE4U?t=80s", label: "Cha Cha with Side by Side and Spin" }
         ]
     }
 ];

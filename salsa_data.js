@@ -13,7 +13,7 @@ const SALSA_LANDMARKS = [
             { name: "Mambo (Back)", beats: 4, mastery: "familiar" }
         ],
         links: [
-            ["https://www.youtube.com/watch?v=7uKj7C4Xv_E", "Basic Step Tutorial"]
+            { id: 1, url: "https://www.youtube.com/watch?v=7uKj7C4Xv_E", label: "Basic Step Tutorial" }
         ]
     },
     {
@@ -30,7 +30,7 @@ const SALSA_LANDMARKS = [
             { name: "Underarm Left", beats: 4, mastery: "familiar" }
         ],
         links: [
-            ["https://www.youtube.com/watch?v=2n-1_eXk03s", "Turns Guide"]
+            { id: 1, url: "https://www.youtube.com/watch?v=2n-1_eXk03s", label: "Turns Guide" }
         ]
     },
     {
@@ -46,7 +46,7 @@ const SALSA_LANDMARKS = [
             { name: "CBL Outside Turn (Finish)", beats: 4, mastery: "learning" }
         ],
         links: [
-            ["https://www.youtube.com/watch?v=7kI589C7mYc", "Cross Body Lead Patterns"]
+            { id: 1, url: "https://www.youtube.com/watch?v=7kI589C7mYc", label: "Cross Body Lead Patterns" }
         ]
     },
     {
@@ -61,7 +61,7 @@ const SALSA_LANDMARKS = [
             { name: "Enchufla Double Finish", beats: 4, mastery: "learning" }
         ],
         links: [
-            ["https://www.youtube.com/watch?v=kYJvMv6nUo4", "Open Break Combinations"]
+            { id: 1, url: "https://www.youtube.com/watch?v=kYJvMv6nUo4", label: "Open Break Combinations" }
         ]
     },
     {
@@ -76,7 +76,7 @@ const SALSA_LANDMARKS = [
             { name: "Behind Back Switch", beats: 4, mastery: "learning" }
         ],
         links: [
-            ["https://www.youtube.com/watch?v=yY_mO7kC_yU", "Hammerlocks & Switches"]
+            { id: 1, url: "https://www.youtube.com/watch?v=yY_mO7kC_yU", label: "Hammerlocks & Switches" }
         ]
     },
     {
@@ -105,7 +105,7 @@ const SALSA_LANDMARKS = [
             { name: "Double Right Finish", beats: 4, mastery: "learning" }
         ],
         links: [
-            ["https://www.youtube.com/watch?v=M9-sB4oA9-A", "Titanic & Copa Patterns"]
+            { id: 1, url: "https://www.youtube.com/watch?v=M9-sB4oA9-A", label: "Titanic & Copa Patterns" }
         ]
     }
 ];

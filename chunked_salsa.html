@@ -182,13 +182,13 @@
                     <div class="w-2 h-2 rounded-full bg-red-400"></div>
                     <h3 class="text-sm font-black text-white uppercase tracking-wider">Confirm Reset</h3>
                 </div>
-                <button id="closeResetModalBtn" class="text-slate-400 hover:text-white text-lg p-1.5 hover:bg-slate-800 rounded-lg transition">&times;</button>
+                <button id="closeResetModalBtn" data-action="close-modal" class="text-slate-400 hover:text-white text-lg p-1.5 hover:bg-slate-800 rounded-lg transition">&times;</button>
             </div>
             <div class="p-6">
                 <p class="text-sm text-slate-300">Are you sure you want to reset all mastery levels back to their default values? This action cannot be undone.</p>
             </div>
             <div class="p-4 border-t border-slate-800 bg-slate-950/20 flex justify-end gap-3">
-                <button id="cancelResetBtn" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl transition">Cancel</button>
+                <button id="cancelResetBtn" data-action="close-modal" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl transition">Cancel</button>
                 <button id="confirmResetBtn" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-xs font-bold rounded-xl transition shadow-lg shadow-red-500/20">Reset Mastery</button>
             </div>
         </div>
@@ -203,7 +203,7 @@
                     <h3 class="text-sm font-black uppercase tracking-wider text-slate-200">Sync Hardcoded Code</h3>
                     <p class="text-[11px] text-slate-400 mt-0.5">Use this diff / patch to update your default values in <code class="text-red-400 font-mono">chunked_salsa.js</code></p>
                 </div>
-                <button id="closeSyncModalBtn" class="text-slate-400 hover:text-white text-lg p-1.5 hover:bg-slate-800 rounded-lg transition">&times;</button>
+                <button id="closeSyncModalBtn" data-action="close-modal" class="text-slate-400 hover:text-white text-lg p-1.5 hover:bg-slate-800 rounded-lg transition">&times;</button>
             </div>
             <div class="p-5 overflow-y-auto space-y-4 flex-1">
                 <p class="text-xs text-slate-300 leading-relaxed">
@@ -228,7 +228,7 @@
                 </div>
             </div>
             <div class="p-4 border-t border-slate-800 bg-slate-950/20 flex justify-end">
-                <button id="closeSyncModalBtn2" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl transition">Close</button>
+                <button id="closeSyncModalBtn2" data-action="close-modal" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl transition">Close</button>
             </div>
         </div>
     </div>

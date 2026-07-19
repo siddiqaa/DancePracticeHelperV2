@@ -94,15 +94,24 @@ window.DanceAudio = {
     playWCSBeat(time, beatNumber, beatsTotal, anchorAccentEnabled) {
         if (!this.ctx) return;
         
-        // In WCS, anchor is typically the last two beats of a move (e.g., 5-6 of a 6-count move)
-        const isAnchorBeat = anchorAccentEnabled && (beatNumber >= beatsTotal - 2);
-        const isEven = (beatNumber + 1) % 2 === 0;
+        // beatNumber is 0-indexed (0, 1, 2, ... beatsTotal-1)
+        const bTotal = beatsTotal || 6;
+        
+        // In WCS, anchor is the final two beats of the pattern.
+        // For 6-count: Indices 4 and 5 (Beats 5 & 6)
+        // For 8-count: Indices 6 and 7 (Beats 7 & 8)
+        const isAnchorBeat = anchorAccentEnabled && (beatNumber >= bTotal - 2);
+        
+        // Standard WCS rhythm: Kick on odd beats (1, 3, 5, 7), Snare on even beats (2, 4, 6, 8)
+        // Index 0, 2, 4, 6 -> Kick
+        // Index 1, 3, 5, 7 -> Snare
+        const isSnareBeat = (beatNumber % 2 === 1);
 
         if (isAnchorBeat) {
             this.playChime(time);
         }
 
-        if (isEven) {
+        if (isSnareBeat) {
             this.playSnare(time);
         } else {
             this.playKick(time);
