@@ -247,12 +247,6 @@ function triggerRandomCountdown() {
     overlayContent.classList.add('hidden');
     countdownDisplay.classList.remove('hidden');
 
-    const lm = WCS_LANDMARKS[currentVisualLandmarkIdx];
-    const nameEl = document.getElementById('nextChunkName');
-    nameEl.textContent = lm.title;
-    nameEl.style.color = lm.color;
-    document.getElementById('nextChunkAnchor').textContent = lm.anchor;
-
     let count = 5;
     const timerEl = document.getElementById('timerCircle');
     timerEl.textContent = count;
@@ -316,7 +310,6 @@ function renderSidebar() {
         section.innerHTML = `
             <div class="flex items-start justify-between mb-2">
                 <div class="cursor-pointer group-hover/lm:brightness-125 flex-1" data-action="select" data-lidx="${lIdx}" data-midx="0">
-                    <div class="text-[9px] font-black uppercase tracking-wider mb-1">${lIdx === currentLandmarkIdx ? '👉 Current ' : ''}Landmark ${lIdx + 1}</div>
                     <div class="text-xs font-bold text-slate-200 pr-2 flex flex-col gap-1">
                         <span class="truncate max-w-[180px]">${lm.title}</span>
                         <span class="self-start text-[9px] font-mono px-1.5 py-0.5 rounded ${
@@ -405,17 +398,7 @@ window.cycleMastery = cycleMastery;
 function updateHUD() {
     const lm = WCS_LANDMARKS[currentLandmarkIdx];
     const hud = document.getElementById('landmarkHUD');
-    hud.style.borderColor = lm.color;
-
-    const tag = document.getElementById('landmarkTag');
-    tag.style.backgroundColor = lm.color;
-    tag.textContent = `L-${currentLandmarkIdx + 1}`;
-
-    document.getElementById('landmarkTitle').textContent = lm.title;
-
-    const anchor = document.getElementById('landmarkAnchor');
-    anchor.textContent = lm.anchor;
-    anchor.style.color = lm.color;
+    if (hud) hud.style.borderColor = lm.color;
 
     const linkContainer = document.getElementById('tutorialLinks');
     linkContainer.innerHTML = '';
@@ -484,8 +467,8 @@ function updateMoveDisplay(shouldRestartInterval = true) {
     if (currentLabelEl && nextLabelEl) {
         currentLabelEl.innerHTML = `<div class="animate-label ${isPaused ? 'paused-anim' : ''} flex flex-col items-center justify-center gap-2">
             <div class="flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
-                <span class="text-indigo-400 font-black text-xl sm:text-2xl md:text-3xl px-3 py-1 rounded bg-indigo-950/40 border border-indigo-900/30 flex items-center gap-1">${move.beats}🥁</span>
-                <span class="text-xl sm:text-3xl md:text-5xl font-black ${config.textColor} tracking-tight text-center leading-tight">${move.name}</span>
+                <span class="text-lg sm:text-xl md:text-2xl font-black px-3 py-1 rounded bg-indigo-950/40 border border-indigo-900/30 flex items-center gap-1">${move.beats}🥁</span>
+                <span class="text-lg sm:text-xl md:text-2xl font-black ${config.textColor} tracking-tight text-center leading-tight">${move.name}</span>
             </div>
             ${hintHtml}
         </div>`;
@@ -570,17 +553,25 @@ document.getElementById('playPauseBtn').onclick = (e) => {
         `;
         if (schedulerIntervalId) clearInterval(schedulerIntervalId);
         beatsQueue = [];
+        
+        // Pause any active label animation manually to prevent it from fading out while paused
+        const label = document.querySelector('#currentMoveLabel .animate-label');
+        if (label) label.classList.add('paused-anim');
     } else {
         e.currentTarget.innerHTML = `
             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>
             Pause
         `;
+        
+        // Resume animation
+        const label = document.querySelector('#currentMoveLabel .animate-label');
+        if (label) label.classList.remove('paused-anim');
+        
         schedLandmarkIdx = currentLandmarkIdx;
         schedMoveIdx = currentMoveIdx;
         schedBeatIdx = beatIdx;
         startScheduler();
     }
-    updateMoveDisplay(false);
 };
 
 document.getElementById('panicBtn').onclick = () => {

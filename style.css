@@ -24,44 +24,27 @@ body {
     }
 }
 
-@keyframes fadeInOut {
+@keyframes labelEntrance {
     0% {
         opacity: 0;
         transform: translateY(10px) scale(0.95);
     }
-    15% {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-    85% {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
     100% {
-        opacity: 0;
-        transform: translateY(-10px) scale(0.95);
-    }
-}
-
-@keyframes pulseGlow {
-    0%, 100% {
-        box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
-    }
-    50% {
-        box-shadow: 0 0 30px rgba(99, 102, 241, 0.4);
+        opacity: 1;
+        transform: translateY(0) scale(1);
     }
 }
 
 .active-move-animate {
-    animation: beatFlash 0.2s ease-out;
+    animation: labelEntrance 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .animate-label {
-    animation: fadeInOut var(--anim-speed) cubic-bezier(0.16, 1, 0.3, 1) infinite;
+    animation: labelEntrance 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .paused-anim {
-    animation-play-state: paused;
+    animation-play-state: paused !important;
 }
 
 /* Landmarks & Moves Active States (Unified beautiful Indigo theme) */

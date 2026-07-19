@@ -35,9 +35,6 @@
         </div>
         <div id="countdownDisplay" class="hidden text-center p-8 w-full max-w-lg relative">
             <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-indigo-500/10 blur-[100px] rounded-full pointer-events-none"></div>
-            <h2 class="text-indigo-400 text-xs font-black uppercase tracking-widest mb-4">Visualize Anchor</h2>
-            <div id="nextChunkName" class="text-white text-2xl sm:text-3xl md:text-4xl font-extrabold mb-3 uppercase tracking-tight"></div>
-            <div id="nextChunkAnchor" class="text-slate-400 text-sm sm:text-base md:text-lg mb-6 sm:mb-10 italic max-w-md mx-auto leading-relaxed"></div>
             <div class="relative w-36 h-36 flex items-center justify-center mx-auto bg-slate-900/60 rounded-full border border-slate-800 shadow-[0_0_30px_rgba(99,102,241,0.1)]">
                 <div id="timerCircle" class="text-white text-6xl font-black tracking-tighter">5</div>
             </div>
@@ -66,10 +63,10 @@
         </div>
     </header>
 
-    <div class="w-full max-w-6xl flex flex-col-reverse md:flex-row gap-6 mt-4">
+    <div class="w-full max-w-7xl flex flex-col-reverse md:flex-row gap-6 mt-4">
         <!-- Sidebar -->
         <section
-            class="w-full md:w-80 bg-slate-900/40 backdrop-blur-md rounded-2xl border border-slate-850 flex flex-col h-fit md:h-[82vh] overflow-hidden shadow-2xl">
+            class="w-full md:flex-1 bg-slate-900/40 backdrop-blur-md rounded-2xl border border-slate-850 flex flex-col h-fit md:h-[82vh] overflow-hidden shadow-2xl">
             <div class="p-4 border-b border-slate-850/80 bg-slate-900/60 rounded-t-2xl flex flex-col gap-2.5">
                 <div class="flex justify-between items-center w-full">
                     <h3 class="text-xs font-black uppercase tracking-wider text-slate-400">The Memory Chain</h3>
@@ -106,17 +103,7 @@
         <!-- Main Controller -->
         <section class="flex-1 flex flex-col gap-6">
             <div id="landmarkHUD" class="bg-slate-900/40 backdrop-blur-md rounded-2xl p-4 sm:p-6 border border-slate-850 border-l-4 transition-all duration-500 shadow-xl">
-                <div class="flex flex-col md:flex-row justify-between items-start gap-4">
-                    <div class="flex-1">
-                        <div class="flex items-center gap-3">
-                            <span id="landmarkTag"
-                                class="px-3 py-1 rounded-full text-white text-[9px] font-black uppercase tracking-wider shrink-0 shadow-sm">L-1</span>
-                            <span id="landmarkTitle"
-                                class="text-xs font-bold uppercase text-slate-400 tracking-widest truncate">Bachata Landmark</span>
-                        </div>
-                        <h2 id="landmarkAnchor" class="text-xl md:text-2xl font-bold text-slate-100 mt-2.5 leading-tight italic">
-                            Loading Landmark...</h2>
-                    </div>
+                <div class="flex flex-col md:flex-row justify-between items-center gap-4">
                     <div id="tutorialLinks" class="flex flex-wrap gap-2 pt-1 md:pt-0"></div>
                 </div>
                 <!-- Real-time Landmark Mastery Progress bar (High ROI suggestion) -->
@@ -137,9 +124,9 @@
                 <div id="displayContainer"
                     class="flex flex-col items-center justify-center text-center px-4 mb-10 min-h-[11rem] md:h-44 py-2 sm:py-4 w-full relative">
                     <!-- Smooth visual pulse effect behind the text (High ROI suggestion) -->
-                    <div id="currentMoveLabel" class="text-4xl md:text-5xl font-black leading-tight text-white tracking-tight drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]"></div>
+                    <div id="currentMoveLabel" class="text-lg md:text-xl font-black leading-tight text-white tracking-tight drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]"></div>
                     <div id="nextMoveLabel"
-                        class="text-xs md:text-sm font-bold text-indigo-400 mt-6 uppercase tracking-widest opacity-90"></div>
+                        class="text-[10px] md:text-xs font-bold text-indigo-400 mt-6 uppercase tracking-widest opacity-90"></div>
                 </div>
 
 
