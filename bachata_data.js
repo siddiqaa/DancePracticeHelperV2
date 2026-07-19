@@ -33,13 +33,13 @@ const BACHATA_LANDMARKS = [
             { name: "Closed basic with hand sweep", beats: 4, mastery: "learning", link: 1 },
             { name: "Closed basic with her right arm flip back → hammerlock", beats: 4, mastery: "learning", hint: "Catch her flipped right arm behind her back with my right" },
             { name: "Unwind hammerlock (R hand)", beats: 4, mastery: "learning" },
-            { name: "Hairbrush using my right hand to closed", beats: 4, mastery: "learning", hint: "Hair brush her right hand by moving my right by her left ear", link: 2},
+            { name: "Hairbrush using my right hand to closed", beats: 4, mastery: "learning", hint: "Hair brush her right hand by moving my right by her left ear", link: 2 },
             { name: "Open basic", beats: 4, mastery: "mastered" },
-            { name: "Basic", beats: 4, mastery: "mastered" },
             { name: "Basic", beats: 4, mastery: "mastered" },
             { name: "Inside turn both hands connected", beats: 4, mastery: "learning", hint: "Move top of my RIGHT fingers to bottom of her RIGHT elbow", link: 2 },
             { name: "Flip her left hand, catch and send back → hammerlock", beats: 4, mastery: "learning", hint: "2 arm moves here: let go of my RIGHT arm to big sweep her straight RIGHT arm UP and out then flip it back to catch with your left" },
-            { name: "Unwind hammer lock", beats: 4, mastery: "learning" }
+            { name: "Unwind hammer lock", beats: 4, mastery: "learning" },
+            { name: "Basic", beats: 4, mastery: "mastered" }
         ],
         links: [
             { id: 1, url: "https://www.instagram.com/reel/DUvvacfjvh-/", label: "Handsweep Hammer Lock with Hair Brush / Hammerlocks" },
@@ -101,7 +101,7 @@ const BACHATA_LANDMARKS = [
             { name: "Basic (Open Hold)", beats: 4, mastery: "learning" },
             { name: "Madrid Step Forward", beats: 4, mastery: "learning", link: 1 },
             { name: "Madrid Step Back", beats: 4, mastery: "learning" },
-            { name: "Madrid Step Forward", beats: 4, mastery: "learning", link: 3},
+            { name: "Madrid Step Forward", beats: 4, mastery: "learning", link: 3 },
             { name: "Turn Follow Insider to Have Her On My Left", beats: 4, mastery: "learning" },
             { name: "Move Across Behind Her to Swap Sides", beats: 4, mastery: "learning" },
             { name: "Raise Hands to Get Close and Exit With a Follow Outside (Away) Turn ", beats: 4, mastery: "learning" }
@@ -142,7 +142,7 @@ const BACHATA_LANDMARKS = [
             { name: "Basic", beats: 4, mastery: "mastered" },
             { name: "Basic", beats: 4, mastery: "mastered" },
             { name: "Inside turn → hammerlock", beats: 4, mastery: "learning", link: 1 },
-            { name: "Switch places", beats: 4, mastery: "learning", hint: "Start step around with your right foot and end with tap on your left foot"},
+            { name: "Switch places", beats: 4, mastery: "learning", hint: "Start step around with your right foot and end with tap on your left foot" },
             { name: "Hands to shoulder blades", beats: 4, mastery: "learning" },
             { name: "Raise hands overhead", beats: 4, mastery: "learning" },
             { name: "Inside turn led from hip", beats: 4, mastery: "learning" },

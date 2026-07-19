@@ -198,6 +198,9 @@ class DancePracticeTool {
         this.lastRenderedLandmarkIdx = -1;
         this.lastRenderedMoveIdx = -1;
         
+        // Practice Session landmark selection state
+        this.selectedLandmarkIndices = [];
+        
         // DOM Elements
         this.els = {
             landmarkList: document.getElementById('landmarkList'),
@@ -225,13 +228,18 @@ class DancePracticeTool {
             resetModal: document.getElementById('resetModal'),
             syncModal: document.getElementById('syncModal'),
             rawCodeArea: document.getElementById('rawCodeArea'),
-            changesList: document.getElementById('changesList')
+            changesList: document.getElementById('changesList'),
+            landmarkTitle: document.getElementById('landmarkTitle')
         };
     }
 
     init() {
         this.loadMasteryState();
         this.updateMasteryStats();
+        
+        // Initialize practice selection checkboxes as empty (unchecked by default)
+        this.selectedLandmarkIndices = [];
+
         this.updateHUD();
         this.renderSidebar();
         this.updateMoveDisplay(false);
@@ -250,7 +258,8 @@ class DancePracticeTool {
 
     // --- Filtering ---
     getFilteredLandmarkIndices() {
-        return window.getFilteredLandmarkIndices(this.landmarks, this.activeFilter);
+        const masteryFiltered = window.getFilteredLandmarkIndices(this.landmarks, this.activeFilter);
+        return masteryFiltered.filter(idx => this.selectedLandmarkIndices.includes(idx));
     }
 
     applyFilter(filterVal) {
@@ -267,6 +276,9 @@ class DancePracticeTool {
                 btn.className = "py-1 text-[9px] font-bold uppercase rounded transition-all text-slate-400 hover:text-slate-100 hover:bg-slate-900/40";
             }
         });
+
+        // Reset the selection checkboxes as empty (unchecked after filter is changed)
+        this.selectedLandmarkIndices = [];
 
         this.renderSidebar();
         const filtered = this.getFilteredLandmarkIndices();
@@ -317,11 +329,6 @@ class DancePracticeTool {
     advanceBeat(secondsPerBeat) {
         this.nextBeatTime += secondsPerBeat;
         this.schedBeatIdx++;
-        
-        // Salsa and Bachata use an 8-beat loop for phrasing
-        if (this.danceType === 'salsa' || this.danceType === 'bachata') {
-            this.schedPhraseBeatIdx = (this.schedPhraseBeatIdx + 1) % 8;
-        }
 
         const currentMove = this.landmarks[this.schedLandmarkIdx].moves[this.schedMoveIdx];
         const beatsTotal = currentMove.beats || 4;
@@ -348,6 +355,14 @@ class DancePracticeTool {
             } else {
                 this.schedMoveIdx++;
             }
+        }
+
+        // Salsa and Bachata use an 8-beat loop for phrasing.
+        // The first move of every landmark starts with beat 1-4.
+        // Even move indices start on 1-4 (0), odd move indices start on 5-8 (4).
+        if (this.danceType === 'salsa' || this.danceType === 'bachata') {
+            const isOddMove = (this.schedMoveIdx % 2 !== 0);
+            this.schedPhraseBeatIdx = isOddMove ? (this.schedBeatIdx + 4) % 8 : this.schedBeatIdx % 8;
         }
     }
 
@@ -469,6 +484,7 @@ class DancePracticeTool {
     updateHUD() {
         const lm = this.landmarks[this.currentLandmarkIdx];
         if (this.els.landmarkHUD) this.els.landmarkHUD.style.borderColor = lm.color;
+        if (this.els.landmarkTitle) this.els.landmarkTitle.textContent = lm.title;
 
         if (this.els.tutorialLinks) {
             this.els.tutorialLinks.innerHTML = (lm.links || []).map(link => `
@@ -504,7 +520,8 @@ class DancePracticeTool {
         if (this.danceType === 'wcs') {
             labelTag = `${move.beats}🥁`;
         } else {
-            labelTag = this.phraseBeatIdx < 4 ? "1-4" : "5-8";
+            // Label is aligned with the displayed move index parity to keep 1-4 / 5-8 solid
+            labelTag = (this.currentMoveIdx % 2 !== 0) ? "5-8" : "1-4";
         }
 
         let hintHtml = move.hint ? `<div class="text-xs sm:text-sm mt-2 text-center font-bold tracking-wider text-amber-300 bg-amber-950/60 border border-amber-500/30 px-3 py-1 rounded-xl shadow-lg">${move.hint}</div>` : '';
@@ -547,9 +564,9 @@ class DancePracticeTool {
     renderSidebar() {
         if (!this.els.landmarkList) return;
         this.els.landmarkList.innerHTML = '';
-        const filtered = this.getFilteredLandmarkIndices();
+        const visibleLandmarks = window.getFilteredLandmarkIndices(this.landmarks, this.activeFilter);
 
-        if (filtered.length === 0) {
+        if (visibleLandmarks.length === 0) {
             this.els.landmarkList.innerHTML = `
                 <div class="p-6 bg-slate-950/45 rounded-xl border border-slate-850 text-slate-400 text-center flex flex-col items-center justify-center gap-2">
                     <p class="font-bold text-slate-300">No chunks in this range!</p>
@@ -559,10 +576,13 @@ class DancePracticeTool {
         }
 
         this.landmarks.forEach((lm, lIdx) => {
-            if (!filtered.includes(lIdx)) return;
+            if (!visibleLandmarks.includes(lIdx)) return;
+
+            const isSelected = this.selectedLandmarkIndices.includes(lIdx);
+            const isCurrent = (lIdx === this.currentLandmarkIdx);
 
             const section = document.createElement('div'); section.id = `lm-section-${lIdx}`;
-            section.className = `p-3 rounded-xl transition-all duration-300 ${lIdx === this.currentLandmarkIdx ? 'landmark-active' : 'opacity-30 hover:opacity-75'}`;
+            section.className = `p-3 rounded-xl transition-all duration-300 ${isCurrent ? 'landmark-active' : isSelected ? 'opacity-50 hover:opacity-85' : 'opacity-20 hover:opacity-40'}`;
             section.style.color = lm.color;
 
             const masteryPct = window.getLandmarkMastery(lm);
@@ -583,11 +603,17 @@ class DancePracticeTool {
             }
 
             section.innerHTML = `
-                <div class="flex items-start justify-between mb-2">
-                    <div class="cursor-pointer flex-1" data-action="select" data-lidx="${lIdx}" data-midx="0">
-                        <div class="text-xs font-bold text-slate-200 flex flex-col gap-1">
-                            <span class="truncate max-w-[180px]">${lm.title}</span>
-                            <span class="self-start text-[9px] font-mono px-1.5 py-0.5 rounded ${masteryPct >= 75 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : masteryPct >= 40 ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}">${masteryPct}% Mastery</span>
+                <div class="flex items-center justify-between mb-2 gap-2">
+                    <div class="flex items-center gap-2 flex-1 min-w-0">
+                        <input type="checkbox" 
+                               class="chunk-checkbox shrink-0 w-4 h-4 rounded border-slate-850 bg-slate-950 text-${this.accentColor}-600 focus:ring-0 focus:ring-offset-0 cursor-pointer" 
+                               data-lidx="${lIdx}" 
+                               ${isSelected ? 'checked' : ''}>
+                        <div class="cursor-pointer flex-1 min-w-0" data-action="select" data-lidx="${lIdx}" data-midx="0">
+                            <div class="text-xs font-bold text-slate-200 flex flex-col gap-1">
+                                <span class="truncate max-w-[150px] sm:max-w-[180px]">${lm.title}</span>
+                                <span class="self-start text-[9px] font-mono px-1.5 py-0.5 rounded ${masteryPct >= 75 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : masteryPct >= 40 ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}">${masteryPct}% Mastery</span>
+                            </div>
                         </div>
                     </div>
                     <div class="flex flex-col gap-1 shrink-0">
@@ -633,11 +659,15 @@ class DancePracticeTool {
         this.currentLandmarkIdx = lIdx;
         this.currentMoveIdx = mIdx;
         this.beatIdx = 0;
-        this.phraseBeatIdx = 0;
+        
+        // Align starting phrase beat with move index parity (even move indices start on 0/1-4, odd on 4/5-8)
+        const isOdd = (mIdx % 2 !== 0);
+        this.phraseBeatIdx = isOdd ? 4 : 0;
+        
         this.schedLandmarkIdx = lIdx;
         this.schedMoveIdx = mIdx;
         this.schedBeatIdx = 0;
-        this.schedPhraseBeatIdx = 0;
+        this.schedPhraseBeatIdx = isOdd ? 4 : 0;
         this.beatsQueue = [];
         if (DanceAudio.isReady()) this.nextBeatTime = DanceAudio.getCurrentTime();
 
@@ -653,15 +683,35 @@ class DancePracticeTool {
         else move.mastery = 'familiar';
         
         this.saveMasteryState();
-        const filtered = this.getFilteredLandmarkIndices();
-        if (filtered.length === 0) {
+        const visible = window.getFilteredLandmarkIndices(this.landmarks, this.activeFilter);
+        if (visible.length === 0) {
             this.applyFilter('all');
-        } else if (!filtered.includes(this.currentLandmarkIdx)) {
-            this.selectMove(filtered[0], 0);
         } else {
-            this.renderSidebar();
-            this.updateMasteryStats();
-            this.updateMasteryProgress();
+            const practiceFiltered = this.getFilteredLandmarkIndices();
+            if (practiceFiltered.length > 0 && !practiceFiltered.includes(this.currentLandmarkIdx)) {
+                this.selectMove(practiceFiltered[0], 0);
+            } else {
+                this.renderSidebar();
+                this.updateMasteryStats();
+                this.updateMasteryProgress();
+            }
+        }
+    }
+
+    toggleLandmarkSelection(lIdx, isChecked) {
+        if (isChecked) {
+            if (!this.selectedLandmarkIndices.includes(lIdx)) {
+                this.selectedLandmarkIndices.push(lIdx);
+            }
+        } else {
+            this.selectedLandmarkIndices = this.selectedLandmarkIndices.filter(idx => idx !== lIdx);
+        }
+
+        this.renderSidebar();
+
+        const filtered = this.getFilteredLandmarkIndices();
+        if (filtered.length > 0 && !filtered.includes(this.currentLandmarkIdx)) {
+            this.selectMove(filtered[0], 0);
         }
     }
 
@@ -721,17 +771,24 @@ class DancePracticeTool {
 
         // Sidebar clicks
         this.els.landmarkList.onclick = (e) => {
+            const checkbox = e.target.closest('.chunk-checkbox');
             const select = e.target.closest('[data-action="select"]');
             const cycle = e.target.closest('[data-action="cycle"]');
             const sPrev = e.target.closest('[data-action="scroll-prev"]');
             const sNext = e.target.closest('[data-action="scroll-next"]');
             
+            if (checkbox) {
+                e.stopPropagation();
+                const lIdx = parseInt(checkbox.dataset.lidx);
+                this.toggleLandmarkSelection(lIdx, checkbox.checked);
+                return;
+            }
             if (select) this.selectMove(parseInt(select.dataset.lidx), parseInt(select.dataset.midx));
             if (cycle) { e.stopPropagation(); this.cycleMastery(parseInt(cycle.dataset.lidx), parseInt(cycle.dataset.midx)); }
             if (sPrev || sNext) {
                 e.stopPropagation();
                 const lIdx = parseInt((sPrev || sNext).dataset.lidx);
-                const filtered = this.getFilteredLandmarkIndices();
+                const filtered = window.getFilteredLandmarkIndices(this.landmarks, this.activeFilter);
                 const pos = filtered.indexOf(lIdx);
                 let targetIdx = -1;
                 if (sPrev && pos > 0) targetIdx = filtered[pos - 1];
@@ -754,6 +811,19 @@ class DancePracticeTool {
                 this.els.syncModal.classList.add('hidden');
             };
         });
+
+        const resetBackdrop = document.getElementById('resetModalBackdrop');
+        if (resetBackdrop) {
+            resetBackdrop.onclick = () => {
+                this.els.resetModal.classList.add('hidden');
+            };
+        }
+        const syncBackdrop = document.getElementById('syncModalBackdrop');
+        if (syncBackdrop) {
+            syncBackdrop.onclick = () => {
+                this.els.syncModal.classList.add('hidden');
+            };
+        }
 
         document.getElementById('confirmResetBtn').onclick = () => {
             localStorage.removeItem(this.storageKey);

@@ -445,4 +445,26 @@ test.describe('Salsa Practice Tool', () => {
     const hudCurrentMove = page.locator('#currentMoveLabel');
     await expect(hudCurrentMove).not.toBeEmpty();
   });
+
+  test('landmark selection checkboxes and filter reset', async ({ page }) => {
+    await page.locator('#bigStartBtn').click();
+    
+    await page.waitForSelector('.chunk-checkbox');
+    const firstCheckbox = page.locator('.chunk-checkbox').first();
+    await expect(firstCheckbox).not.toBeChecked();
+    
+    // Toggle checkbox to check
+    await firstCheckbox.click();
+    await expect(firstCheckbox).toBeChecked();
+    
+    // Changing the mastery filter resets selection checkboxes
+    const filterLow = page.locator('#filterLowBtn');
+    await filterLow.click();
+    
+    const filterAll = page.locator('#filterAllBtn');
+    await filterAll.click();
+    
+    // It should be unchecked again after filter reset
+    await expect(firstCheckbox).not.toBeChecked();
+  });
 });
