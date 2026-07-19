@@ -39,7 +39,8 @@ const BACHATA_LANDMARKS = [
             { name: "Basic", beats: 4, mastery: "mastered" },
             { name: "Inside turn both hands connected", beats: 4, mastery: "learning", hint: "Move top of my RIGHT fingers to bottom of her RIGHT elbow", link: 2 },
             { name: "Flip her left hand, catch and send back → hammerlock", beats: 4, mastery: "learning", hint: "2 arm moves here: let go of my RIGHT arm to big sweep her straight RIGHT arm UP and out then flip it back to catch with your left" },
-            { name: "Unwind hammer lock", beats: 4, mastery: "learning" }
+            { name: "Unwind hammer lock", beats: 4, mastery: "learning" },
+            { name: "Basic", beats: 4, mastery: "mastered" },
         ],
         links: [
             { id: 1, url: "https://www.instagram.com/reel/DUvvacfjvh-/", label: "Handsweep Hammer Lock with Hair Brush / Hammerlocks" },
