@@ -582,7 +582,7 @@ class DancePracticeTool {
             const isCurrent = (lIdx === this.currentLandmarkIdx);
 
             const section = document.createElement('div'); section.id = `lm-section-${lIdx}`;
-            section.className = `p-3 rounded-xl transition-all duration-300 ${isCurrent ? 'landmark-active' : isSelected ? 'opacity-50 hover:opacity-85' : 'opacity-20 hover:opacity-40'}`;
+            section.className = `p-3 rounded-xl transition-all duration-300 ${isCurrent ? 'landmark-active' : isSelected ? 'opacity-90 hover:opacity-100' : 'opacity-40 hover:opacity-60'}`;
             section.style.color = lm.color;
 
             const masteryPct = window.getLandmarkMastery(lm);
@@ -605,11 +605,19 @@ class DancePracticeTool {
             section.innerHTML = `
                 <div class="flex items-center justify-between mb-2 gap-2">
                     <div class="flex items-center gap-2 flex-1 min-w-0">
-                        <input type="checkbox" 
-                               class="chunk-checkbox shrink-0 w-4 h-4 rounded border-slate-850 bg-slate-950 text-${this.accentColor}-600 focus:ring-0 focus:ring-offset-0 cursor-pointer" 
-                               data-lidx="${lIdx}" 
-                               ${isSelected ? 'checked' : ''}>
-                        <div class="cursor-pointer flex-1 min-w-0" data-action="select" data-lidx="${lIdx}" data-midx="0">
+                        <!-- Custom Touch-optimized Checkbox Wrapper (44x44px min target area) -->
+                        <div class="p-2 -m-2 flex items-center justify-center cursor-pointer select-none group/cb relative shrink-0" data-action="toggle-check" data-lidx="${lIdx}">
+                            <input type="checkbox" 
+                                   class="chunk-checkbox absolute opacity-0 cursor-pointer w-8 h-8 z-10" 
+                                   data-lidx="${lIdx}" 
+                                   ${isSelected ? 'checked' : ''}>
+                            <div class="w-5 h-5 rounded-md border-2 border-slate-800 bg-slate-950 flex items-center justify-center transition-all duration-200 group-hover/cb:border-${this.accentColor}-500/50 ${isSelected ? `bg-${this.accentColor}-600/20 border-${this.accentColor}-500 text-${this.accentColor}-400 shadow-[0_0_10px_rgba(99,102,241,0.2)]` : 'text-transparent'}">
+                                <svg class="w-3.5 h-3.5 stroke-[3.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="cursor-pointer flex-1 min-w-0 pl-1" data-action="select" data-lidx="${lIdx}" data-midx="0">
                             <div class="text-xs font-bold text-slate-200 flex flex-col gap-1">
                                 <span class="truncate max-w-[150px] sm:max-w-[180px]">${lm.title}</span>
                                 <span class="self-start text-[9px] font-mono px-1.5 py-0.5 rounded ${masteryPct >= 75 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : masteryPct >= 40 ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}">${masteryPct}% Mastery</span>
@@ -647,7 +655,7 @@ class DancePracticeTool {
                     ${m.hint ? '<span class="text-white mr-1">?</span>' : ''}${m.name} ${this.danceType === 'wcs' ? `<span class="opacity-60 text-[9px] font-mono">(${m.beats}🥁)</span>` : ''}${movieLinkHtml}
                 </span>
                 ${tooltipHtml}
-                <button class="shrink-0 text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded border ${config.badgeColor} hover:brightness-125" data-action="cycle" data-lidx="${lIdx}" data-midx="${mIdx}">
+                <button class="shrink-0 text-[9px] font-black uppercase tracking-wider px-2 py-1.5 sm:py-1 rounded border ${config.badgeColor} hover:brightness-125 transition-all shadow-sm active:scale-[0.97]" data-action="cycle" data-lidx="${lIdx}" data-midx="${mIdx}">
                     ${config.text}
                 </button>
             </div>
