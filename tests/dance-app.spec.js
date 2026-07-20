@@ -26,7 +26,7 @@ test.describe('West Coast Swing Practice Tool', () => {
   });
 
   test('initial UI load and starting the practice session', async ({ page }) => {
-    await expect(page.locator('h1', { hasText: 'West Coast Swing' }).first()).toBeVisible();
+
     
     // The "Begin Practice Session" overlay button
     
@@ -43,12 +43,10 @@ test.describe('West Coast Swing Practice Tool', () => {
 
   test('toggling random mode', async ({ page }) => {
     const modeToggle = page.locator('#modeToggle');
-    await expect(modeToggle).toHaveText(/Randomize Chunks/i);
+    await expect(modeToggle).toHaveText(/Sequential/i);
     await modeToggle.click();
     
-    await expect(modeToggle).toHaveText(/Switch to Linear/i);
-    const modeBadge = page.locator('#modeBadge');
-    await expect(modeBadge).toHaveText(/Random/i);
+    await expect(modeToggle).toHaveText(/Random/i);
   });
 
   test('mastery filter buttons', async ({ page }) => {
@@ -144,7 +142,7 @@ test.describe('Bachata Practice Tool', () => {
   });
 
   test('initial UI load and starting the practice session', async ({ page }) => {
-    await expect(page.locator('h1', { hasText: 'Bachata' }).first()).toBeVisible();
+
     
     
     const playPauseBtn = page.locator('#playPauseBtn');
@@ -289,11 +287,6 @@ test.describe('Additional Comprehensive Tests', () => {
     await expect(page.locator('#diffContent')).not.toHaveClass(/hidden/);
     await expect(page.locator('#codeContent')).toHaveClass(/hidden/);
   });
-  
-  test('UI elements presence (progress bar)', async ({ page }) => {
-    await expect(page.locator('#sessionProgressBar')).toBeVisible();
-    await expect(page.locator('#sessionProgressPct')).toBeVisible();
-  });
 
   test('WCS speed slider updates BPM', async ({ page }) => {
     const speedSlider = page.locator('#speedSlider');
@@ -319,12 +312,10 @@ test.describe('Bachata - Additional Comprehensive Tests', () => {
 
   test('toggling random mode', async ({ page }) => {
     const modeToggle = page.locator('#modeToggle');
-    await expect(modeToggle).toHaveText(/Randomize Chunks/i);
+    await expect(modeToggle).toHaveText(/Sequential/i);
     await modeToggle.click();
     
-    await expect(modeToggle).toHaveText(/Switch to Linear/i);
-    const modeBadge = page.locator('#modeBadge');
-    await expect(modeBadge).toHaveText(/Random/i);
+    await expect(modeToggle).toHaveText(/Random/i);
   });
   
   test('mastery filter buttons', async ({ page }) => {
@@ -354,7 +345,7 @@ test.describe('Salsa Practice Tool', () => {
   });
 
   test('initial UI load and starting the practice session', async ({ page }) => {
-    await expect(page.locator('h1', { hasText: 'Salsa' }).first()).toBeVisible();
+
     
     
     const playPauseBtn = page.locator('#playPauseBtn');

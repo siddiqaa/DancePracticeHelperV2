@@ -141,8 +141,8 @@ const BACHATA_LANDMARKS = [
         moves: [
             { name: "Basic", beats: 4, mastery: "mastered" },
             { name: "Basic", beats: 4, mastery: "mastered" },
-            { name: "Inside turn → hammerlock", beats: 4, mastery: "learning", link: 1 },
-            { name: "Switch places", beats: 4, mastery: "learning", hint: "Start step around with your right foot and end with tap on your left foot" },
+            { name: "Inside Turn Into Hammerlock", beats: 4, mastery: "mastered", link: 1 },
+            { name: "Switch places", beats: 4, mastery: "mastered", hint: "Start step around with your right foot and end with tap on your left foot" },
             { name: "Hands to shoulder blades", beats: 4, mastery: "learning" },
             { name: "Raise hands overhead", beats: 4, mastery: "learning" },
             { name: "Inside turn led from hip", beats: 4, mastery: "learning" },

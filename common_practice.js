@@ -210,16 +210,12 @@ class DancePracticeTool {
             timerCircle: document.getElementById('timerCircle'),
             landmarkHUD: document.getElementById('landmarkHUD'),
             tutorialLinks: document.getElementById('tutorialLinks'),
-            sessionProgressPct: document.getElementById('sessionProgressPct'),
-            sessionProgressBar: document.getElementById('sessionProgressBar'),
             currentMoveLabel: document.getElementById('currentMoveLabel'),
             nextMoveLabel: document.getElementById('nextMoveLabel'),
             masteryStatsCount: document.getElementById('masteryStatsCount'),
             bpmSlider: document.getElementById(this.bpmSliderId),
             bpmValue: document.getElementById('bpmValue'),
             playPauseBtn: document.getElementById('playPauseBtn'),
-            modeBadge: document.getElementById('modeBadge'),
-            modeName: document.getElementById('modeName'),
             modeToggle: document.getElementById('modeToggle'),
             loopToggle: document.getElementById('loopToggle'),
             panicBtn: document.getElementById('panicBtn'),
@@ -497,20 +493,6 @@ class DancePracticeTool {
                 </a>
             `).join('');
         }
-        this.updateMasteryProgress();
-    }
-
-    updateMasteryProgress() {
-        const lm = this.landmarks[this.currentLandmarkIdx];
-        if (!lm) return;
-        const stats = window.getLandmarkMastery(lm);
-        
-        if (this.els.sessionProgressPct) this.els.sessionProgressPct.textContent = `${stats}%`;
-        if (this.els.sessionProgressBar) {
-            this.els.sessionProgressBar.style.width = `${stats}%`;
-            const color2 = this.danceType === 'salsa' ? '#fca5a5' : '#a78bfa';
-            this.els.sessionProgressBar.style.backgroundImage = `linear-gradient(to right, ${lm.color}, ${color2})`;
-        }
     }
 
     updateMoveDisplay(shouldRestart = true) {
@@ -637,6 +619,33 @@ class DancePracticeTool {
             `;
             this.els.landmarkList.appendChild(section);
         });
+        
+        this.updateSyncButtonState();
+    }
+
+    updateSyncButtonState() {
+        let isDirty = false;
+        for (let lIdx = 0; lIdx < this.landmarks.length; lIdx++) {
+            const lm = this.landmarks[lIdx];
+            for (let mIdx = 0; mIdx < lm.moves.length; mIdx++) {
+                const mastery = lm.moves[mIdx].mastery || 'learning';
+                const originalMastery = this.originalLandmarks[lIdx]?.moves?.[mIdx]?.mastery || 'learning';
+                if (mastery !== originalMastery) {
+                    isDirty = true;
+                    break;
+                }
+            }
+            if (isDirty) break;
+        }
+
+        const btn = document.getElementById('showDiffBtn');
+        if (!btn) return;
+
+        if (isDirty) {
+            btn.innerHTML = `Sync Code<span class="inline-block w-1.5 h-1.5 rounded-full bg-white ml-1.5 shadow-[0_0_8px_rgba(255,255,255,0.8)] align-middle"></span>`;
+        } else {
+            btn.innerHTML = `Sync Code`;
+        }
     }
 
     renderMoveItem(lIdx, mIdx) {
@@ -647,6 +656,10 @@ class DancePracticeTool {
         const config = MASTERY_CONFIG[mastery];
         const isCurrent = (lIdx === this.currentLandmarkIdx && mIdx === this.currentMoveIdx);
         
+        const originalMastery = this.originalLandmarks[lIdx]?.moves?.[mIdx]?.mastery || 'learning';
+        const isModified = mastery !== originalMastery;
+        const modifiedBorderClass = isModified ? 'border-[2px] !border-white' : 'border';
+
         const tooltipHtml = m.hint ? `<div class="move-tooltip">${m.hint}</div>` : '';
         const tooltipClass = m.hint ? 'has-move-tooltip' : '';
 
@@ -659,7 +672,7 @@ class DancePracticeTool {
                     ${m.hint ? '<span class="text-white mr-1">?</span>' : ''}${m.name} ${this.danceType === 'wcs' ? `<span class="opacity-60 text-[9px] font-mono">(${m.beats}🥁)</span>` : ''}${movieLinkHtml}
                 </span>
                 ${tooltipHtml}
-                <button class="shrink-0 text-[9px] font-black uppercase tracking-wider px-2 py-1.5 sm:py-1 rounded border ${config.badgeColor} hover:brightness-125 transition-all shadow-sm active:scale-[0.97]" data-action="cycle" data-lidx="${lIdx}" data-midx="${mIdx}">
+                <button class="shrink-0 text-[9px] font-black uppercase tracking-wider px-2 py-1.5 sm:py-1 rounded ${modifiedBorderClass} ${config.badgeColor} hover:brightness-125 transition-all shadow-sm active:scale-[0.97]" data-action="cycle" data-lidx="${lIdx}" data-midx="${mIdx}">
                     ${config.text}
                 </button>
             </div>
@@ -705,7 +718,6 @@ class DancePracticeTool {
             } else {
                 this.renderSidebar();
                 this.updateMasteryStats();
-                this.updateMasteryProgress();
             }
         }
     }
@@ -729,7 +741,8 @@ class DancePracticeTool {
 
     updateMasteryStats() {
         const stats = window.getMasteryStats(this.landmarks);
-        if (this.els.masteryStatsCount) this.els.masteryStatsCount.textContent = `Mastered: ${stats.mastered}/${stats.total}`;
+        const percent = stats.total > 0 ? Math.round((stats.mastered / stats.total) * 100) : 0;
+        if (this.els.masteryStatsCount) this.els.masteryStatsCount.textContent = `Mastered: ${stats.mastered}/${stats.total} (${percent}%)`;
     }
 
     // --- Event Listeners ---
@@ -756,9 +769,7 @@ class DancePracticeTool {
 
         this.els.modeToggle.onclick = () => {
             this.isRandomMode = !this.isRandomMode;
-            this.els.modeBadge.textContent = this.isRandomMode ? "Random" : "Sequential";
-            this.els.modeName.textContent = this.isRandomMode ? "Randomized Landmark Drills" : "Linear Sequence Training";
-            this.els.modeToggle.textContent = this.isRandomMode ? "Switch to Linear" : "Randomize Chunks";
+            this.els.modeToggle.textContent = this.isRandomMode ? "Random" : "Sequential";
         };
 
         this.els.loopToggle.onchange = (e) => this.isLoopMode = e.target.checked;

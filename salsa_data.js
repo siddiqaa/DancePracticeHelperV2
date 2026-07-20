@@ -3,7 +3,7 @@ const SALSA_LANDMARKS = [
         title: "Fundamentals",
         color: "#10b981",
         moves: [
-            { name: "Basic (Front Part)", beats: 4, mastery: "mastered" },
+            { name: "Basic (Front Part)", beats: 4, mastery: "mastered", link: 1 },
             { name: "Basic (Back Part)", beats: 4, mastery: "mastered" },
             { name: "Side Basic (Left)", beats: 4, mastery: "mastered" },
             { name: "Side Basic (Right)", beats: 4, mastery: "mastered" },
@@ -20,8 +20,8 @@ const SALSA_LANDMARKS = [
         title: "The Turn Matrix",
         color: "#3b82f6",
         moves: [
-            { name: "Basic (Front)", beats: 4, mastery: "mastered" },
-            { name: "Right Turn (Lead)", beats: 4, mastery: "mastered" },
+            { name: "Basic (Front)", beats: 4, mastery: "mastered", link: 1 },
+            { name: "Right Turn (Lead)", beats: 4, mastery: "mastered", link: 1 },
             { name: "Right Turn (Follow)", beats: 4, mastery: "mastered" },
             { name: "Basic (Back)", beats: 4, mastery: "mastered" },
             { name: "Left Turn (Lead)", beats: 4, mastery: "familiar" },
@@ -38,8 +38,8 @@ const SALSA_LANDMARKS = [
         color: "#8b5cf6",
         moves: [
             { name: "Basic (Front)", beats: 4, mastery: "mastered" },
-            { name: "CBL Setup", beats: 4, mastery: "mastered" },
-            { name: "CBL Finish", beats: 4, mastery: "mastered" },
+            { name: "CBL Setup", beats: 4, mastery: "mastered", link: 1 },
+            { name: "CBL Finish", beats: 4, mastery: "mastered", link: 1 },
             { name: "CBL Inside Turn (Start)", beats: 4, mastery: "learning" },
             { name: "CBL Inside Turn (Finish)", beats: 4, mastery: "learning" },
             { name: "CBL Outside Turn (Start)", beats: 4, mastery: "learning" },
@@ -54,7 +54,7 @@ const SALSA_LANDMARKS = [
         color: "#f59e0b",
         moves: [
             { name: "Basic (Front)", beats: 4, mastery: "mastered" },
-            { name: "Open Break", beats: 4, mastery: "familiar" },
+            { name: "Open Break", beats: 4, mastery: "familiar", link: 1 },
             { name: "Underarm Turn (Open)", beats: 4, mastery: "learning" },
             { name: "CBL from Open", beats: 4, mastery: "learning" },
             { name: "Enchufla", beats: 4, mastery: "learning" },
