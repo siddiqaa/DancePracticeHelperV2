@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
+    "postinstall": "npx playwright install",
     "dev": "node build.js && serve dist -l 3000",
     "build": "node build.js",
     "lint": "echo 'No lint step required'",

@@ -223,7 +223,6 @@ class DancePracticeTool {
             modeToggle: document.getElementById('modeToggle'),
             loopToggle: document.getElementById('loopToggle'),
             panicBtn: document.getElementById('panicBtn'),
-            bigStartBtn: document.getElementById('bigStartBtn'),
             // Modals
             resetModal: document.getElementById('resetModal'),
             syncModal: document.getElementById('syncModal'),
@@ -242,6 +241,11 @@ class DancePracticeTool {
 
         this.updateHUD();
         this.renderSidebar();
+        
+        this.isPaused = true;
+        this.selectMove(this.getFilteredLandmarkIndices()[0] || 0, 0);
+        if (this.els.playPauseBtn) this.els.playPauseBtn.innerHTML = this.getPlayPauseBtnHtml(true);
+
         this.updateMoveDisplay(false);
         this.setupEventListeners();
         requestAnimationFrame(() => this.draw());
@@ -730,14 +734,6 @@ class DancePracticeTool {
 
     // --- Event Listeners ---
     setupEventListeners() {
-        this.els.bigStartBtn.onclick = () => {
-            DanceAudio.init();
-            this.els.startOverlay.classList.add('hidden');
-            this.isPaused = true;
-            this.selectMove(this.getFilteredLandmarkIndices()[0] || 0, 0);
-            if (this.els.playPauseBtn) this.els.playPauseBtn.innerHTML = this.getPlayPauseBtnHtml(true);
-        };
-
         this.els.playPauseBtn.onclick = (e) => {
             DanceAudio.init();
             this.isPaused = !this.isPaused;

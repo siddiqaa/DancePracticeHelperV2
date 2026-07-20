@@ -26,12 +26,9 @@ test.describe('West Coast Swing Practice Tool', () => {
   });
 
   test('initial UI load and starting the practice session', async ({ page }) => {
-    await expect(page.getByRole('heading', { name: 'West Coast Swing', exact: true })).toBeVisible();
+    await expect(page.locator('h1', { hasText: 'West Coast Swing' }).first()).toBeVisible();
     
     // The "Begin Practice Session" overlay button
-    const beginButton = page.locator('#bigStartBtn');
-    await expect(beginButton).toBeVisible();
-    await beginButton.click();
     
     // After clicking begin, the overlay hides but it's initially paused, so it shows "Resume"
     const playPauseBtn = page.locator('#playPauseBtn');
@@ -45,7 +42,6 @@ test.describe('West Coast Swing Practice Tool', () => {
   });
 
   test('toggling random mode', async ({ page }) => {
-    await page.locator('#bigStartBtn').click();
     const modeToggle = page.locator('#modeToggle');
     await expect(modeToggle).toHaveText(/Randomize Chunks/i);
     await modeToggle.click();
@@ -56,7 +52,6 @@ test.describe('West Coast Swing Practice Tool', () => {
   });
 
   test('mastery filter buttons', async ({ page }) => {
-    await page.locator('#bigStartBtn').click();
     const filterAll = page.locator('#filterAllBtn');
     const filterLow = page.locator('#filterLowBtn');
     
@@ -68,7 +63,6 @@ test.describe('West Coast Swing Practice Tool', () => {
   });
 
   test('sync progress modal opens and closes', async ({ page }) => {
-    await page.locator('#bigStartBtn').click();
     const showDiffBtn = page.locator('#showDiffBtn');
     await expect(showDiffBtn).toBeVisible();
     await showDiffBtn.click();
@@ -90,7 +84,6 @@ test.describe('West Coast Swing Practice Tool', () => {
   });
   
   test('cycling mastery state updates local storage and UI', async ({ page }) => {
-    await page.locator('#bigStartBtn').click();
     
     // Find the first cycle button in the landmark list
     const firstCycleBtn = page.locator('[data-action="cycle"]').first();
@@ -106,7 +99,6 @@ test.describe('West Coast Swing Practice Tool', () => {
   });
   
   test('clicking a move in sidebar updates the HUD', async ({ page }) => {
-    await page.locator('#bigStartBtn').click();
     
     // The second landmark (Whips) should be clickable if we change to it
     // Wait for list to render
@@ -125,7 +117,6 @@ test.describe('West Coast Swing Practice Tool', () => {
   });
   
   test('reset mastery button shows confirm modal', async ({ page }) => {
-    await page.locator('#bigStartBtn').click();
     
     await page.locator('#resetMasteryBtn').click();
     const resetModal = page.locator('#resetModal');
@@ -136,7 +127,6 @@ test.describe('West Coast Swing Practice Tool', () => {
   });
   
   test('play/pause button toggles the active state of current move HUD', async ({ page }) => {
-    await page.locator('#bigStartBtn').click();
     
     const playPauseBtn = page.locator('#playPauseBtn');
     await playPauseBtn.click(); // Now playing
@@ -156,16 +146,12 @@ test.describe('Bachata Practice Tool', () => {
   test('initial UI load and starting the practice session', async ({ page }) => {
     await expect(page.locator('h1', { hasText: 'Bachata' }).first()).toBeVisible();
     
-    const beginButton = page.locator('#bigStartBtn');
-    await expect(beginButton).toBeVisible();
-    await beginButton.click();
     
     const playPauseBtn = page.locator('#playPauseBtn');
     await expect(playPauseBtn).toHaveText(/Resume/i);
   });
 
   test('changing BPM with slider', async ({ page }) => {
-    await page.locator('#bigStartBtn').click();
     
     const bpmSlider = page.locator('#bpmSlider, #speedSlider').first();
     const bpmValue = page.locator('#bpmValue');
@@ -183,7 +169,6 @@ test.describe('Bachata Practice Tool', () => {
   });
   
   test('mastery state persistence in localStorage', async ({ page }) => {
-    await page.locator('#bigStartBtn').click();
     
     await page.evaluate(() => {
       const state = { "Basic Warmup": ["mastered", "mastered"] };
@@ -191,14 +176,12 @@ test.describe('Bachata Practice Tool', () => {
     });
     
     await page.reload();
-    await page.locator('#bigStartBtn').click();
     
     const stateInStorage = await page.evaluate(() => localStorage.getItem('bachata_mastery_state'));
     expect(stateInStorage).toContain('mastered');
   });
   
   test('cycling mastery state in bachata updates UI', async ({ page }) => {
-    await page.locator('#bigStartBtn').click();
     
     const firstCycleBtn = page.locator('[data-action="cycle"]').first();
     await expect(firstCycleBtn).toBeVisible();
@@ -212,7 +195,6 @@ test.describe('Bachata Practice Tool', () => {
   });
   
   test('clicking a bachata move updates the HUD', async ({ page }) => {
-    await page.locator('#bigStartBtn').click();
     
     await page.waitForSelector('#landmarkList');
     
@@ -233,7 +215,6 @@ test.describe('Bachata Practice Tool', () => {
 test.describe('West Coast Swing - Additional Actions', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/chunked_wcs.html');
-    await page.locator('#bigStartBtn').click();
   });
 
   test('panic button jumps to next chunk', async ({ page }) => {
@@ -255,7 +236,6 @@ test.describe('West Coast Swing - Additional Actions', () => {
 test.describe('Additional Comprehensive Tests', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/chunked_wcs.html');
-    await page.locator('#bigStartBtn').click();
   });
 
   test('confirming reset clears mastery state', async ({ page }) => {
@@ -266,7 +246,6 @@ test.describe('Additional Comprehensive Tests', () => {
     });
     
     await page.reload();
-    await page.locator('#bigStartBtn').click();
     
     // Open reset modal
     await page.locator('#resetMasteryBtn').click();
@@ -336,7 +315,6 @@ test.describe('Additional Comprehensive Tests', () => {
 test.describe('Bachata - Additional Comprehensive Tests', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/chunked_bachata.html');
-    await page.locator('#bigStartBtn').click();
   });
 
   test('toggling random mode', async ({ page }) => {
@@ -378,16 +356,12 @@ test.describe('Salsa Practice Tool', () => {
   test('initial UI load and starting the practice session', async ({ page }) => {
     await expect(page.locator('h1', { hasText: 'Salsa' }).first()).toBeVisible();
     
-    const beginButton = page.locator('#bigStartBtn');
-    await expect(beginButton).toBeVisible();
-    await beginButton.click();
     
     const playPauseBtn = page.locator('#playPauseBtn');
     await expect(playPauseBtn).toHaveText(/Resume/i);
   });
 
   test('changing BPM with slider', async ({ page }) => {
-    await page.locator('#bigStartBtn').click();
     
     const bpmSlider = page.locator('#bpmSlider');
     const bpmValue = page.locator('#bpmValue');
@@ -405,7 +379,6 @@ test.describe('Salsa Practice Tool', () => {
   });
   
   test('mastery state persistence in localStorage', async ({ page }) => {
-    await page.locator('#bigStartBtn').click();
     
     await page.evaluate(() => {
       const state = { "Fundamentals": ["mastered", "mastered", "mastered"] };
@@ -413,14 +386,12 @@ test.describe('Salsa Practice Tool', () => {
     });
     
     await page.reload();
-    await page.locator('#bigStartBtn').click();
     
     const stateInStorage = await page.evaluate(() => localStorage.getItem('salsa_mastery_state'));
     expect(stateInStorage).toContain('mastered');
   });
   
   test('cycling mastery state in salsa updates UI', async ({ page }) => {
-    await page.locator('#bigStartBtn').click();
     
     const firstCycleBtn = page.locator('[data-action="cycle"]').first();
     await expect(firstCycleBtn).toBeVisible();
@@ -434,7 +405,6 @@ test.describe('Salsa Practice Tool', () => {
   });
   
   test('clicking a salsa move updates the HUD', async ({ page }) => {
-    await page.locator('#bigStartBtn').click();
     
     await page.waitForSelector('#landmarkList');
     
@@ -447,7 +417,6 @@ test.describe('Salsa Practice Tool', () => {
   });
 
   test('landmark selection checkboxes and filter reset', async ({ page }) => {
-    await page.locator('#bigStartBtn').click();
     
     await page.waitForSelector('.chunk-checkbox');
     const firstCheckbox = page.locator('.chunk-checkbox').first();

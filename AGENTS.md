@@ -40,4 +40,6 @@ The application features a "Randomized Landmark Drills" mode (`isRandomMode`).
 
 ## 7. Testing & Development Dependencies
 - **Playwright**: Playwright is used for end-to-end testing and must be listed as a `devDependencies` in `package.json`.
-- **Browser Binaries**: After installing dependencies, ensure the required browser binaries are installed by running `npx playwright install`. This is necessary for running tests in headful/headless environments.
+- **Test Maintenance**: You must ensure that unit and E2E tests are updated after any modifications to the code.
+- **Test Execution**: ONLY trigger running of the E2E tests upon explicit user instruction. Do not automatically run tests when making code changes unless asked.
+- **Browser Binaries**: The browser binaries required for Playwright are installed automatically via the `postinstall` script in `package.json` (`npx playwright install`) at the start of container deployment.
