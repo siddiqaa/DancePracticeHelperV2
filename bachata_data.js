@@ -36,7 +36,7 @@ const BACHATA_LANDMARKS = [
             { name: "Hairbrush using my right hand to closed", beats: 4, mastery: "learning", hint: "Hair brush her right hand by moving my right by her left ear", link: 2 },
             { name: "Open basic", beats: 4, mastery: "mastered" },
             { name: "Basic", beats: 4, mastery: "mastered" },
-            { name: "Inside turn both hands connected", beats: 4, mastery: "learning", hint: "Move top of my RIGHT fingers to bottom of her RIGHT elbow", link: 2 },
+            { name: "Inside turn both hands connected", beats: 4, mastery: "learning", hint: "Move top of my RIGHT fingers to bottom of her RIGHT elbow; her LEFT hand is on top of her RIGHT elbow", link: 2 },
             { name: "Flip her left hand, catch and send back → hammerlock", beats: 4, mastery: "learning", hint: "2 arm moves here: let go of my RIGHT arm to big sweep her straight RIGHT arm UP and out then flip it back to catch with your left" },
             { name: "Unwind hammer lock", beats: 4, mastery: "learning" },
             { name: "Basic", beats: 4, mastery: "mastered" }
