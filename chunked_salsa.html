@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
     <title>Salsa Landmark Memorizer</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -184,7 +184,7 @@
     </div>
 
     <!-- Mobile Bottom Navigation -->
-    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-slate-950 border-t border-slate-800 flex z-50 px-2 pb-safe pt-2">
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-slate-950 border-t border-slate-800 flex z-50 px-2 pb-[env(safe-area-inset-bottom)] pt-2">
         <button id="mobileTabPracticeBtn" class="flex-1 py-3 flex flex-col items-center justify-center gap-1 text-indigo-400 font-bold border-b-2 border-indigo-500 transition-colors">
             <span class="text-[10px] uppercase tracking-wider">Practice</span>
         </button>
