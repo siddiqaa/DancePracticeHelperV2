@@ -224,7 +224,12 @@ class DancePracticeTool {
             syncModal: document.getElementById('syncModal'),
             rawCodeArea: document.getElementById('rawCodeArea'),
             changesList: document.getElementById('changesList'),
-            landmarkTitle: document.getElementById('landmarkTitle')
+            landmarkTitle: document.getElementById('landmarkTitle'),
+            // Mobile Tabs
+            movesTabPanel: document.getElementById('movesTabPanel'),
+            practiceTabPanel: document.getElementById('practiceTabPanel'),
+            mobileTabPracticeBtn: document.getElementById('mobileTabPracticeBtn'),
+            mobileTabMovesBtn: document.getElementById('mobileTabMovesBtn')
         };
     }
 
@@ -244,6 +249,7 @@ class DancePracticeTool {
 
         this.updateMoveDisplay(false);
         this.setupEventListeners();
+        this.setupMobileTabs();
         requestAnimationFrame(() => this.draw());
     }
 
@@ -699,6 +705,7 @@ class DancePracticeTool {
         this.updateHUD();
         this.renderSidebar();
         this.updateMoveDisplay(true);
+        if (this.switchToPracticeTab) this.switchToPracticeTab();
     }
 
     cycleMastery(lIdx, mIdx) {
@@ -894,6 +901,52 @@ class DancePracticeTool {
             `).join('');
         }
         this.els.rawCodeArea.textContent = `const LANDMARKS = ${JSON.stringify(this.landmarks, null, 4)};`;
+    }
+
+    setupMobileTabs() {
+        if (!this.els.mobileTabPracticeBtn || !this.els.mobileTabMovesBtn) return;
+        
+        // Helper to switch to Practice Tab
+        this.switchToPracticeTab = () => {
+            if (this.els.practiceTabPanel.classList.contains('flex')) return; // Already on practice tab
+
+            // Reset buttons styling (Assuming generic active classes, we need to toggle standard tailwind active/inactive styles)
+            // But since buttons have custom color (indigo or red), we can just toggle opacity for inactive state
+            this.els.mobileTabMovesBtn.style.opacity = '0.5';
+            this.els.mobileTabMovesBtn.style.borderBottomColor = 'transparent';
+            
+            this.els.mobileTabPracticeBtn.style.opacity = '1';
+            this.els.mobileTabPracticeBtn.style.borderBottomColor = 'currentColor';
+
+            this.els.movesTabPanel.classList.remove('flex');
+            this.els.movesTabPanel.classList.add('hidden');
+            
+            this.els.practiceTabPanel.classList.remove('hidden');
+            this.els.practiceTabPanel.classList.add('flex');
+        };
+
+        // Helper to switch to Moves Tab
+        this.switchToMovesTab = () => {
+            if (this.els.movesTabPanel.classList.contains('flex')) return;
+
+            this.els.mobileTabPracticeBtn.style.opacity = '0.5';
+            this.els.mobileTabPracticeBtn.style.borderBottomColor = 'transparent';
+            
+            this.els.mobileTabMovesBtn.style.opacity = '1';
+            this.els.mobileTabMovesBtn.style.borderBottomColor = 'currentColor';
+
+            this.els.practiceTabPanel.classList.remove('flex');
+            this.els.practiceTabPanel.classList.add('hidden');
+            
+            this.els.movesTabPanel.classList.remove('hidden');
+            this.els.movesTabPanel.classList.add('flex');
+        };
+
+        this.els.mobileTabPracticeBtn.onclick = this.switchToPracticeTab;
+        this.els.mobileTabMovesBtn.onclick = this.switchToMovesTab;
+        
+        // Initialize default view
+        this.switchToPracticeTab();
     }
 }
 

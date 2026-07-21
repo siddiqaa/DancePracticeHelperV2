@@ -428,3 +428,71 @@ test.describe('Salsa Practice Tool', () => {
     await expect(firstCheckbox).not.toBeChecked();
   });
 });
+
+test.describe('Mobile Tab Navigation', () => {
+  test.use({ viewport: { width: 375, height: 812 } });
+
+  test('switches between Practice and Moves tabs on mobile', async ({ page }) => {
+    await page.goto('/chunked_wcs.html');
+    
+    // Check initial state (Practice tab is active by default)
+    const practiceTabPanel = page.locator('#practiceTabPanel');
+    const movesTabPanel = page.locator('#movesTabPanel');
+    
+    await expect(practiceTabPanel).toBeVisible();
+    await expect(movesTabPanel).toBeHidden();
+    
+    // Click Moves tab
+    const movesTabBtn = page.locator('#mobileTabMovesBtn');
+    await movesTabBtn.click();
+    
+    // Check if Moves panel is now visible
+    await expect(movesTabPanel).toBeVisible();
+    await expect(practiceTabPanel).toBeHidden();
+    
+    // Click Practice tab
+    const practiceTabBtn = page.locator('#mobileTabPracticeBtn');
+    await practiceTabBtn.click();
+    
+    // Check if Practice panel is now visible
+    await expect(practiceTabPanel).toBeVisible();
+    await expect(movesTabPanel).toBeHidden();
+  });
+  
+  test('clicking a move in mobile moves tab switches to practice tab', async ({ page }) => {
+    await page.goto('/chunked_wcs.html');
+    
+    // Go to moves tab
+    const movesTabBtn = page.locator('#mobileTabMovesBtn');
+    await movesTabBtn.click();
+    
+    const movesTabPanel = page.locator('#movesTabPanel');
+    await expect(movesTabPanel).toBeVisible();
+    
+    // Click a move in the list
+    await page.waitForSelector('#landmarkList');
+    const firstMoveNode = page.locator('#landmarkList [data-lidx="0"][data-midx="0"]').first();
+    await expect(firstMoveNode).toBeVisible();
+    await firstMoveNode.click({ force: true });
+    
+    // Should automatically switch to Practice tab
+    const practiceTabPanel = page.locator('#practiceTabPanel');
+    await expect(practiceTabPanel).toBeVisible();
+    await expect(movesTabPanel).toBeHidden();
+  });
+});
+
+test.describe('Loop/Repeat Feature', () => {
+  test('loop toggle updates state correctly', async ({ page }) => {
+    await page.goto('/chunked_wcs.html');
+    
+    const loopToggle = page.locator('#loopToggle');
+    await expect(loopToggle).not.toBeChecked();
+    
+    await loopToggle.check();
+    await expect(loopToggle).toBeChecked();
+    
+    await loopToggle.uncheck();
+    await expect(loopToggle).not.toBeChecked();
+  });
+});

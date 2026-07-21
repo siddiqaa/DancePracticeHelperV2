@@ -108,15 +108,15 @@
       </a>
 
       <!-- Salsa On 1 Card -->
-      <a href="chunked_salsa.html" class="group relative flex flex-col justify-between bg-slate-900 border border-slate-800/80 hover:border-red-500/40 rounded-2xl p-8 shadow-xl transition-all hover:translate-y-[-4px] hover:shadow-2xl hover:shadow-red-900/5">
+      <a href="chunked_salsa.html" class="group relative flex flex-col justify-between bg-slate-900 border border-slate-800/80 hover:border-indigo-500/40 rounded-2xl p-8 shadow-xl transition-all hover:translate-y-[-4px] hover:shadow-2xl hover:shadow-indigo-900/5">
         <div class="space-y-4">
           <div class="flex justify-between items-start">
-            <span class="px-2.5 py-1 bg-red-500/10 border border-red-500/20 text-red-400 rounded-md text-[10px] font-black tracking-wider uppercase">
+            <span class="px-2.5 py-1 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 rounded-md text-[10px] font-black tracking-wider uppercase">
               Salsa On 1
             </span>
           </div>
           
-          <h2 class="text-2xl font-black text-white group-hover:text-red-400 transition-colors">
+          <h2 class="text-2xl font-black text-white group-hover:text-indigo-400 transition-colors">
             Salsa Landmark Memorizer
           </h2>
           <p class="text-slate-400 text-sm leading-relaxed">
@@ -124,7 +124,7 @@
           </p>
         </div>
 
-        <div class="flex items-center gap-2 mt-8 text-xs font-bold text-red-400 group-hover:text-red-300 transition-colors">
+        <div class="flex items-center gap-2 mt-8 text-xs font-bold text-indigo-400 group-hover:text-indigo-300 transition-colors">
           Start Practicing
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 transform group-hover:translate-x-1 transition-transform">
             <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
@@ -260,11 +260,7 @@
               <h2 class="text-2xl font-black text-white tracking-tight">Global Mastery Dashboard</h2>
             </div>
             
-            ${(bachataSaved || wcsSaved || salsaSaved) ? `
-              <button onclick="resetGlobalProgress()" class="text-[10px] font-bold text-slate-500 hover:text-red-400 border border-slate-800/80 hover:border-red-950 px-2.5 py-1.5 rounded-lg bg-slate-950 transition-colors uppercase">
-                Reset Progress
-              </button>
-            ` : ''}
+
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -274,17 +270,17 @@
                 <span class="text-xs font-mono text-slate-400">${bachataTotal > 0 ? Math.round((bachataMastered * 100 + bachataFamiliar * 50) / (bachataTotal * 100) * 100) : 0}%</span>
               </div>
               <div class="grid grid-cols-3 gap-1.5 sm:gap-2 text-center text-[9px] sm:text-[10px] font-bold">
-                <div class="bg-emerald-950/30 border border-emerald-900/30 text-emerald-400 px-1 sm:px-2 py-1.5 rounded">
-                  <div class="text-xs font-black">${bachataMastered}</div>
-                  Mastered
+                <div class="bg-slate-900 border border-slate-800 text-slate-400 px-1 sm:px-2 py-1.5 rounded">
+                  <div class="text-xs font-black">${bachataLearning}</div>
+                  Learning
                 </div>
                 <div class="bg-indigo-950/30 border border-indigo-900/30 text-indigo-400 px-1 sm:px-2 py-1.5 rounded">
                   <div class="text-xs font-black">${bachataFamiliar}</div>
                   Familiar
                 </div>
-                <div class="bg-slate-900 border border-slate-800 text-slate-400 px-1 sm:px-2 py-1.5 rounded">
-                  <div class="text-xs font-black">${bachataLearning}</div>
-                  Learning
+                <div class="bg-emerald-950/30 border border-emerald-900/30 text-emerald-400 px-1 sm:px-2 py-1.5 rounded">
+                  <div class="text-xs font-black">${bachataMastered}</div>
+                  Mastered
                 </div>
               </div>
             </div>
@@ -295,39 +291,57 @@
                 <span class="text-xs font-mono text-slate-400">${wcsTotal > 0 ? Math.round((wcsMastered * 100 + wcsFamiliar * 50) / (wcsTotal * 100) * 100) : 0}%</span>
               </div>
               <div class="grid grid-cols-3 gap-1.5 sm:gap-2 text-center text-[9px] sm:text-[10px] font-bold">
-                <div class="bg-emerald-950/30 border border-emerald-900/30 text-emerald-400 px-1 sm:px-2 py-1.5 rounded">
-                  <div class="text-xs font-black">${wcsMastered}</div>
-                  Mastered
+                <div class="bg-slate-900 border border-slate-800 text-slate-400 px-1 sm:px-2 py-1.5 rounded">
+                  <div class="text-xs font-black">${wcsLearning}</div>
+                  Learning
                 </div>
                 <div class="bg-indigo-950/30 border border-indigo-900/30 text-indigo-400 px-1 sm:px-2 py-1.5 rounded">
                   <div class="text-xs font-black">${wcsFamiliar}</div>
                   Familiar
                 </div>
-                <div class="bg-slate-900 border border-slate-800 text-slate-400 px-1 sm:px-2 py-1.5 rounded">
-                  <div class="text-xs font-black">${wcsLearning}</div>
-                  Learning
+                <div class="bg-emerald-950/30 border border-emerald-900/30 text-emerald-400 px-1 sm:px-2 py-1.5 rounded">
+                  <div class="text-xs font-black">${wcsMastered}</div>
+                  Mastered
                 </div>
               </div>
             </div>
 
             <div class="space-y-3 p-4 bg-slate-950/40 rounded-xl border border-slate-850/40">
               <div class="flex justify-between items-center">
-                <span class="text-xs font-black text-red-400 uppercase tracking-wider">Salsa On 1 Moves</span>
+                <span class="text-xs font-black text-indigo-400 uppercase tracking-wider">Salsa On 1 Moves</span>
                 <span class="text-xs font-mono text-slate-400">${salsaTotal > 0 ? Math.round((salsaMastered * 100 + salsaFamiliar * 50) / (salsaTotal * 100) * 100) : 0}%</span>
               </div>
               <div class="grid grid-cols-3 gap-1.5 sm:gap-2 text-center text-[9px] sm:text-[10px] font-bold">
-                <div class="bg-emerald-950/30 border border-emerald-900/30 text-emerald-400 px-1 sm:px-2 py-1.5 rounded">
-                  <div class="text-xs font-black">${salsaMastered}</div>
-                  Mastered
-                </div>
-                <div class="bg-red-950/30 border border-red-900/30 text-red-400 px-1 sm:px-2 py-1.5 rounded">
-                  <div class="text-xs font-black">${salsaFamiliar}</div>
-                  Familiar
-                </div>
                 <div class="bg-slate-900 border border-slate-800 text-slate-400 px-1 sm:px-2 py-1.5 rounded">
                   <div class="text-xs font-black">${salsaLearning}</div>
                   Learning
                 </div>
+                <div class="bg-indigo-950/30 border border-indigo-900/30 text-indigo-400 px-1 sm:px-2 py-1.5 rounded">
+                  <div class="text-xs font-black">${salsaFamiliar}</div>
+                  Familiar
+                </div>
+                <div class="bg-emerald-950/30 border border-emerald-900/30 text-emerald-400 px-1 sm:px-2 py-1.5 rounded">
+                  <div class="text-xs font-black">${salsaMastered}</div>
+                  Mastered
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="mt-8 border-t border-slate-850 pt-6">
+            <h4 class="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-4">Mastery Level Definitions</h4>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs text-slate-400">
+              <div class="flex gap-3 items-start bg-slate-950/20 p-3 rounded-xl border border-slate-850/50">
+                <div class="w-2 h-2 rounded-full bg-slate-400 mt-1 shrink-0"></div>
+                <div><strong class="text-slate-300 font-bold block mb-1">Learning</strong> The default state. You are just learning the mechanics and sequence of this move.</div>
+              </div>
+              <div class="flex gap-3 items-start bg-slate-950/20 p-3 rounded-xl border border-slate-850/50">
+                <div class="w-2 h-2 rounded-full bg-indigo-400 mt-1 shrink-0"></div>
+                <div><strong class="text-indigo-300 font-bold block mb-1">Familiar</strong> You know the mechanics and can execute the move, but it still requires active mental effort and counting.</div>
+              </div>
+              <div class="flex gap-3 items-start bg-slate-950/20 p-3 rounded-xl border border-slate-850/50">
+                <div class="w-2 h-2 rounded-full bg-emerald-400 mt-1 shrink-0"></div>
+                <div><strong class="text-emerald-300 font-bold block mb-1">Mastered</strong> The move is in your muscle memory. You can execute it effortlessly, in time with the music, without actively thinking about the steps.</div>
               </div>
             </div>
           </div>
@@ -335,14 +349,7 @@
       `;
     }
 
-    function resetGlobalProgress() {
-      if (confirm("Are you sure you want to reset all your dance landmark practice and mastery stats? This will return all moves to 'learning' status.")) {
-        localStorage.removeItem('bachata_mastery_state');
-        localStorage.removeItem('wcs_mastery_state');
-        localStorage.removeItem('salsa_mastery_state');
-        renderGlobalDashboard();
-      }
-    }
+
 
     window.addEventListener('DOMContentLoaded', renderGlobalDashboard);
   </script>
