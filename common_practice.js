@@ -200,6 +200,7 @@ class DancePracticeTool {
         
         // Practice Session landmark selection state
         this.selectedLandmarkIndices = [];
+        this.expandedLandmarks = new Set();
         
         // DOM Elements
         this.els = {
@@ -219,6 +220,7 @@ class DancePracticeTool {
             modeToggle: document.getElementById('modeToggle'),
             loopToggle: document.getElementById('loopToggle'),
             panicBtn: document.getElementById('panicBtn'),
+            collapseAllBtn: document.getElementById('collapseAllBtn'),
             // Modals
             resetModal: document.getElementById('resetModal'),
             syncModal: document.getElementById('syncModal'),
@@ -244,7 +246,7 @@ class DancePracticeTool {
         this.renderSidebar();
         
         this.isPaused = true;
-        this.selectMove(this.getFilteredLandmarkIndices()[0] || 0, 0);
+        this.selectMove(this.getFilteredLandmarkIndices()[0] || 0, 0, false);
         if (this.els.playPauseBtn) this.els.playPauseBtn.innerHTML = this.getPlayPauseBtnHtml(true);
 
         this.updateMoveDisplay(false);
@@ -572,9 +574,14 @@ class DancePracticeTool {
 
             const isSelected = this.selectedLandmarkIndices.includes(lIdx);
             const isCurrent = (lIdx === this.currentLandmarkIdx);
+            const isExpanded = this.expandedLandmarks.has(lIdx);
 
             const section = document.createElement('div'); section.id = `lm-section-${lIdx}`;
-            section.className = `p-3 rounded-xl transition-all duration-300 ${isCurrent ? 'landmark-active' : isSelected ? 'opacity-90 hover:opacity-100' : 'opacity-40 hover:opacity-60'}`;
+            section.className = `rounded-xl transition-all duration-200 overflow-hidden border ${
+                isCurrent 
+                    ? 'landmark-active border-indigo-500/50 bg-slate-900/80 shadow-md' 
+                    : 'border-slate-800/80 bg-slate-900/40 hover:bg-slate-900/60'
+            }`;
             section.style.color = lm.color;
 
             const masteryPct = window.getLandmarkMastery(lm);
@@ -583,45 +590,67 @@ class DancePracticeTool {
             let movesHtml = '';
             if (this.danceType === 'bachata') {
                 for (let mIdx = 0; mIdx < lm.moves.length; mIdx += 2) {
-                    movesHtml += `<div class="border border-slate-800/80 rounded-lg p-0.5 mb-2 bg-slate-900/40 space-y-0.5">
+                    movesHtml += `<div class="border border-slate-800/80 rounded-lg p-0.5 mb-1.5 bg-slate-950/40 space-y-0.5">
                         ${this.renderMoveItem(lIdx, mIdx)}
                         ${this.renderMoveItem(lIdx, mIdx + 1)}
                     </div>`;
                 }
             } else {
-                movesHtml = `<div class="space-y-0.5 bg-slate-900/40 rounded-lg p-0.5 mb-2 border border-slate-800/80">
+                movesHtml = `<div class="space-y-0.5 bg-slate-950/40 rounded-lg p-0.5 mb-1.5 border border-slate-800/80">
                     ${lm.moves.map((_, mIdx) => this.renderMoveItem(lIdx, mIdx)).join('')}
                 </div>`;
             }
 
             section.innerHTML = `
-                <div class="flex items-center justify-between mb-2 gap-2">
+                <!-- Accordion Header Bar -->
+                <div class="flex items-center justify-between p-2 sm:p-2.5 cursor-pointer select-none group/hdr" data-action="toggle-accordion" data-lidx="${lIdx}">
                     <div class="flex items-center gap-2 flex-1 min-w-0">
                         <!-- Custom Touch-optimized Checkbox Wrapper (44x44px min target area) -->
-                        <div class="p-2 -m-2 flex items-center justify-center cursor-pointer select-none group/cb relative shrink-0" data-action="toggle-check" data-lidx="${lIdx}">
+                        <div class="p-1 -m-1 flex items-center justify-center cursor-pointer select-none group/cb relative shrink-0" data-action="toggle-check" data-lidx="${lIdx}">
                             <input type="checkbox" 
-                                   class="chunk-checkbox absolute opacity-0 cursor-pointer w-8 h-8 z-10" 
+                                   class="chunk-checkbox absolute opacity-0 cursor-pointer w-7 h-7 z-10" 
                                    data-lidx="${lIdx}" 
                                    ${isSelected ? 'checked' : ''}>
-                            <div class="w-5 h-5 rounded-md border-2 border-slate-800 bg-slate-950 flex items-center justify-center transition-all duration-200 group-hover/cb:border-${this.accentColor}-500/50 ${isSelected ? `bg-${this.accentColor}-600/20 border-${this.accentColor}-500 text-${this.accentColor}-400 shadow-[0_0_10px_rgba(99,102,241,0.2)]` : 'text-transparent'}">
-                                <svg class="w-3.5 h-3.5 stroke-[3.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div class="w-4 h-4 rounded border-2 border-slate-700 bg-slate-950 flex items-center justify-center transition-all duration-200 group-hover/cb:border-${this.accentColor}-500/50 ${isSelected ? `bg-${this.accentColor}-600/20 border-${this.accentColor}-500 text-${this.accentColor}-400 shadow-[0_0_10px_rgba(99,102,241,0.2)]` : 'text-transparent'}">
+                                <svg class="w-3 h-3 stroke-[3.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                                 </svg>
                             </div>
                         </div>
-                        <div class="cursor-pointer flex-1 min-w-0 pl-1" data-action="select" data-lidx="${lIdx}" data-midx="0">
-                            <div class="text-xs font-bold text-slate-200 flex flex-col gap-1">
-                                <span class="truncate max-w-[150px] sm:max-w-[180px]">${lm.title}</span>
-                                <span class="self-start text-[9px] font-mono px-1.5 py-0.5 rounded ${masteryPct >= 75 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : masteryPct >= 40 ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}">${masteryPct}% Mastery</span>
-                            </div>
+                        <!-- Chunk Title & Mastery % -->
+                        <div class="flex-1 min-w-0 flex items-center justify-between gap-2 pr-1">
+                            <span class="text-xs font-bold text-slate-200 truncate group-hover/hdr:text-white transition-colors">${lm.title}</span>
+                            <span class="text-[9px] font-mono px-1.5 py-0.5 rounded shrink-0 ${masteryPct >= 75 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : masteryPct >= 40 ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}">${masteryPct}%</span>
                         </div>
                     </div>
-                    <div class="flex flex-col gap-1 shrink-0">
-                        <button class="text-slate-500 hover:text-white bg-slate-950/50 hover:bg-slate-800 border border-slate-800 rounded px-2 py-1" data-action="scroll-prev" data-lidx="${lIdx}"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 15l7-7 7 7"></path></svg></button>
-                        <button class="text-slate-500 hover:text-white bg-slate-950/50 hover:bg-slate-800 border border-slate-800 rounded px-2 py-1" data-action="scroll-next" data-lidx="${lIdx}"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7"></path></svg></button>
+                    <!-- Accordion Toggle Chevron -->
+                    <div class="flex items-center gap-1 shrink-0 ml-1">
+                        <button class="text-slate-400 group-hover/hdr:text-slate-200 p-1 rounded hover:bg-slate-800/60 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}" data-action="toggle-accordion" data-lidx="${lIdx}" title="${isExpanded ? 'Collapse chunk' : 'Expand chunk'}">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
                     </div>
                 </div>
-                ${movesHtml}
+
+                <!-- Accordion Detail Panel (Moves & Chunk Controls) -->
+                <div class="${isExpanded ? 'block' : 'hidden'} px-2 pb-2 pt-0.5 border-t border-slate-800/50 space-y-1.5">
+                    <!-- Chunk Navigation Controls -->
+                    <div class="flex items-center justify-between px-1 text-[10px] text-slate-400">
+                        <span class="font-bold text-slate-500 uppercase tracking-wider text-[9px]">${lm.moves.length} moves</span>
+                        <div class="flex items-center gap-1">
+                            <button class="text-slate-400 hover:text-white bg-slate-950/60 hover:bg-slate-800 border border-slate-800 rounded px-2 py-0.5 text-[9px] font-bold flex items-center gap-1 transition-colors" data-action="scroll-prev" data-lidx="${lIdx}" title="Previous chunk">
+                                <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 15l7-7 7 7"></path></svg>
+                                Prev
+                            </button>
+                            <button class="text-slate-400 hover:text-white bg-slate-950/60 hover:bg-slate-800 border border-slate-800 rounded px-2 py-0.5 text-[9px] font-bold flex items-center gap-1 transition-colors" data-action="scroll-next" data-lidx="${lIdx}" title="Next chunk">
+                                Next
+                                <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7"></path></svg>
+                            </button>
+                        </div>
+                    </div>
+                    ${movesHtml}
+                </div>
             `;
             this.els.landmarkList.appendChild(section);
         });
@@ -673,7 +702,7 @@ class DancePracticeTool {
         const movieLinkHtml = moveLink ? `<a href="${moveLink.url}" target="_blank" class="ml-1 hover:scale-110 transition-transform inline-block" onclick="event.stopPropagation()">🎬</a>` : '';
 
         return `
-            <div id="m-${lIdx}-${mIdx}" class="text-[11px] px-2 py-1.5 rounded flex items-center justify-between gap-2 group ${isCurrent ? 'move-active' : 'hover:bg-slate-900/30'} ${tooltipClass}">
+            <div id="m-${lIdx}-${mIdx}" class="text-[11px] px-2 py-1.5 rounded flex items-center justify-between gap-2 group cursor-pointer ${isCurrent ? 'move-active' : 'hover:bg-slate-900/30'} ${tooltipClass}" data-action="select" data-lidx="${lIdx}" data-midx="${mIdx}">
                 <span class="truncate flex-1 py-0.5 font-bold ${config.textColor}" data-lidx="${lIdx}" data-midx="${mIdx}">
                     ${m.hint ? '<span class="text-white mr-1">?</span>' : ''}${m.name} ${this.danceType === 'wcs' ? `<span class="opacity-60 text-[9px] font-mono">(${m.beats}🥁)</span>` : ''}${movieLinkHtml}
                 </span>
@@ -686,9 +715,30 @@ class DancePracticeTool {
     }
 
     // --- Actions ---
-    selectMove(lIdx, mIdx) {
+    toggleAccordion(lIdx) {
+        if (this.expandedLandmarks.has(lIdx)) {
+            this.expandedLandmarks.delete(lIdx);
+        } else {
+            this.expandedLandmarks.add(lIdx);
+            if (this.currentLandmarkIdx !== lIdx) {
+                this.selectMove(lIdx, 0);
+                return;
+            }
+        }
+        this.renderSidebar();
+    }
+
+    collapseAllAccordions() {
+        this.expandedLandmarks.clear();
+        this.renderSidebar();
+    }
+
+    selectMove(lIdx, mIdx, expand = true) {
         this.currentLandmarkIdx = lIdx;
         this.currentMoveIdx = mIdx;
+        if (expand) {
+            this.expandedLandmarks.add(lIdx);
+        }
         this.beatIdx = 0;
         
         // Align starting phrase beat with move index parity (even move indices start on 0/1-4, odd on 4/5-8)
@@ -785,6 +835,10 @@ class DancePracticeTool {
             if (!this.isPaused) this.startScheduler();
         };
 
+        if (this.els.collapseAllBtn) {
+            this.els.collapseAllBtn.onclick = () => this.collapseAllAccordions();
+        }
+
         // Filter Buttons
         ['filterAllBtn', 'filterLowBtn', 'filterMedBtn', 'filterHighBtn'].forEach(id => {
             const btn = document.getElementById(id);
@@ -793,11 +847,12 @@ class DancePracticeTool {
 
         // Sidebar clicks
         this.els.landmarkList.onclick = (e) => {
-            const checkbox = e.target.closest('.chunk-checkbox');
-            const select = e.target.closest('[data-action="select"]');
+            const checkbox = e.target.closest('.chunk-checkbox') || e.target.closest('[data-action="toggle-check"]');
             const cycle = e.target.closest('[data-action="cycle"]');
             const sPrev = e.target.closest('[data-action="scroll-prev"]');
             const sNext = e.target.closest('[data-action="scroll-next"]');
+            const select = e.target.closest('[data-action="select"]');
+            const toggleAcc = e.target.closest('[data-action="toggle-accordion"]');
             
             if (checkbox) {
                 e.stopPropagation();
@@ -805,8 +860,7 @@ class DancePracticeTool {
                 this.toggleLandmarkSelection(lIdx, checkbox.checked);
                 return;
             }
-            if (select) this.selectMove(parseInt(select.dataset.lidx), parseInt(select.dataset.midx));
-            if (cycle) { e.stopPropagation(); this.cycleMastery(parseInt(cycle.dataset.lidx), parseInt(cycle.dataset.midx)); }
+            if (cycle) { e.stopPropagation(); this.cycleMastery(parseInt(cycle.dataset.lidx), parseInt(cycle.dataset.midx)); return; }
             if (sPrev || sNext) {
                 e.stopPropagation();
                 const lIdx = parseInt((sPrev || sNext).dataset.lidx);
@@ -815,7 +869,22 @@ class DancePracticeTool {
                 let targetIdx = -1;
                 if (sPrev && pos > 0) targetIdx = filtered[pos - 1];
                 if (sNext && pos < filtered.length - 1) targetIdx = filtered[pos + 1];
-                if (targetIdx !== -1) document.getElementById(`lm-section-${targetIdx}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                if (targetIdx !== -1) {
+                    this.selectMove(targetIdx, 0);
+                    document.getElementById(`lm-section-${targetIdx}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+                return;
+            }
+            if (select) {
+                e.stopPropagation();
+                this.selectMove(parseInt(select.dataset.lidx), parseInt(select.dataset.midx));
+                return;
+            }
+            if (toggleAcc) {
+                e.stopPropagation();
+                const lIdx = parseInt(toggleAcc.dataset.lidx);
+                this.toggleAccordion(lIdx);
+                return;
             }
         };
 

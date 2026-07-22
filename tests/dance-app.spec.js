@@ -81,8 +81,26 @@ test.describe('West Coast Swing Practice Tool', () => {
     await expect(syncModal).not.toBeVisible();
   });
   
+  test('all chunk accordions are collapsed on initial page load and collapse all button works', async ({ page }) => {
+    await page.waitForSelector('#landmarkList');
+    const cycleBtn = page.locator('[data-action="cycle"]').first();
+    await expect(cycleBtn).toBeHidden();
+
+    // Click first accordion header to expand chunk 0
+    await page.locator('[data-action="toggle-accordion"]').first().click();
+    await expect(cycleBtn).toBeVisible();
+
+    // Click Collapse All button
+    const collapseAllBtn = page.locator('#collapseAllBtn');
+    await expect(collapseAllBtn).toBeVisible();
+    await collapseAllBtn.click();
+
+    // Verify chunk 0 is now collapsed
+    await expect(cycleBtn).toBeHidden();
+  });
+
   test('cycling mastery state updates local storage and UI', async ({ page }) => {
-    
+    await page.locator('[data-action="toggle-accordion"]').first().click();
     // Find the first cycle button in the landmark list
     const firstCycleBtn = page.locator('[data-action="cycle"]').first();
     await expect(firstCycleBtn).toBeVisible();
@@ -101,9 +119,7 @@ test.describe('West Coast Swing Practice Tool', () => {
     // The second landmark (Whips) should be clickable if we change to it
     // Wait for list to render
     await page.waitForSelector('#landmarkList');
-    
-    // Click on the first move in the first landmark to ensure HUD updates
-    const firstMoveLabel = page.locator('[data-action="select"]', { hasText: 'Sugar Push' }).first();
+    await page.locator('[data-action="toggle-accordion"]').first().click();
     
     // It might be a div without data-action="select" wrapping it now. Let's select by text.
     const sugarPush = page.locator('#landmarkList').getByText('Sugar Push', { exact: false }).first();
@@ -180,7 +196,7 @@ test.describe('Bachata Practice Tool', () => {
   });
   
   test('cycling mastery state in bachata updates UI', async ({ page }) => {
-    
+    await page.locator('[data-action="toggle-accordion"]').first().click();
     const firstCycleBtn = page.locator('[data-action="cycle"]').first();
     await expect(firstCycleBtn).toBeVisible();
     
@@ -195,6 +211,7 @@ test.describe('Bachata Practice Tool', () => {
   test('clicking a bachata move updates the HUD', async ({ page }) => {
     
     await page.waitForSelector('#landmarkList');
+    await page.locator('[data-action="toggle-accordion"]').first().click();
     
     // Find the first move in Bachata which is likely "Basic in place" or similar
     // The exact text doesn't matter, just click the first move text
@@ -383,7 +400,7 @@ test.describe('Salsa Practice Tool', () => {
   });
   
   test('cycling mastery state in salsa updates UI', async ({ page }) => {
-    
+    await page.locator('[data-action="toggle-accordion"]').first().click();
     const firstCycleBtn = page.locator('[data-action="cycle"]').first();
     await expect(firstCycleBtn).toBeVisible();
     
@@ -398,6 +415,7 @@ test.describe('Salsa Practice Tool', () => {
   test('clicking a salsa move updates the HUD', async ({ page }) => {
     
     await page.waitForSelector('#landmarkList');
+    await page.locator('[data-action="toggle-accordion"]').first().click();
     
     const firstMoveNode = page.locator('#landmarkList [data-lidx="0"][data-midx="0"]').first();
     await expect(firstMoveNode).toBeVisible();
@@ -471,6 +489,7 @@ test.describe('Mobile Tab Navigation', () => {
     
     // Click a move in the list
     await page.waitForSelector('#landmarkList');
+    await page.locator('[data-action="toggle-accordion"]').first().click();
     const firstMoveNode = page.locator('#landmarkList [data-lidx="0"][data-midx="0"]').first();
     await expect(firstMoveNode).toBeVisible();
     await firstMoveNode.click({ force: true });

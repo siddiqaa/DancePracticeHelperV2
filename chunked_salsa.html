@@ -55,6 +55,10 @@
                 <div class="flex flex-col gap-1 border-t border-slate-850/60 pt-2 font-sans">
                     <div class="flex justify-between items-center mb-1">
                         <span class="text-[9px] font-black uppercase text-slate-500 tracking-wider">Practice Filter</span>
+                        <button id="collapseAllBtn" class="text-[9px] text-slate-400 hover:text-slate-200 transition uppercase font-sans font-bold px-1.5 py-0.5 rounded bg-slate-950/60 border border-slate-850/80 hover:bg-slate-900/60 active:scale-[0.97] flex items-center gap-1" title="Collapse all chunk accordions">
+                            <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+                            Collapse All
+                        </button>
                     </div>
                     <div class="grid grid-cols-4 gap-0.5 bg-slate-950/70 p-0.5 rounded-lg border border-slate-850/80">
                         <button id="filterAllBtn" class="py-1.5 text-[9px] font-bold uppercase rounded transition-all bg-indigo-600 text-white shadow-sm border border-indigo-500/10" data-range="all">All</button>
@@ -64,7 +68,7 @@
                     </div>
                 </div>
             </div>
-            <div id="landmarkList" class="overflow-y-auto flex-1 p-3 space-y-4 max-h-[400px] md:max-h-none"></div>
+            <div id="landmarkList" class="overflow-y-auto flex-1 p-2 sm:p-3 space-y-2 max-h-[400px] md:max-h-none"></div>
         </section>
 
         <!-- Practice Tab Panel -->
