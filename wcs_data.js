@@ -84,15 +84,14 @@ const WCS_LANDMARKS = [
         color: "#8b5cf6",
         moves: [
             { name: "Basic Whip", beats: 8, mastery: "mastered" },
-            { name: "RSP Into Closed Whip with Lead Turn", beats: 8, mastery: "learning" },
-            { name: "LSP Roll into Sweetheart With Reverse Whip Exit", beats: 8, mastery: "learning" },
-            { name: "Basket Whip", beats: 8, mastery: "familiar" },
-            { name: "Basket Whip with Outside Turn", beats: 8, mastery: "familiar" },
+            { name: "Basic Whip with Follow Outside Turn and Lead Turn", beats: 8, mastery: "learning", link: 1 },
+            { name: "Basket Whip", beats: 8, mastery: "mastered" },
+            { name: "Basket Whip with Outside Turn", beats: 8, mastery: "familiar", link: 2 },
 
 
         ],
         links: [
-            { id: 1, url: "https://youtu.be/xnN3mVDTE90", label: "RSP Into Closed Whip with Lead Turn / LSP into Sweetheart / Whip Exits" },
+            { id: 1, url: "https://youtu.be/xnN3mVDTE90", label: "Whip with follow outside turn and lead turn" },
             { id: 2, url: "https://youtu.be/q80NN7oEYL4?t=85s", label: "Basket Whip with Outside Turn" }
         ]
     },
@@ -118,17 +117,19 @@ const WCS_LANDMARKS = [
         title: "Reverse Whips",
         color: "#f59e0b",
         moves: [
-            { name: "Reverse Whip", beats: 8, mastery: "learning" },
-            { name: "Wren Reverse Whip with Lead Cross the Slot", beats: 8, mastery: "learning" },
-            { name: "Mike Reverse Whip with Lead Cross the Slot", beats: 8, mastery: "learning" },
-            { name: "Reverse Whip", beats: 8, mastery: "learning" }
+            { name: "Reverse Whip", beats: 8, mastery: "learning", link: 1 },
+            { name: "Wren Reverse Whip with Lead Cross the Slot", beats: 8, mastery: "learning", link: 2 },
+            { name: "Mike Reverse Whip with Lead Cross the Slot", beats: 8, mastery: "learning", link: 3 },
+            { name: "Reverse Whip with Lead Turn Along", beats: 8, mastery: "learning" , link: 4},
+            { name: "LSP Roll into Sweetheart With Reverse Whip Exit", beats: 8, mastery: "learning", link: 5 },
 
         ],
         links: [
             { id: 1, url: "https://youtu.be/q80NN7oEYL4?t=25s", label: "Reverse Whip" },
             { id: 2, url: "https://youtu.be/q80NN7oEYL4?t=37s", label: "Wren Reverse Whip with Lead Cross the Slot" },
             { id: 3, url: "https://youtu.be/PIuJGK59rmg?t=60s", label: "Mike Reverse Whip with Lead Cross the Slot" },
-            { id: 4, url: "https://youtu.be/q80NN7oEYL4?t=50s", label: "Reverse Whip with Lead Turn Along" }
+            { id: 4, url: "https://youtu.be/q80NN7oEYL4?t=50s", label: "Reverse Whip with Lead Turn Along" },
+            { id: 5, url: "https://youtu.be/xnN3mVDTE90?t=22s", label: "LSP into sweetheart with reverse whip exit" },
         ]
     },
     {
