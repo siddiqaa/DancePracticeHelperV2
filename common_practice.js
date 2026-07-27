@@ -201,10 +201,13 @@ class DancePracticeTool {
         // Practice Session landmark selection state
         this.selectedLandmarkIndices = [];
         this.expandedLandmarks = new Set();
+        this.searchQuery = '';
         
         // DOM Elements
         this.els = {
             landmarkList: document.getElementById('landmarkList'),
+            moveSearchInput: document.getElementById('moveSearchInput'),
+            clearSearchBtn: document.getElementById('clearSearchBtn'),
             startOverlay: document.getElementById('startOverlay'),
             overlayContent: document.getElementById('overlayContent'),
             countdownDisplay: document.getElementById('countdownDisplay'),
@@ -638,19 +641,35 @@ class DancePracticeTool {
     renderSidebar() {
         if (!this.els.landmarkList) return;
         this.els.landmarkList.innerHTML = '';
-        const visibleLandmarks = window.getFilteredLandmarkIndices(this.landmarks, this.activeFilter);
+
+        const query = (this.searchQuery || '').trim().toLowerCase();
+        let visibleLandmarks = window.getFilteredLandmarkIndices(this.landmarks, this.activeFilter);
+
+        if (query) {
+            visibleLandmarks = visibleLandmarks.filter(lIdx => {
+                const lm = this.landmarks[lIdx];
+                return lm.moves.some(m => m.name.toLowerCase().includes(query));
+            });
+        }
 
         if (visibleLandmarks.length === 0) {
             this.els.landmarkList.innerHTML = `
-                <div class="p-6 bg-slate-950/45 rounded-xl border border-slate-850 text-slate-400 text-center flex flex-col items-center justify-center gap-2">
-                    <p class="font-bold text-slate-300">No chunks in this range!</p>
+                <div class="p-6 bg-[#fdfbf7] rounded-2xl border-2 border-[#1c1917] text-stone-700 text-center flex flex-col items-center justify-center gap-2 shadow-[4px_4px_0px_#1c1917]">
+                    <p class="font-black text-xs text-stone-900">${query ? 'No moves matching "' + this.searchQuery + '"' : 'No chunks in this range!'}</p>
                 </div>
             `;
+            this.updateCollapseExpandBtn();
             return;
         }
 
-        this.landmarks.forEach((lm, lIdx) => {
-            if (!visibleLandmarks.includes(lIdx)) return;
+        visibleLandmarks.forEach((lIdx, pos) => {
+            const lm = this.landmarks[lIdx];
+            const isFirst = (pos === 0);
+            const isLast = (pos === visibleLandmarks.length - 1);
+
+            if (query) {
+                this.expandedLandmarks.add(lIdx);
+            }
 
             const isSelected = this.selectedLandmarkIndices.includes(lIdx);
             const isCurrent = (lIdx === this.currentLandmarkIdx);
@@ -670,21 +689,34 @@ class DancePracticeTool {
             let movesHtml = '';
             if (this.danceType === 'bachata') {
                 for (let mIdx = 0; mIdx < lm.moves.length; mIdx += 2) {
+                    const m1 = lm.moves[mIdx];
+                    const m2 = lm.moves[mIdx + 1];
+                    const m1Matches = !query || (m1 && m1.name.toLowerCase().includes(query));
+                    const m2Matches = !query || (m2 && m2.name.toLowerCase().includes(query));
+                    if (!m1Matches && !m2Matches) continue;
+
                     movesHtml += `<div class="border-2 border-[#1c1917] rounded-2xl p-1.5 mb-2 bg-[#fdfbf7] space-y-1.5 shadow-[2px_2px_0px_#1c1917]">
-                        ${this.renderMoveItem(lIdx, mIdx)}
-                        ${this.renderMoveItem(lIdx, mIdx + 1)}
+                        ${m1Matches ? this.renderMoveItem(lIdx, mIdx) : ''}
+                        ${m2Matches ? this.renderMoveItem(lIdx, mIdx + 1) : ''}
                     </div>`;
                 }
             } else {
+                let moveItemsHtml = '';
+                lm.moves.forEach((m, mIdx) => {
+                    const matches = !query || m.name.toLowerCase().includes(query);
+                    if (matches) {
+                        moveItemsHtml += this.renderMoveItem(lIdx, mIdx);
+                    }
+                });
                 movesHtml = `<div class="space-y-1.5 bg-[#fdfbf7] rounded-2xl p-1.5 mb-2 border-2 border-[#1c1917] shadow-[2px_2px_0px_#1c1917]">
-                    ${lm.moves.map((_, mIdx) => this.renderMoveItem(lIdx, mIdx)).join('')}
+                    ${moveItemsHtml}
                 </div>`;
             }
 
             section.innerHTML = `
                 <!-- Accordion Header Bar -->
                 <div class="flex items-center justify-between p-2.5 sm:p-3 cursor-pointer select-none group/hdr bg-[#ffde59] hover:bg-[#ffc312]" data-action="toggle-accordion" data-lidx="${lIdx}">
-                    <div class="flex items-center gap-2.5 flex-1 min-w-0">
+                    <div class="flex items-center gap-2 flex-1 min-w-0 pr-1">
                         <!-- Custom Touch-optimized Checkbox Wrapper (44x44px min target area) -->
                         <div class="p-1 -m-1 flex items-center justify-center cursor-pointer select-none group/cb relative shrink-0" data-action="toggle-check" data-lidx="${lIdx}">
                             <input type="checkbox" 
@@ -697,14 +729,23 @@ class DancePracticeTool {
                                 </svg>
                             </div>
                         </div>
-                        <!-- Chunk Title & Mastery % -->
-                        <div class="flex-1 min-w-0 flex items-center justify-between gap-2 pr-1">
+                        <!-- Chunk Title, Move Count & Mastery % -->
+                        <div class="flex-1 min-w-0 flex items-center justify-between gap-1.5">
                             <span class="text-xs font-black text-[#1c1917] truncate group-hover/hdr:underline transition-colors">${lm.title}</span>
-                            <span class="text-[11px] font-mono font-black px-2.5 py-1 rounded-xl shrink-0 border-2 border-[#1c1917] shadow-[2px_2px_0px_#1c1917] ${masteryPct >= 75 ? 'bg-emerald-300 text-emerald-950' : masteryPct >= 40 ? 'bg-amber-300 text-amber-950' : 'bg-rose-300 text-rose-950'}">${masteryPct}%</span>
+                            <div class="flex items-center gap-1.5 shrink-0">
+                                <span class="text-[10px] font-black text-[#1c1917] bg-[#fdfbf7] px-1.5 py-0.5 rounded border-2 border-[#1c1917] uppercase tracking-wide shadow-[1px_1px_0px_#1c1917]">${lm.moves.length} moves</span>
+                                <span class="text-[11px] font-mono font-black px-2 py-0.5 rounded-xl shrink-0 border-2 border-[#1c1917] shadow-[2px_2px_0px_#1c1917] ${masteryPct >= 75 ? 'bg-emerald-300 text-emerald-950' : masteryPct >= 40 ? 'bg-amber-300 text-amber-950' : 'bg-rose-300 text-rose-950'}">${masteryPct}%</span>
+                            </div>
                         </div>
                     </div>
-                    <!-- Accordion Toggle Chevron -->
+                    <!-- Up / Down Arrow Controls & Accordion Toggle Chevron -->
                     <div class="flex items-center gap-1 shrink-0 ml-1">
+                        <button class="text-[#1c1917] hover:bg-white bg-[#fdfbf7] border-2 border-[#1c1917] rounded-lg p-1 transition-all shadow-[1.5px_1.5px_0px_#1c1917] active:scale-[0.95] ${isFirst ? 'opacity-40 cursor-not-allowed' : ''}" data-action="scroll-prev" data-lidx="${lIdx}" title="Previous chunk">
+                            <svg class="w-3.5 h-3.5 stroke-[3.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"></path></svg>
+                        </button>
+                        <button class="text-[#1c1917] hover:bg-white bg-[#fdfbf7] border-2 border-[#1c1917] rounded-lg p-1 transition-all shadow-[1.5px_1.5px_0px_#1c1917] active:scale-[0.95] ${isLast ? 'opacity-40 cursor-not-allowed' : ''}" data-action="scroll-next" data-lidx="${lIdx}" title="Next chunk">
+                            <svg class="w-3.5 h-3.5 stroke-[3.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
                         <button class="text-[#1c1917] p-1 rounded-lg hover:bg-black/10 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}" data-action="toggle-accordion" data-lidx="${lIdx}" title="${isExpanded ? 'Collapse chunk' : 'Expand chunk'}">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path>
@@ -713,28 +754,15 @@ class DancePracticeTool {
                     </div>
                 </div>
 
-                <!-- Accordion Detail Panel (Moves & Chunk Controls) -->
-                <div class="${isExpanded ? 'block' : 'hidden'} px-2.5 pb-2.5 pt-1 border-t-2 border-[#1c1917] space-y-2 bg-[#ffffff]">
-                    <!-- Chunk Navigation Controls -->
-                    <div class="flex items-center justify-between px-1 text-[10px] text-[#78716c]">
-                        <span class="font-black text-[#78716c] uppercase tracking-wider text-[10px]">${lm.moves.length} moves</span>
-                        <div class="flex items-center gap-1.5">
-                            <button class="text-[#1c1917] hover:text-black bg-[#faedcd] hover:bg-[#ffde59] border-2 border-[#1c1917] rounded-lg px-2.5 py-1 text-[10px] font-black flex items-center gap-1 transition-all shadow-[2px_2px_0px_#1c1917] active:scale-[0.97]" data-action="scroll-prev" data-lidx="${lIdx}" title="Previous chunk">
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 15l7-7 7 7"></path></svg>
-                                Prev
-                            </button>
-                            <button class="text-[#1c1917] hover:text-black bg-[#faedcd] hover:bg-[#ffde59] border-2 border-[#1c1917] rounded-lg px-2.5 py-1 text-[10px] font-black flex items-center gap-1 transition-all shadow-[2px_2px_0px_#1c1917] active:scale-[0.97]" data-action="scroll-next" data-lidx="${lIdx}" title="Next chunk">
-                                Next
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7"></path></svg>
-                            </button>
-                        </div>
-                    </div>
+                <!-- Accordion Detail Panel (Moves) -->
+                <div class="${isExpanded ? 'block' : 'hidden'} px-2.5 pb-2.5 pt-2 border-t-2 border-[#1c1917] space-y-2 bg-[#ffffff]">
                     ${movesHtml}
                 </div>
             `;
             this.els.landmarkList.appendChild(section);
         });
         
+        this.updateCollapseExpandBtn();
         this.updateSyncButtonState();
     }
 
@@ -808,9 +836,52 @@ class DancePracticeTool {
         this.renderSidebar();
     }
 
-    collapseAllAccordions() {
-        this.expandedLandmarks.clear();
+    toggleExpandCollapseAll() {
+        const query = (this.searchQuery || '').trim().toLowerCase();
+        let visibleLandmarks = window.getFilteredLandmarkIndices(this.landmarks, this.activeFilter);
+        if (query) {
+            visibleLandmarks = visibleLandmarks.filter(lIdx => {
+                const lm = this.landmarks[lIdx];
+                return lm.moves.some(m => m.name.toLowerCase().includes(query));
+            });
+        }
+
+        const hasExpanded = visibleLandmarks.some(lIdx => this.expandedLandmarks.has(lIdx));
+
+        if (hasExpanded) {
+            this.expandedLandmarks.clear();
+        } else {
+            visibleLandmarks.forEach(lIdx => this.expandedLandmarks.add(lIdx));
+        }
         this.renderSidebar();
+    }
+
+    updateCollapseExpandBtn() {
+        if (!this.els.collapseAllBtn) return;
+        const query = (this.searchQuery || '').trim().toLowerCase();
+        let visibleLandmarks = window.getFilteredLandmarkIndices(this.landmarks, this.activeFilter);
+        if (query) {
+            visibleLandmarks = visibleLandmarks.filter(lIdx => {
+                const lm = this.landmarks[lIdx];
+                return lm.moves.some(m => m.name.toLowerCase().includes(query));
+            });
+        }
+
+        const hasExpanded = visibleLandmarks.some(lIdx => this.expandedLandmarks.has(lIdx));
+
+        if (hasExpanded) {
+            this.els.collapseAllBtn.innerHTML = `
+                <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7"></path></svg>
+                <span>Collapse All</span>
+            `;
+            this.els.collapseAllBtn.title = "Collapse all chunk accordions";
+        } else {
+            this.els.collapseAllBtn.innerHTML = `
+                <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+                <span>Expand All</span>
+            `;
+            this.els.collapseAllBtn.title = "Expand all chunk accordions";
+        }
     }
 
     selectMove(lIdx, mIdx, expand = true) {
@@ -927,8 +998,33 @@ class DancePracticeTool {
             if (!this.isPaused) this.startScheduler();
         };
 
+        if (this.els.moveSearchInput) {
+            this.els.moveSearchInput.oninput = (e) => {
+                this.searchQuery = e.target.value.trim().toLowerCase();
+                if (this.els.clearSearchBtn) {
+                    if (this.searchQuery.length > 0) {
+                        this.els.clearSearchBtn.classList.remove('hidden');
+                    } else {
+                        this.els.clearSearchBtn.classList.add('hidden');
+                    }
+                }
+                this.renderSidebar();
+            };
+        }
+
+        if (this.els.clearSearchBtn) {
+            this.els.clearSearchBtn.onclick = () => {
+                if (this.els.moveSearchInput) {
+                    this.els.moveSearchInput.value = '';
+                }
+                this.searchQuery = '';
+                this.els.clearSearchBtn.classList.add('hidden');
+                this.renderSidebar();
+            };
+        }
+
         if (this.els.collapseAllBtn) {
-            this.els.collapseAllBtn.onclick = () => this.collapseAllAccordions();
+            this.els.collapseAllBtn.onclick = () => this.toggleExpandCollapseAll();
         }
 
         // Filter Buttons
@@ -1030,8 +1126,8 @@ class DancePracticeTool {
 
     getPlayPauseBtnHtml(isPaused) {
         return isPaused ? 
-            `<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path></svg> Resume` :
-            `<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg> Pause`;
+            `<svg class="w-5 h-5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path></svg> <span class="leading-none">Resume</span>` :
+            `<svg class="w-5 h-5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg> <span class="leading-none">Pause</span>`;
     }
 
     toggleSyncView(view) {
