@@ -8,21 +8,21 @@
 const MASTERY_CONFIG = {
     learning: {
         text: 'Learning',
-        textColor: 'text-red-400',
-        badgeColor: 'bg-red-500/10 border-red-500/30 text-red-400',
-        diffColor: 'text-red-400 bg-red-950/40 border-red-900/30'
+        textColor: 'text-rose-900 font-black',
+        badgeColor: 'bg-rose-400 border-2 border-[#1c1917] text-rose-950 shadow-[2px_2px_0px_#1c1917]',
+        diffColor: 'text-rose-900 bg-rose-100 border-2 border-rose-300'
     },
     familiar: {
         text: 'Familiar',
-        textColor: 'text-amber-400',
-        badgeColor: 'bg-amber-500/10 border-amber-500/30 text-amber-400',
-        diffColor: 'text-amber-400 bg-amber-950/40 border-amber-900/30'
+        textColor: 'text-amber-900 font-black',
+        badgeColor: 'bg-amber-300 border-2 border-[#1c1917] text-amber-950 shadow-[2px_2px_0px_#1c1917]',
+        diffColor: 'text-amber-900 bg-amber-100 border-2 border-amber-300'
     },
     mastered: {
         text: 'Mastered',
-        textColor: 'text-emerald-400',
-        badgeColor: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400',
-        diffColor: 'text-emerald-400 bg-emerald-950/40 border-emerald-900/30'
+        textColor: 'text-emerald-900 font-black',
+        badgeColor: 'bg-emerald-400 border-2 border-[#1c1917] text-emerald-950 shadow-[2px_2px_0px_#1c1917]',
+        diffColor: 'text-emerald-900 bg-emerald-100 border-2 border-emerald-300'
     }
 };
 
@@ -274,8 +274,9 @@ class DancePracticeTool {
     // --- Daily Practice Counter ---
     getDailyMovesCount() {
         const today = new Date().toLocaleDateString('en-CA');
+        const key = `dance_daily_moves_tracker_${this.danceType || 'general'}`;
         try {
-            const saved = localStorage.getItem('dance_daily_moves_tracker');
+            const saved = localStorage.getItem(key);
             if (saved) {
                 const data = JSON.parse(saved);
                 if (data && data.date === today && typeof data.count === 'number') {
@@ -290,10 +291,11 @@ class DancePracticeTool {
 
     incrementDailyMovesCount() {
         const today = new Date().toLocaleDateString('en-CA');
+        const key = `dance_daily_moves_tracker_${this.danceType || 'general'}`;
         let currentCount = this.getDailyMovesCount();
         currentCount++;
         try {
-            localStorage.setItem('dance_daily_moves_tracker', JSON.stringify({
+            localStorage.setItem(key, JSON.stringify({
                 date: today,
                 count: currentCount
             }));
@@ -571,12 +573,12 @@ class DancePracticeTool {
             const links = lm.links || [];
             if (links.length > 0) {
                 this.els.tutorialLinks.innerHTML = links.map(link => `
-                    <a href="${link.url}" target="_blank" class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-950/50 hover:bg-slate-900/50 text-slate-300 hover:text-white text-[10px] font-bold rounded-lg border border-slate-800 uppercase transition-colors">
-                        ${link.label}
+                    <a href="${link.url}" target="_blank" class="flex items-center gap-1.5 px-3 py-1.5 bg-white text-stone-900 hover:bg-stone-100 text-[10px] font-black rounded-xl border-2 border-[#1c1917] uppercase transition-all shadow-[2px_2px_0px_#1c1917] active:scale-95">
+                        🎬 ${link.label}
                     </a>
                 `).join('');
             } else {
-                this.els.tutorialLinks.innerHTML = `<span class="text-[10px] text-slate-500 font-mono italic">No video links for this chunk</span>`;
+                this.els.tutorialLinks.innerHTML = `<span class="text-[10px] text-stone-600 font-mono italic">No video links for this chunk</span>`;
             }
         }
     }
@@ -610,7 +612,7 @@ class DancePracticeTool {
             this.els.currentMoveLabel.innerHTML = `
                 <div class="${animClass} ${this.isPaused ? 'paused-anim' : ''} flex flex-col items-center justify-center gap-2">
                     <div class="flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
-                        <span class="text-lg sm:text-xl md:text-2xl font-black px-3 py-1 rounded bg-${this.accentColor}-950/40 border border-${this.accentColor}-900/30 text-${this.accentColor}-400 flex items-center gap-1 font-mono">${labelTag}</span>
+                        <span class="text-lg sm:text-xl md:text-2xl font-black px-3.5 py-1.5 rounded-2xl bg-white border-2 border-stone-900 text-stone-900 shadow-[3px_3px_0px_#1c1917] flex items-center gap-1 font-mono">${labelTag}</span>
                         <span class="text-lg sm:text-xl md:text-2xl font-black ${config.textColor} tracking-tight text-center leading-tight">${move.name}</span>
                     </div>
                     ${hintHtml}
@@ -655,10 +657,10 @@ class DancePracticeTool {
             const isExpanded = this.expandedLandmarks.has(lIdx);
 
             const section = document.createElement('div'); section.id = `lm-section-${lIdx}`;
-            section.className = `rounded-xl transition-all duration-200 overflow-hidden border ${
+            section.className = `rounded-2xl transition-all duration-200 overflow-hidden border-2 border-[#1c1917] shadow-[4px_4px_0px_#1c1917] ${
                 isCurrent 
-                    ? 'landmark-active border-indigo-500/50 bg-slate-900/80 shadow-md' 
-                    : 'border-slate-800/80 bg-slate-900/40 hover:bg-slate-900/60'
+                    ? 'landmark-active bg-[#fff1f2]' 
+                    : 'bg-[#ffffff] hover:bg-[#faedcd]'
             }`;
             section.style.color = lm.color;
 
@@ -668,28 +670,28 @@ class DancePracticeTool {
             let movesHtml = '';
             if (this.danceType === 'bachata') {
                 for (let mIdx = 0; mIdx < lm.moves.length; mIdx += 2) {
-                    movesHtml += `<div class="border border-slate-800/80 rounded-lg p-0.5 mb-1.5 bg-slate-950/40 space-y-0.5">
+                    movesHtml += `<div class="border-2 border-[#1c1917] rounded-2xl p-1.5 mb-2 bg-[#fdfbf7] space-y-1.5 shadow-[2px_2px_0px_#1c1917]">
                         ${this.renderMoveItem(lIdx, mIdx)}
                         ${this.renderMoveItem(lIdx, mIdx + 1)}
                     </div>`;
                 }
             } else {
-                movesHtml = `<div class="space-y-0.5 bg-slate-950/40 rounded-lg p-0.5 mb-1.5 border border-slate-800/80">
+                movesHtml = `<div class="space-y-1.5 bg-[#fdfbf7] rounded-2xl p-1.5 mb-2 border-2 border-[#1c1917] shadow-[2px_2px_0px_#1c1917]">
                     ${lm.moves.map((_, mIdx) => this.renderMoveItem(lIdx, mIdx)).join('')}
                 </div>`;
             }
 
             section.innerHTML = `
                 <!-- Accordion Header Bar -->
-                <div class="flex items-center justify-between p-2 sm:p-2.5 cursor-pointer select-none group/hdr" data-action="toggle-accordion" data-lidx="${lIdx}">
-                    <div class="flex items-center gap-2 flex-1 min-w-0">
+                <div class="flex items-center justify-between p-2.5 sm:p-3 cursor-pointer select-none group/hdr bg-[#ffde59] hover:bg-[#ffc312]" data-action="toggle-accordion" data-lidx="${lIdx}">
+                    <div class="flex items-center gap-2.5 flex-1 min-w-0">
                         <!-- Custom Touch-optimized Checkbox Wrapper (44x44px min target area) -->
                         <div class="p-1 -m-1 flex items-center justify-center cursor-pointer select-none group/cb relative shrink-0" data-action="toggle-check" data-lidx="${lIdx}">
                             <input type="checkbox" 
                                    class="chunk-checkbox absolute opacity-0 cursor-pointer w-7 h-7 z-10" 
                                    data-lidx="${lIdx}" 
                                    ${isSelected ? 'checked' : ''}>
-                            <div class="w-4 h-4 rounded border-2 border-slate-700 bg-slate-950 flex items-center justify-center transition-all duration-200 group-hover/cb:border-${this.accentColor}-500/50 ${isSelected ? `bg-${this.accentColor}-600/20 border-${this.accentColor}-500 text-${this.accentColor}-400 shadow-[0_0_10px_rgba(99,102,241,0.2)]` : 'text-transparent'}">
+                            <div class="w-4 h-4 rounded border-2 border-[#1c1917] flex items-center justify-center transition-all duration-200 group-hover/cb:scale-110 ${isSelected ? 'bg-[#1c1917] text-white shadow-sm' : 'bg-white text-transparent'}">
                                 <svg class="w-3 h-3 stroke-[3.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                                 </svg>
@@ -697,14 +699,14 @@ class DancePracticeTool {
                         </div>
                         <!-- Chunk Title & Mastery % -->
                         <div class="flex-1 min-w-0 flex items-center justify-between gap-2 pr-1">
-                            <span class="text-xs font-bold text-slate-200 truncate group-hover/hdr:text-white transition-colors">${lm.title}</span>
-                            <span class="text-[9px] font-mono px-1.5 py-0.5 rounded shrink-0 ${masteryPct >= 75 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : masteryPct >= 40 ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}">${masteryPct}%</span>
+                            <span class="text-xs font-black text-[#1c1917] truncate group-hover/hdr:underline transition-colors">${lm.title}</span>
+                            <span class="text-[11px] font-mono font-black px-2.5 py-1 rounded-xl shrink-0 border-2 border-[#1c1917] shadow-[2px_2px_0px_#1c1917] ${masteryPct >= 75 ? 'bg-emerald-300 text-emerald-950' : masteryPct >= 40 ? 'bg-amber-300 text-amber-950' : 'bg-rose-300 text-rose-950'}">${masteryPct}%</span>
                         </div>
                     </div>
                     <!-- Accordion Toggle Chevron -->
                     <div class="flex items-center gap-1 shrink-0 ml-1">
-                        <button class="text-slate-400 group-hover/hdr:text-slate-200 p-1 rounded hover:bg-slate-800/60 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}" data-action="toggle-accordion" data-lidx="${lIdx}" title="${isExpanded ? 'Collapse chunk' : 'Expand chunk'}">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <button class="text-[#1c1917] p-1 rounded-lg hover:bg-black/10 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}" data-action="toggle-accordion" data-lidx="${lIdx}" title="${isExpanded ? 'Collapse chunk' : 'Expand chunk'}">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path>
                             </svg>
                         </button>
@@ -712,18 +714,18 @@ class DancePracticeTool {
                 </div>
 
                 <!-- Accordion Detail Panel (Moves & Chunk Controls) -->
-                <div class="${isExpanded ? 'block' : 'hidden'} px-2 pb-2 pt-0.5 border-t border-slate-800/50 space-y-1.5">
+                <div class="${isExpanded ? 'block' : 'hidden'} px-2.5 pb-2.5 pt-1 border-t-2 border-[#1c1917] space-y-2 bg-[#ffffff]">
                     <!-- Chunk Navigation Controls -->
-                    <div class="flex items-center justify-between px-1 text-[10px] text-slate-400">
-                        <span class="font-bold text-slate-500 uppercase tracking-wider text-[9px]">${lm.moves.length} moves</span>
-                        <div class="flex items-center gap-1">
-                            <button class="text-slate-400 hover:text-white bg-slate-950/60 hover:bg-slate-800 border border-slate-800 rounded px-2 py-0.5 text-[9px] font-bold flex items-center gap-1 transition-colors" data-action="scroll-prev" data-lidx="${lIdx}" title="Previous chunk">
-                                <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 15l7-7 7 7"></path></svg>
+                    <div class="flex items-center justify-between px-1 text-[10px] text-[#78716c]">
+                        <span class="font-black text-[#78716c] uppercase tracking-wider text-[10px]">${lm.moves.length} moves</span>
+                        <div class="flex items-center gap-1.5">
+                            <button class="text-[#1c1917] hover:text-black bg-[#faedcd] hover:bg-[#ffde59] border-2 border-[#1c1917] rounded-lg px-2.5 py-1 text-[10px] font-black flex items-center gap-1 transition-all shadow-[2px_2px_0px_#1c1917] active:scale-[0.97]" data-action="scroll-prev" data-lidx="${lIdx}" title="Previous chunk">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 15l7-7 7 7"></path></svg>
                                 Prev
                             </button>
-                            <button class="text-slate-400 hover:text-white bg-slate-950/60 hover:bg-slate-800 border border-slate-800 rounded px-2 py-0.5 text-[9px] font-bold flex items-center gap-1 transition-colors" data-action="scroll-next" data-lidx="${lIdx}" title="Next chunk">
+                            <button class="text-[#1c1917] hover:text-black bg-[#faedcd] hover:bg-[#ffde59] border-2 border-[#1c1917] rounded-lg px-2.5 py-1 text-[10px] font-black flex items-center gap-1 transition-all shadow-[2px_2px_0px_#1c1917] active:scale-[0.97]" data-action="scroll-next" data-lidx="${lIdx}" title="Next chunk">
                                 Next
-                                <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7"></path></svg>
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7"></path></svg>
                             </button>
                         </div>
                     </div>
@@ -777,15 +779,15 @@ class DancePracticeTool {
         const tooltipClass = m.hint ? 'has-move-tooltip' : '';
 
         const moveLink = m.link ? (lm.links || []).find(l => l.id === m.link) : null;
-        const movieLinkHtml = moveLink ? `<a href="${moveLink.url}" target="_blank" class="ml-1 hover:scale-110 transition-transform inline-block" onclick="event.stopPropagation()">🎬</a>` : '';
+        const movieLinkHtml = moveLink ? `<a href="${moveLink.url}" target="_blank" class="ml-1.5 px-1.5 py-0.5 bg-white text-stone-900 border-2 border-[#1c1917] rounded-md shadow-[1.5px_1.5px_0px_#1c1917] hover:scale-110 hover:bg-stone-100 active:scale-95 transition-all inline-flex items-center leading-none text-[10px]" title="Watch video" onclick="event.stopPropagation()">🎬</a>` : '';
 
         return `
-            <div id="m-${lIdx}-${mIdx}" class="text-[11px] px-2 py-1.5 rounded flex items-center justify-between gap-2 group cursor-pointer ${isCurrent ? 'move-active' : 'hover:bg-slate-900/30'} ${tooltipClass}" data-action="select" data-lidx="${lIdx}" data-midx="${mIdx}">
-                <span class="truncate flex-1 py-0.5 font-bold ${config.textColor}" data-lidx="${lIdx}" data-midx="${mIdx}">
-                    ${m.hint ? '<span class="text-white mr-1">?</span>' : ''}${m.name} ${this.danceType === 'wcs' ? `<span class="opacity-60 text-[9px] font-mono">(${m.beats}🥁)</span>` : ''}${movieLinkHtml}
+            <div id="m-${lIdx}-${mIdx}" class="text-[11px] px-3 py-2 rounded-xl flex items-center justify-between gap-2.5 group cursor-pointer border-2 transition-all ${isCurrent ? 'move-active bg-[#fff1f2] text-slate-950 border-[#1c1917] shadow-[3px_3px_0px_#1c1917]' : 'bg-[#ffde59] text-stone-900 border-[#1c1917] hover:bg-[#ffc312] shadow-[2px_2px_0px_#1c1917]'} ${tooltipClass}" data-action="select" data-lidx="${lIdx}" data-midx="${mIdx}">
+                <span class="truncate flex-1 py-0.5 font-black ${isCurrent ? 'text-slate-950' : 'text-stone-900'}" data-lidx="${lIdx}" data-midx="${mIdx}">
+                    ${m.hint ? '<span class="bg-rose-500 border border-slate-900 px-1.5 py-0.5 rounded text-[9px] mr-1.5 text-white font-black shadow-[1px_1px_0px_#1c1917]">?</span>' : ''}${m.name} ${this.danceType === 'wcs' ? `<span class="${isCurrent ? 'bg-slate-950 text-white' : 'bg-[#1c1917] text-white'} px-1.5 py-0.5 rounded text-[9px] font-mono font-black ml-1.5">${m.beats}🥁</span>` : ''}${movieLinkHtml}
                 </span>
                 ${tooltipHtml}
-                <button class="shrink-0 text-[9px] font-black uppercase tracking-wider px-2 py-1.5 sm:py-1 rounded ${modifiedBorderClass} ${config.badgeColor} hover:brightness-125 transition-all shadow-sm active:scale-[0.97]" data-action="cycle" data-lidx="${lIdx}" data-midx="${mIdx}">
+                <button class="shrink-0 text-[10px] font-black uppercase tracking-wider px-2.5 py-1.5 rounded-lg ${modifiedBorderClass} ${config.badgeColor} hover:brightness-110 transition-all active:scale-[0.97]" data-action="cycle" data-lidx="${lIdx}" data-midx="${mIdx}">
                     ${config.text}
                 </button>
             </div>

@@ -16,141 +16,146 @@
     }
   </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between overflow-x-hidden selection:bg-indigo-600/30 selection:text-indigo-200">
+<body class="bg-[#fbf9f5] text-stone-900 min-h-screen flex flex-col justify-between overflow-x-hidden selection:bg-indigo-500 selection:text-white">
 
-  <!-- Header & Top Nav -->
-  <header class="border-b border-slate-900 bg-slate-950/80 backdrop-blur-md sticky top-0 z-10">
-    <div class="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
+  <!-- Header & Top Vibrant Banner -->
+  <header class="bg-gradient-to-r from-[#ff5733] via-[#ff6b4a] to-[#ff8c42] text-white shadow-md sticky top-0 z-20">
+    <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
       <div class="flex items-center gap-3">
         <!-- Logo Icon -->
-        <div class="h-10 w-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-400 flex items-center justify-center text-white shadow-lg shadow-indigo-900/20">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+        <div class="h-11 w-11 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white shadow-inner border border-white/30">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-6 h-6">
             <path stroke-linecap="round" stroke-linejoin="round" d="M9 9l10.5-3m0 0L5.25 8.25m14.25-2.25V18.75m0 0A2.25 2.25 0 1118 16.5h1.5zm-14.25-8.25v11.25m0 0A2.25 2.25 0 113 16.5h1.5z" />
           </svg>
         </div>
         <div>
-          <span class="text-lg font-extrabold tracking-tight bg-gradient-to-r from-indigo-400 to-indigo-300 bg-clip-text text-transparent">Dance Practice</span>
-          <span class="text-xs font-semibold text-slate-500 block -mt-1 tracking-wider uppercase">Landmark Memorizer</span>
+          <div class="flex items-center gap-2">
+            <span class="text-xl font-black tracking-tight text-white drop-shadow-sm">DANCE SYNC</span>
+            <span class="bg-[#ffde59] text-stone-950 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider">Pro Practice</span>
+          </div>
+          <span class="text-xs font-bold text-white/90 block tracking-wide uppercase">Landmark Memorizer & Metronome</span>
         </div>
       </div>
     </div>
   </header>
 
   <!-- Main Content -->
-  <main class="max-w-5xl w-full mx-auto px-6 py-12 flex-1 flex flex-col justify-center">
+  <main class="max-w-6xl w-full mx-auto px-6 py-12 flex-1 flex flex-col justify-center">
     
     <!-- Hero Title Section -->
-    <div class="text-center max-w-2xl mx-auto mb-16">
-      <span class="px-3 py-1 bg-slate-900 border border-slate-800 rounded-full text-xs font-semibold text-slate-400 tracking-wider uppercase mb-4 inline-block">
-        🚀 Interactive Training Tool
+    <div class="text-center max-w-3xl mx-auto mb-16">
+      <span class="px-4 py-1.5 bg-[#ffde59] border-2 border-stone-900 rounded-full text-xs font-black text-stone-900 tracking-wider uppercase mb-5 inline-block shadow-[2px_2px_0px_#1c1917]">
+        ⚡ Zero-Friction Social Dancing
       </span>
-      <h1 class="text-4xl sm:text-5xl font-black text-white tracking-tight mb-4 leading-tight">
-        Master Your <span class="bg-gradient-to-r from-indigo-400 via-indigo-500 to-purple-400 bg-clip-text text-transparent">Landmarks & Timing</span>
+      <h1 class="text-4xl sm:text-6xl font-black text-stone-900 tracking-tight mb-5 leading-tight">
+        Master Your <span class="text-indigo-700 underline decoration-wavy decoration-[#ff5733]">Landmarks & Timing</span>
       </h1>
-      <p class="text-slate-400 text-base leading-relaxed">
-        Memorize key structural landmarks, visual cues, and count-by-count routines for your social dancing. Use the metronome drills to lock down muscle memory.
+      <p class="text-stone-700 text-lg leading-relaxed font-medium">
+        Memorize key structural landmarks, visual cues, and count-by-count routines for social dancing. Use the metronome drills to lock down muscle memory effortlessly.
       </p>
     </div>
 
-
-
     <!-- Active Dance Styles Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
       
       <!-- Bachata Card -->
-      <a href="chunked_bachata.html" class="group relative flex flex-col justify-between bg-slate-900 border border-slate-800/80 hover:border-indigo-500/40 rounded-2xl p-8 shadow-xl transition-all hover:translate-y-[-4px] hover:shadow-2xl hover:shadow-indigo-900/5">
+      <a href="chunked_bachata.html" class="group relative flex flex-col justify-between bg-gradient-to-br from-[#4c1d95] to-[#3b0764] text-white border-3 border-stone-900 hover:border-[#ff5733] rounded-3xl p-8 shadow-[6px_6px_0px_#1c1917] hover:shadow-[8px_8px_0px_#ff5733] transition-all hover:translate-y-[-4px]">
         <div class="space-y-4">
           <div class="flex justify-between items-start">
-            <span class="px-2.5 py-1 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 rounded-md text-[10px] font-black tracking-wider uppercase">
+            <span class="px-3 py-1 bg-[#ffde59] text-stone-950 rounded-lg text-xs font-black tracking-wider uppercase shadow-sm">
               Bachata
             </span>
+            <span class="text-xs font-bold text-purple-300">Sequential & Tap</span>
           </div>
           
-          <h2 class="text-2xl font-black text-white group-hover:text-indigo-400 transition-colors">
+          <h2 class="text-2xl font-black text-white group-hover:text-[#ffde59] transition-colors">
             Bachata Landmark Memorizer
           </h2>
-          <p class="text-slate-400 text-sm leading-relaxed">
+          <p class="text-purple-200 text-sm leading-relaxed font-medium">
             Practice modern sequential loops, hammerlocks, pretzel variants, closed control, and shadow body rolls with an active, configurable metronome.
           </p>
         </div>
 
-        <div class="flex items-center gap-2 mt-8 text-xs font-bold text-indigo-400 group-hover:text-indigo-300 transition-colors">
-          Start Practicing
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 transform group-hover:translate-x-1 transition-transform">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-          </svg>
+        <div class="flex items-center justify-between mt-8 pt-4 border-t border-purple-800/60">
+          <span class="text-xs font-black tracking-wider uppercase text-[#ffde59]">Launch Tool</span>
+          <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-[#ffde59] group-hover:text-stone-950 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 transform group-hover:translate-x-0.5 transition-transform">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+            </svg>
+          </div>
         </div>
       </a>
 
       <!-- West Coast Swing Card -->
-      <a href="chunked_wcs.html" class="group relative flex flex-col justify-between bg-slate-900 border border-slate-800/80 hover:border-indigo-500/40 rounded-2xl p-8 shadow-xl transition-all hover:translate-y-[-4px] hover:shadow-2xl hover:shadow-indigo-900/5">
+      <a href="chunked_wcs.html" class="group relative flex flex-col justify-between bg-gradient-to-br from-[#1e3a8a] to-[#172554] text-white border-3 border-stone-900 hover:border-[#ff5733] rounded-3xl p-8 shadow-[6px_6px_0px_#1c1917] hover:shadow-[8px_8px_0px_#ff5733] transition-all hover:translate-y-[-4px]">
         <div class="space-y-4">
           <div class="flex justify-between items-start">
-            <span class="px-2.5 py-1 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 rounded-md text-[10px] font-black tracking-wider uppercase">
-              West Coast Swing
+            <span class="px-3 py-1 bg-[#ffde59] text-stone-950 rounded-lg text-xs font-black tracking-wider uppercase shadow-sm">
+              WCS
             </span>
+            <span class="text-xs font-bold text-blue-200">Slot & Anchor</span>
           </div>
           
-          <h2 class="text-2xl font-black text-white group-hover:text-indigo-400 transition-colors">
+          <h2 class="text-2xl font-black text-white group-hover:text-[#ffde59] transition-colors">
             WCS Landmark Memorizer
           </h2>
-          <p class="text-slate-400 text-sm leading-relaxed">
+          <p class="text-blue-200 text-sm leading-relaxed font-medium">
             Reinforce West Coast Swing timing drills. Visualizes anchors, counts, linear lanes, and dynamic tempos to sharpen lead/follow cues.
           </p>
         </div>
 
-        <div class="flex items-center gap-2 mt-8 text-xs font-bold text-indigo-400 group-hover:text-indigo-300 transition-colors">
-          Start Practicing
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 transform group-hover:translate-x-1 transition-transform">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-          </svg>
+        <div class="flex items-center justify-between mt-8 pt-4 border-t border-blue-900/60">
+          <span class="text-xs font-black tracking-wider uppercase text-[#ffde59]">Launch Tool</span>
+          <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-[#ffde59] group-hover:text-stone-950 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 transform group-hover:translate-x-0.5 transition-transform">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+            </svg>
+          </div>
         </div>
       </a>
 
       <!-- Salsa On 1 Card -->
-      <a href="chunked_salsa.html" class="group relative flex flex-col justify-between bg-slate-900 border border-slate-800/80 hover:border-indigo-500/40 rounded-2xl p-8 shadow-xl transition-all hover:translate-y-[-4px] hover:shadow-2xl hover:shadow-indigo-900/5">
+      <a href="chunked_salsa.html" class="group relative flex flex-col justify-between bg-gradient-to-br from-[#991b1b] to-[#7f1d1d] text-white border-3 border-stone-900 hover:border-[#ff5733] rounded-3xl p-8 shadow-[6px_6px_0px_#1c1917] hover:shadow-[8px_8px_0px_#ff5733] transition-all hover:translate-y-[-4px]">
         <div class="space-y-4">
           <div class="flex justify-between items-start">
-            <span class="px-2.5 py-1 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 rounded-md text-[10px] font-black tracking-wider uppercase">
+            <span class="px-3 py-1 bg-[#ffde59] text-stone-950 rounded-lg text-xs font-black tracking-wider uppercase shadow-sm">
               Salsa On 1
             </span>
+            <span class="text-xs font-bold text-red-200">8-Count & Turns</span>
           </div>
           
-          <h2 class="text-2xl font-black text-white group-hover:text-indigo-400 transition-colors">
+          <h2 class="text-2xl font-black text-white group-hover:text-[#ffde59] transition-colors">
             Salsa Landmark Memorizer
           </h2>
-          <p class="text-slate-400 text-sm leading-relaxed">
+          <p class="text-red-200 text-sm leading-relaxed font-medium">
             Practice Salsa LA Style fundamentals, turns, cross body leads, and copas with an 8-count metronome specifically tuned for On 1 timing.
           </p>
         </div>
 
-        <div class="flex items-center gap-2 mt-8 text-xs font-bold text-indigo-400 group-hover:text-indigo-300 transition-colors">
-          Start Practicing
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 transform group-hover:translate-x-1 transition-transform">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-          </svg>
+        <div class="flex items-center justify-between mt-8 pt-4 border-t border-red-950/60">
+          <span class="text-xs font-black tracking-wider uppercase text-[#ffde59]">Launch Tool</span>
+          <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-[#ffde59] group-hover:text-stone-950 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 transform group-hover:translate-x-0.5 transition-transform">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+            </svg>
+          </div>
         </div>
       </a>
 
     </div>
 
-    <!-- Active Dance Styles Grid -->
+    <!-- Mastery Dashboard Container -->
     <div id="masteryDashboardContainer" class="mb-12"></div>
-
-
-
-
-
 
   </main>
 
   <!-- Footer -->
-  <footer class="border-t border-slate-900 bg-slate-950/40 py-8 text-center text-xs text-slate-600">
-    <div class="max-w-5xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-      <span class="font-medium">&copy; 2026 Dance Practice Landmarks Guide. All rights reserved.</span>
+  <footer class="border-t-2 border-stone-900 bg-stone-100 py-8 text-center text-xs text-stone-600 font-semibold">
+    <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <span>&copy; 2026 Dance Practice Landmarks Guide. All rights reserved.</span>
       <div class="flex items-center gap-2">
-        <span class="h-1 w-1 bg-slate-600 rounded-full"></span>
-        <span class="font-mono text-[10px]">Imported from siddiqaa/DancePracticeHelper</span>
+        <span class="h-2 w-2 bg-emerald-500 rounded-full"></span>
+        <span class="mono text-[10px]">Synced locally &middot; Vibrant Synapse Theme</span>
       </div>
     </div>
   </footer>
@@ -158,6 +163,14 @@
   <script src="bachata_data.js"></script>
   <script src="wcs_data.js"></script>
   <script src="salsa_data.js"></script>
+  <script src="common_practice.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Render global mastery summary on dashboard if needed
+    });
+  </script>
+</body>
+</html>
   <script>
     function renderGlobalDashboard() {
       const container = document.getElementById('masteryDashboardContainer');
