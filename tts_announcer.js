@@ -17,7 +17,7 @@ class ChunkTTSAnnouncer {
         this.preferredVoice = null;
         this.rate = 1.0;
         this.pitch = 1.0;
-        this.volume = 1.0;
+        this.volume = 0.5;
         this.uiButton = null;
 
         if (this.synth) {

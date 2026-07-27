@@ -1,3 +1,56 @@
-<svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke-width="2" stroke="currentColor" class="w-5 h-5">
-  <path stroke-linecap="round" stroke-linejoin="round" d="M9 9l10.5-3m0 0L5.25 8.25m14.25-2.25V18.75m0 0A2.25 2.25 0 1118 16.5h1.5zm-14.25-8.25v11.25m0 0A2.25 2.25 0 113 16.5h1.5z" />
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#6D28D9"/>
+      <stop offset="100%" stop-color="#DB2777"/>
+    </linearGradient>
+    <linearGradient id="note" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#F3E8FF"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Rounded square background -->
+  <rect width="64" height="64" rx="14" fill="url(#bg)"/>
+
+  <!-- Staff lines -->
+  <g stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" opacity="0.55">
+    <line x1="10" y1="20" x2="54" y2="20"/>
+    <line x1="10" y1="27" x2="54" y2="27"/>
+    <line x1="10" y1="34" x2="54" y2="34"/>
+    <line x1="10" y1="41" x2="54" y2="41"/>
+    <line x1="10" y1="48" x2="54" y2="48"/>
+  </g>
+
+  <!-- Beamed eighth notes with dancing, wavy stems -->
+  <g fill="url(#note)">
+    <!-- left stem: S-curve kick to the left -->
+    <path d="M23 44
+             C 19 38, 27 32, 21 26
+             C 17 21.5, 23 18, 26 16.5
+             L 27 19
+             C 24.5 20.5, 20.5 23, 23.5 27
+             C 29 33.5, 21.5 39, 25.5 44.5
+             Z"/>
+
+    <!-- right stem: mirrored S-curve kick to the right -->
+    <path d="M41 40
+             C 45.5 34.5, 38 29, 43.5 23
+             C 47 19, 42 14.5, 41 12.5
+             L 44 12
+             C 45.5 14.5, 50 19, 46 23.5
+             C 40.5 29.5, 47.5 34.5, 44 40.5
+             Z"/>
+
+    <!-- beam connecting the two stems, given a slight sway -->
+    <path d="M26.5 16.5
+             C 32 14, 38 12.5, 41 12.5
+             L 43.5 18.5
+             C 39 18, 32.5 19.5, 27.5 22.5
+             Z"/>
+
+    <!-- note heads (tilted ellipses), slightly rotated for a livelier stance -->
+    <ellipse cx="19" cy="46" rx="6.4" ry="4.7" transform="rotate(-22 19 46)"/>
+    <ellipse cx="38" cy="42" rx="6.4" ry="4.7" transform="rotate(-14 38 42)"/>
+  </g>
 </svg>
