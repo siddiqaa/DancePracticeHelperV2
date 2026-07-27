@@ -231,13 +231,15 @@ class DancePracticeTool {
             movesTabPanel: document.getElementById('movesTabPanel'),
             practiceTabPanel: document.getElementById('practiceTabPanel'),
             mobileTabPracticeBtn: document.getElementById('mobileTabPracticeBtn'),
-            mobileTabMovesBtn: document.getElementById('mobileTabMovesBtn')
+            mobileTabMovesBtn: document.getElementById('mobileTabMovesBtn'),
+            dailyMovesCount: document.getElementById('dailyMovesCount')
         };
     }
 
     init() {
         this.loadMasteryState();
         this.updateMasteryStats();
+        this.updateDailyMovesUI();
         
         // Initialize practice selection checkboxes as empty (unchecked by default)
         this.selectedLandmarkIndices = [];
@@ -252,6 +254,11 @@ class DancePracticeTool {
         this.updateMoveDisplay(false);
         this.setupEventListeners();
         this.setupMobileTabs();
+
+        if (window.ChunkSpeech && document.getElementById('ttsToggleBtn')) {
+            window.ChunkSpeech.initUI('ttsToggleBtn');
+        }
+
         requestAnimationFrame(() => this.draw());
     }
 
@@ -262,6 +269,48 @@ class DancePracticeTool {
 
     saveMasteryState() {
         window.saveMasteryState(this.storageKey, this.landmarks);
+    }
+
+    // --- Daily Practice Counter ---
+    getDailyMovesCount() {
+        const today = new Date().toLocaleDateString('en-CA');
+        try {
+            const saved = localStorage.getItem('dance_daily_moves_tracker');
+            if (saved) {
+                const data = JSON.parse(saved);
+                if (data && data.date === today && typeof data.count === 'number') {
+                    return data.count;
+                }
+            }
+        } catch (e) {
+            console.warn('Error reading daily moves count', e);
+        }
+        return 0;
+    }
+
+    incrementDailyMovesCount() {
+        const today = new Date().toLocaleDateString('en-CA');
+        let currentCount = this.getDailyMovesCount();
+        currentCount++;
+        try {
+            localStorage.setItem('dance_daily_moves_tracker', JSON.stringify({
+                date: today,
+                count: currentCount
+            }));
+        } catch (e) {
+            console.warn('Error saving daily moves count', e);
+        }
+        this.updateDailyMovesUI(currentCount);
+        return currentCount;
+    }
+
+    updateDailyMovesUI(count = null) {
+        if (count === null) {
+            count = this.getDailyMovesCount();
+        }
+        if (this.els.dailyMovesCount) {
+            this.els.dailyMovesCount.textContent = count;
+        }
     }
 
     // --- Filtering ---
@@ -390,6 +439,19 @@ class DancePracticeTool {
         this.beatIdx = playedBeat.beat;
         this.phraseBeatIdx = playedBeat.phraseBeat;
 
+        // Daily moves counter increment logic:
+        // WCS: increment after each move (last beat of move)
+        // Bachata/Salsa: increment after each 8-beat pair (phraseBeat 7)
+        if (this.danceType === 'wcs') {
+            if (playedBeat.beat === playedBeat.beatsTotal - 1) {
+                this.incrementDailyMovesCount();
+            }
+        } else {
+            if (playedBeat.phraseBeat === 7) {
+                this.incrementDailyMovesCount();
+            }
+        }
+
         let displayLIdx = playedBeat.landmarkIdx;
         let displayMIdx = playedBeat.moveIdx;
 
@@ -424,6 +486,7 @@ class DancePracticeTool {
         }
 
         if (displayMIdx !== this.lastRenderedMoveIdx || displayLIdx !== this.lastRenderedLandmarkIdx) {
+            const isNewLandmark = (displayLIdx !== this.lastRenderedLandmarkIdx);
             this.lastRenderedMoveIdx = displayMIdx;
             this.lastRenderedLandmarkIdx = displayLIdx;
             this.currentLandmarkIdx = displayLIdx;
@@ -432,6 +495,11 @@ class DancePracticeTool {
             this.updateHUD();
             this.renderSidebar();
             this.updateMoveDisplay(false);
+
+            if (isNewLandmark && window.ChunkSpeech) {
+                const lm = this.landmarks[displayLIdx];
+                if (lm) window.ChunkSpeech.announceChunk(lm.title);
+            }
         }
 
         // Random mode landmark completion
@@ -469,6 +537,11 @@ class DancePracticeTool {
         this.renderSidebar();
         this.updateMoveDisplay(false);
 
+        if (window.ChunkSpeech) {
+            const lm = this.landmarks[this.currentLandmarkIdx];
+            if (lm) window.ChunkSpeech.announceChunk(lm.title);
+        }
+
         this.els.startOverlay.classList.remove('hidden');
         if (this.els.overlayContent) this.els.overlayContent.classList.add('hidden');
         this.els.countdownDisplay.classList.remove('hidden');
@@ -495,11 +568,16 @@ class DancePracticeTool {
         if (this.els.landmarkTitle) this.els.landmarkTitle.textContent = lm.title;
 
         if (this.els.tutorialLinks) {
-            this.els.tutorialLinks.innerHTML = (lm.links || []).map(link => `
-                <a href="${link.url}" target="_blank" class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-950/50 hover:bg-slate-900/50 text-slate-300 hover:text-white text-[10px] font-bold rounded-lg border border-slate-800 uppercase transition-colors">
-                    ${link.label}
-                </a>
-            `).join('');
+            const links = lm.links || [];
+            if (links.length > 0) {
+                this.els.tutorialLinks.innerHTML = links.map(link => `
+                    <a href="${link.url}" target="_blank" class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-950/50 hover:bg-slate-900/50 text-slate-300 hover:text-white text-[10px] font-bold rounded-lg border border-slate-800 uppercase transition-colors">
+                        ${link.label}
+                    </a>
+                `).join('');
+            } else {
+                this.els.tutorialLinks.innerHTML = `<span class="text-[10px] text-slate-500 font-mono italic">No video links for this chunk</span>`;
+            }
         }
     }
 
@@ -734,6 +812,7 @@ class DancePracticeTool {
     }
 
     selectMove(lIdx, mIdx, expand = true) {
+        const isNewLandmark = (this.currentLandmarkIdx !== lIdx);
         this.currentLandmarkIdx = lIdx;
         this.currentMoveIdx = mIdx;
         if (expand) {
@@ -756,6 +835,11 @@ class DancePracticeTool {
         this.renderSidebar();
         this.updateMoveDisplay(true);
         if (this.switchToPracticeTab) this.switchToPracticeTab();
+
+        if (window.ChunkSpeech && (isNewLandmark || mIdx === 0)) {
+            const lm = this.landmarks[lIdx];
+            if (lm) window.ChunkSpeech.announceChunk(lm.title);
+        }
     }
 
     cycleMastery(lIdx, mIdx) {
@@ -810,12 +894,18 @@ class DancePracticeTool {
             if (this.isPaused) {
                 if (this.schedulerIntervalId) clearInterval(this.schedulerIntervalId);
                 this.beatsQueue = [];
+                if (window.ChunkSpeech) window.ChunkSpeech.cancel();
             } else {
                 this.schedLandmarkIdx = this.currentLandmarkIdx;
                 this.schedMoveIdx = this.currentMoveIdx;
                 this.schedBeatIdx = this.beatIdx;
                 this.schedPhraseBeatIdx = this.phraseBeatIdx;
                 this.startScheduler();
+
+                if (window.ChunkSpeech) {
+                    const lm = this.landmarks[this.currentLandmarkIdx];
+                    if (lm) window.ChunkSpeech.announceChunk(lm.title);
+                }
             }
             e.currentTarget.innerHTML = this.getPlayPauseBtnHtml(this.isPaused);
         };

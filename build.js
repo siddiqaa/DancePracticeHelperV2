@@ -12,6 +12,7 @@ const filesToCopy = [
   'style.css',
   'common_audio.js',
   'common_practice.js',
+  'tts_announcer.js',
   'bachata_data.js',
   'wcs_data.js',
   'salsa_data.js'

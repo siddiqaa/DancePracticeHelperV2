@@ -74,11 +74,23 @@
 
         <!-- Practice Tab Panel -->
         <section id="practiceTabPanel" class="w-full md:flex-1 flex flex-col gap-6">
-            <div id="landmarkHUD" class="bg-slate-900/40 backdrop-blur-md rounded-2xl p-4 sm:p-6 border border-slate-850 border-l-4 transition-all duration-500 shadow-xl">
-                <div class="flex flex-col md:flex-row justify-between items-center gap-4">
-                    <h2 id="landmarkTitle" class="text-sm font-black uppercase tracking-wider text-slate-200"></h2>
-                    <div id="tutorialLinks" class="flex flex-wrap gap-2 pt-1 md:pt-0"></div>
+            <div id="landmarkHUD" class="bg-slate-900/40 backdrop-blur-md rounded-2xl p-3 sm:p-4 border border-slate-850 border-l-4 transition-all duration-500 shadow-xl flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                        </svg>
+                        <span class="text-xs font-black uppercase tracking-wider text-slate-300">Tutorial Videos</span>
+                    </div>
+                    <!-- Web Speech Chunk Announcer Toggle -->
+                    <button id="ttsToggleBtn" class="px-3 py-1.5 rounded-xl border transition-all duration-200 flex items-center gap-1.5 cursor-pointer shadow-sm active:scale-[0.98] bg-indigo-950/60 border-indigo-500/40 text-indigo-300 hover:bg-indigo-900/60" title="Toggle chunk voice announcements">
+                        <svg class="w-3.5 h-3.5 text-indigo-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path>
+                        </svg>
+                        <span class="text-[10px] font-black uppercase tracking-wider">Voice ON</span>
+                    </button>
                 </div>
+                <div id="tutorialLinks" class="flex flex-wrap gap-2"></div>
             </div>
 
             <div
@@ -86,7 +98,8 @@
                 <!-- Current move display stage -->
                 <div id="displayContainer"
                     class="flex flex-col items-center justify-center text-center px-4 mb-4 min-h-[11rem] md:h-44 py-2 sm:py-4 w-full relative">
-                    <!-- Smooth visual pulse effect behind the text (High ROI suggestion) -->
+                    <!-- Current Chunk Title Header Label -->
+                    <h2 id="landmarkTitle" class="text-xs sm:text-sm font-extrabold uppercase tracking-widest text-indigo-400 mb-3 px-3 py-1 rounded-full bg-slate-950/60 border border-slate-800/80 shadow-sm transition-all duration-300"></h2>
                     <div id="currentMoveLabel" class="text-lg md:text-xl font-black leading-tight text-white tracking-tight drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]"></div>
                     <div id="nextMoveLabel"
                         class="text-[10px] md:text-xs font-bold text-indigo-400 mt-6 uppercase tracking-widest opacity-90"></div>
@@ -113,13 +126,29 @@
                     </div>
 
                     <!-- Tempo slider -->
-                    <div class="bg-slate-950/45 p-4 rounded-xl border border-slate-850/60">
-                        <div class="flex justify-between text-xs font-bold text-slate-400 mb-2.5 uppercase tracking-wider">
-                            <span>Base Speed (BPM)</span>
-                            <span id="bpmValue" class="text-indigo-400 font-black">100 BPM</span>
+                    <div class="bg-slate-950/45 p-4 rounded-xl border border-slate-850/60 flex flex-col gap-3">
+                        <div>
+                            <div class="flex justify-between text-xs font-bold text-slate-400 mb-2.5 uppercase tracking-wider">
+                                <span>Base Speed (BPM)</span>
+                                <span id="bpmValue" class="text-indigo-400 font-black">100 BPM</span>
+                            </div>
+                            <input type="range" id="speedSlider" min="60" max="160" step="1" value="100"
+                                class="w-full h-2 bg-slate-900 rounded-lg appearance-none cursor-pointer accent-indigo-500 border border-slate-800">
                         </div>
-                        <input type="range" id="speedSlider" min="60" max="160" step="1" value="100"
-                            class="w-full h-2 bg-slate-900 rounded-lg appearance-none cursor-pointer accent-indigo-500 border border-slate-800">
+
+                        <!-- Daily Moves Practiced Counter -->
+                        <div class="pt-2.5 border-t border-slate-850/80 flex items-center justify-between text-xs">
+                            <div class="flex items-center gap-1.5 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
+                                <svg class="w-3.5 h-3.5 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <span>Today's Moves Practiced</span>
+                            </div>
+                            <div class="flex items-center gap-1">
+                                <span id="dailyMovesCount" class="font-black text-emerald-400 text-sm">0</span>
+                                <span class="text-[10px] text-slate-500 font-semibold uppercase">moves</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -221,6 +250,7 @@
         </button>
     </nav>
 
+    <script src="tts_announcer.js"></script>
     <script src="common_audio.js"></script>
     <script src="common_practice.js"></script>
     <script src="wcs_data.js"></script>

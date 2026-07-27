@@ -94,7 +94,7 @@ const BACHATA_LANDMARKS = [
         links: []
     },
     {
-        title: "Madrida",
+        title: "Madrids",
         color: "#f97316",
         moves: [
             { name: "Basic (Open Hold)", beats: 4, mastery: "learning" },
@@ -150,6 +150,19 @@ const BACHATA_LANDMARKS = [
         ],
         links: [
             { id: 1, url: "https://youtu.be/Vx3AWpgnoVQ?si=pZlZTw1V6d322ON-&t=221", label: "Finale Video" }
+        ]
+    },
+    {
+        title: "Hairbrush & Hand Styling",
+        color: "#1e293b",
+        moves: [
+            { name: "Basic", beats: 4, mastery: "mastered" },
+            { name: "Basic", beats: 4, mastery: "mastered" },
+            { name: "Inside turn both hands connected", beats: 4, mastery: "learning", hint: "Move top of my RIGHT fingers to bottom of her RIGHT elbow; her LEFT hand is on top of her RIGHT elbow", link: 1 },
+            { name: "Flip her left hand", beats: 4, mastery: "learning", hint: "2 arm moves here: let go of my RIGHT arm to big sweep her straight RIGHT arm UP and back to normal position" },
+        ],
+        links: [
+            { id: 1, url: "https://youtu.be/XfWSKuzRVCM?t=285", label: "Arm Flip" }
         ]
     }
 ];
