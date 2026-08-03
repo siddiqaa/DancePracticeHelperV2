@@ -1,19 +1,19 @@
 const WCS_LANDMARKS = [
 
     {
-        title: "Sugar Tucks and Pushes",
+        title: "Sugar Tucks, Pulls, Rolls, and Pushes",
         color: "#ef4444",
         moves: [
             { name: "Sugar Push", beats: 6, mastery: "mastered", link: 1 },
             { name: "Sugar Tuck", beats: 6, mastery: "mastered" },
             { name: "Right Side Pass to My Right to Her Left Hold", beats: 6, mastery: "mastered", link: 4 },
             { name: "Sugar Pull Lead to Right, Shoulder Catch and Guide Back", beats: 6, mastery: "familiar", link: 4, hint: "Lead follow to your right in a half turn via her left hand. Gently guide her back out of the half turn" },
-            { name: "Sugar Tuck Waist Catch and Arm Free Spin Back", beats: 6, mastery: "familiar", link: 5, hint: "Follow should be sideways to make it side to side shadow move. Get in shadown position" },
+            { name: "Sugar Pull Waist Catch and Arm Free Spin Back", beats: 8, mastery: "familiar", link: 5, hint: "Follow should be sideways to make it side to side shadow position for free spin using her left arm" },
             { name: "Drama Sugar Push", beats: 6, mastery: "familiar", link: 6 },
             { name: "Sugar Tuck Ring Around The Rosie", beats: 6, mastery: "familiar", link: 6 },
-            { name: "Sugar Tuck Catch & Reverse Spin", beats: 6, mastery: "familiar", link: 8 },
+            { name: "Sugar Pull Catch & Reverse Spin", beats: 6, mastery: "familiar", link: 8 },
             { name: "Sugar Tuck Arm Rock Play", beats: 6, mastery: "familiar", link: 9, hint: "Use your right hooky finger hand on follow lower arm to start the rock" },
-            { name: "Sling Shot x 2 with Sugar Tuck Exit", beats: 10, mastery: "learning", link: 10 },
+            { name: "Double Handed Into Sling Shot x 2 with Sugar Tuck Exit", beats: 10, mastery: "learning", link: 10 },
             { name: "Sugar Tuck Elbow Catch and Double Spin", beats: 10, mastery: "learning", hint: "Accelerate the follow out of tuck at beat 4", link: 3 },
             { name: "Sugar Tuck Slow Side", beats: 8, mastery: "mastered", link: 11 },
             { name: "Sugar Tuck With Follow Turn to Leader Right Side Var 1", beats: 8, mastery: "learning", link: 12 },

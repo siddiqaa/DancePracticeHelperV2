@@ -158,9 +158,13 @@
                     <!-- Tempo slider -->
                     <div class="bg-[#faedcd] p-4 rounded-2xl border-2 border-stone-900 shadow-[4px_4px_0px_#1c1917] flex flex-col gap-3">
                         <div>
-                            <div class="flex justify-between text-xs font-black text-stone-800 mb-2.5 uppercase tracking-wider">
+                            <div class="flex justify-between items-center text-xs font-black text-stone-800 mb-2.5 uppercase tracking-wider">
                                 <span>Tempo (BPM)</span>
-                                <span id="bpmValue" class="text-[#dc2626] font-black">160 BPM</span>
+                                <div class="flex items-center gap-1 bg-[#fdfbf7] px-2 py-1 rounded-xl border-2 border-stone-900 shadow-[2px_2px_0px_#1c1917]">
+                                    <input type="number" id="bpmInput" min="40" max="250" value="160"
+                                        class="w-12 text-right font-mono font-black text-xs text-[#dc2626] bg-transparent focus:outline-none focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+                                    <span class="text-[10px] font-black text-stone-800 uppercase">BPM</span>
+                                </div>
                             </div>
                             <input type="range" id="bpmSlider" min="120" max="220" step="1" value="160"
                                 class="w-full h-2.5 bg-white rounded-lg appearance-none cursor-pointer accent-[#dc2626] border-2 border-stone-900">

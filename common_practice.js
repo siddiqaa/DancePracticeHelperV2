@@ -219,6 +219,7 @@ class DancePracticeTool {
             masteryStatsCount: document.getElementById('masteryStatsCount'),
             bpmSlider: document.getElementById(this.bpmSliderId),
             bpmValue: document.getElementById('bpmValue'),
+            bpmInput: document.getElementById('bpmInput'),
             playPauseBtn: document.getElementById('playPauseBtn'),
             modeToggle: document.getElementById('modeToggle'),
             loopToggle: document.getElementById('loopToggle'),
@@ -243,6 +244,10 @@ class DancePracticeTool {
         this.loadMasteryState();
         this.updateMasteryStats();
         this.updateDailyMovesUI();
+        
+        if (this.els.bpmInput && this.els.bpmSlider) {
+            this.els.bpmInput.value = this.els.bpmSlider.value;
+        }
         
         // Initialize practice selection checkboxes as empty (unchecked by default)
         this.selectedLandmarkIndices = [];
@@ -360,10 +365,26 @@ class DancePracticeTool {
         this.schedulerIntervalId = setInterval(() => this.scheduler(), this.lookahead);
     }
 
+    getBpm() {
+        if (this.els.bpmInput && this.els.bpmInput.value !== '') {
+            const parsed = parseInt(this.els.bpmInput.value, 10);
+            if (!isNaN(parsed) && parsed > 0) {
+                return parsed;
+            }
+        }
+        if (this.els.bpmSlider && this.els.bpmSlider.value) {
+            const parsed = parseInt(this.els.bpmSlider.value, 10);
+            if (!isNaN(parsed) && parsed > 0) {
+                return parsed;
+            }
+        }
+        return 90;
+    }
+
     scheduler() {
         if (this.isPaused || this.schedHoldingForRandom) return;
 
-        const bpm = parseInt(this.els.bpmSlider.value);
+        const bpm = this.getBpm();
         const secondsPerBeat = 60.0 / bpm;
 
         while (this.nextBeatTime < DanceAudio.getCurrentTime() + this.scheduleAheadTime) {
@@ -993,10 +1014,62 @@ class DancePracticeTool {
         };
 
         this.els.loopToggle.onchange = (e) => this.isLoopMode = e.target.checked;
-        this.els.bpmSlider.oninput = (e) => {
-            if (this.els.bpmValue) this.els.bpmValue.textContent = e.target.value + ' BPM';
-            if (!this.isPaused) this.startScheduler();
-        };
+        
+        if (this.els.bpmSlider) {
+            this.els.bpmSlider.oninput = (e) => {
+                const val = e.target.value;
+                if (this.els.bpmInput) this.els.bpmInput.value = val;
+                if (this.els.bpmValue) this.els.bpmValue.textContent = val + ' BPM';
+                if (!this.isPaused) this.startScheduler();
+            };
+        }
+
+        if (this.els.bpmInput) {
+            const handleBpmInput = (isBlurOrChange = false) => {
+                let val = parseInt(this.els.bpmInput.value, 10);
+                if (isNaN(val)) {
+                    if (isBlurOrChange) {
+                        val = this.els.bpmSlider ? parseInt(this.els.bpmSlider.value, 10) : 90;
+                        this.els.bpmInput.value = val;
+                    } else {
+                        return;
+                    }
+                }
+
+                if (this.els.bpmSlider) {
+                    let minVal = parseInt(this.els.bpmSlider.min, 10) || 40;
+                    let maxVal = parseInt(this.els.bpmSlider.max, 10) || 250;
+
+                    if (isBlurOrChange) {
+                        val = Math.max(30, Math.min(300, val));
+                        this.els.bpmInput.value = val;
+                    }
+
+                    if (val < minVal && val >= 30) {
+                        this.els.bpmSlider.min = val;
+                    }
+                    if (val > maxVal && val <= 300) {
+                        this.els.bpmSlider.max = val;
+                    }
+                    if (val >= parseInt(this.els.bpmSlider.min, 10) && val <= parseInt(this.els.bpmSlider.max, 10)) {
+                        this.els.bpmSlider.value = val;
+                    }
+                }
+
+                if (this.els.bpmValue) this.els.bpmValue.textContent = val + ' BPM';
+                if (!this.isPaused) this.startScheduler();
+            };
+
+            this.els.bpmInput.oninput = () => handleBpmInput(false);
+            this.els.bpmInput.onchange = () => handleBpmInput(true);
+            this.els.bpmInput.onblur = () => handleBpmInput(true);
+            this.els.bpmInput.onfocus = () => this.els.bpmInput.select();
+            this.els.bpmInput.onkeydown = (e) => {
+                if (e.key === 'Enter') {
+                    this.els.bpmInput.blur();
+                }
+            };
+        }
 
         if (this.els.moveSearchInput) {
             this.els.moveSearchInput.oninput = (e) => {
