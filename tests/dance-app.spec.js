@@ -515,3 +515,26 @@ test.describe('Loop/Repeat Feature', () => {
     await expect(loopToggle).not.toBeChecked();
   });
 });
+
+test.describe('Inactive Moves Feature', () => {
+  test('displays inactive moves with gray font and preserves hint and video link', async ({ page }) => {
+    await page.goto('/chunked_wcs.html');
+    await page.waitForSelector('#landmarkList');
+    
+    // Expand first chunk accordion
+    await page.locator('[data-action="toggle-accordion"]').first().click();
+    
+    // Move m-0-3 is inactive ("Sugar Pull Lead to Right...")
+    const inactiveMoveItem = page.locator('#m-0-3');
+    await expect(inactiveMoveItem).toBeVisible();
+    
+    // Check gray font class on the text span
+    const textSpan = inactiveMoveItem.locator('span').first();
+    await expect(textSpan).toHaveClass(/text-stone-400/);
+    
+    // Verify hint/link elements are displayed inside the move item
+    const videoLink = inactiveMoveItem.locator('a[title="Watch video"]');
+    await expect(videoLink).toBeVisible();
+  });
+});
+

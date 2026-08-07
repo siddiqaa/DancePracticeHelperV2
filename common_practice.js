@@ -240,6 +240,21 @@ class DancePracticeTool {
         };
     }
 
+    isMoveActive(move) {
+        return !move || move.status !== 'inactive';
+    }
+
+    findNextActiveMoveIdx(lIdx, startMIdx = 0) {
+        const lm = this.landmarks[lIdx];
+        if (!lm || !lm.moves) return -1;
+        for (let i = startMIdx; i < lm.moves.length; i++) {
+            if (this.isMoveActive(lm.moves[i])) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
     init() {
         this.loadMasteryState();
         this.updateMasteryStats();
@@ -256,7 +271,9 @@ class DancePracticeTool {
         this.renderSidebar();
         
         this.isPaused = true;
-        this.selectMove(this.getFilteredLandmarkIndices()[0] || 0, 0, false);
+        const initialLIdx = this.getFilteredLandmarkIndices()[0] || 0;
+        const initialMIdx = this.findNextActiveMoveIdx(initialLIdx, 0);
+        this.selectMove(initialLIdx, initialMIdx !== -1 ? initialMIdx : 0, false);
         if (this.els.playPauseBtn) this.els.playPauseBtn.innerHTML = this.getPlayPauseBtnHtml(true);
 
         this.updateMoveDisplay(false);
@@ -388,6 +405,17 @@ class DancePracticeTool {
         const secondsPerBeat = 60.0 / bpm;
 
         while (this.nextBeatTime < DanceAudio.getCurrentTime() + this.scheduleAheadTime) {
+            // Ensure schedMoveIdx points to an active move
+            if (!this.isMoveActive(this.landmarks[this.schedLandmarkIdx]?.moves?.[this.schedMoveIdx])) {
+                const nextActiveMIdx = this.findNextActiveMoveIdx(this.schedLandmarkIdx, this.schedMoveIdx);
+                if (nextActiveMIdx !== -1) {
+                    this.schedMoveIdx = nextActiveMIdx;
+                } else {
+                    this.advanceLandmarkInScheduler();
+                    if (this.schedHoldingForRandom) break;
+                    continue;
+                }
+            }
             const currentMove = this.landmarks[this.schedLandmarkIdx].moves[this.schedMoveIdx];
             
             // Audio trigger
@@ -418,25 +446,22 @@ class DancePracticeTool {
         
         if (this.schedBeatIdx >= beatsTotal) {
             this.schedBeatIdx = 0;
-            if (this.schedMoveIdx >= this.landmarks[this.schedLandmarkIdx].moves.length - 1) {
+            const nextActiveMIdx = this.findNextActiveMoveIdx(this.schedLandmarkIdx, this.schedMoveIdx + 1);
+            if (nextActiveMIdx === -1) {
                 if (this.isRandomMode) {
                     this.schedHoldingForRandom = true;
                 } else if (this.isLoopMode) {
-                    this.schedMoveIdx = 0;
-                } else {
-                    const filtered = this.getFilteredLandmarkIndices();
-                    const currentFilteredPos = filtered.indexOf(this.schedLandmarkIdx);
-                    if (currentFilteredPos !== -1 && filtered.length > 0) {
-                        this.schedLandmarkIdx = filtered[(currentFilteredPos + 1) % filtered.length];
-                    } else if (filtered.length > 0) {
-                        this.schedLandmarkIdx = filtered[0];
+                    const firstActiveMIdx = this.findNextActiveMoveIdx(this.schedLandmarkIdx, 0);
+                    if (firstActiveMIdx !== -1) {
+                        this.schedMoveIdx = firstActiveMIdx;
                     } else {
-                        this.schedLandmarkIdx = (this.schedLandmarkIdx + 1) % this.landmarks.length;
+                        this.advanceLandmarkInScheduler();
                     }
-                    this.schedMoveIdx = 0;
+                } else {
+                    this.advanceLandmarkInScheduler();
                 }
             } else {
-                this.schedMoveIdx++;
+                this.schedMoveIdx = nextActiveMIdx;
             }
         }
 
@@ -446,6 +471,45 @@ class DancePracticeTool {
         if (this.danceType === 'salsa' || this.danceType === 'bachata') {
             const isOddMove = (this.schedMoveIdx % 2 !== 0);
             this.schedPhraseBeatIdx = isOddMove ? (this.schedBeatIdx + 4) % 8 : this.schedBeatIdx % 8;
+        }
+    }
+
+    advanceLandmarkInScheduler() {
+        const filtered = this.getFilteredLandmarkIndices();
+        const currentFilteredPos = filtered.indexOf(this.schedLandmarkIdx);
+        let nextLIdx = -1;
+        let nextMIdx = -1;
+
+        if (filtered.length > 0) {
+            let startPos = currentFilteredPos !== -1 ? currentFilteredPos : 0;
+            for (let i = 1; i <= filtered.length; i++) {
+                const candLIdx = filtered[(startPos + i) % filtered.length];
+                const candMIdx = this.findNextActiveMoveIdx(candLIdx, 0);
+                if (candMIdx !== -1) {
+                    nextLIdx = candLIdx;
+                    nextMIdx = candMIdx;
+                    break;
+                }
+            }
+        }
+
+        if (nextLIdx === -1) {
+            for (let i = 1; i <= this.landmarks.length; i++) {
+                const candLIdx = (this.schedLandmarkIdx + i) % this.landmarks.length;
+                const candMIdx = this.findNextActiveMoveIdx(candLIdx, 0);
+                if (candMIdx !== -1) {
+                    nextLIdx = candLIdx;
+                    nextMIdx = candMIdx;
+                    break;
+                }
+            }
+        }
+
+        if (nextLIdx !== -1) {
+            this.schedLandmarkIdx = nextLIdx;
+            this.schedMoveIdx = nextMIdx;
+        } else {
+            this.schedHoldingForRandom = true;
         }
     }
 
@@ -493,21 +557,40 @@ class DancePracticeTool {
 
         if (shouldPreempt) {
             const lm = this.landmarks[displayLIdx];
-            if (displayMIdx < lm.moves.length - 1) {
-                displayMIdx++;
+            const nextActiveInLm = this.findNextActiveMoveIdx(displayLIdx, displayMIdx + 1);
+            if (nextActiveInLm !== -1) {
+                displayMIdx = nextActiveInLm;
             } else if (this.isLoopMode) {
-                displayMIdx = 0;
+                const firstActiveInLm = this.findNextActiveMoveIdx(displayLIdx, 0);
+                if (firstActiveInLm !== -1) displayMIdx = firstActiveInLm;
             } else if (!this.isRandomMode) {
                 const filtered = this.getFilteredLandmarkIndices();
                 const pos = filtered.indexOf(displayLIdx);
-                if (pos !== -1 && filtered.length > 0) {
-                    displayLIdx = filtered[(pos + 1) % filtered.length];
-                } else if (filtered.length > 0) {
-                    displayLIdx = filtered[0];
-                } else {
-                    displayLIdx = (displayLIdx + 1) % this.landmarks.length;
+                let foundNext = false;
+                if (filtered.length > 0) {
+                    let startPos = pos !== -1 ? pos : 0;
+                    for (let i = 1; i <= filtered.length; i++) {
+                        const candLIdx = filtered[(startPos + i) % filtered.length];
+                        const candMIdx = this.findNextActiveMoveIdx(candLIdx, 0);
+                        if (candMIdx !== -1) {
+                            displayLIdx = candLIdx;
+                            displayMIdx = candMIdx;
+                            foundNext = true;
+                            break;
+                        }
+                    }
                 }
-                displayMIdx = 0;
+                if (!foundNext) {
+                    for (let i = 1; i <= this.landmarks.length; i++) {
+                        const candLIdx = (displayLIdx + i) % this.landmarks.length;
+                        const candMIdx = this.findNextActiveMoveIdx(candLIdx, 0);
+                        if (candMIdx !== -1) {
+                            displayLIdx = candLIdx;
+                            displayMIdx = candMIdx;
+                            break;
+                        }
+                    }
+                }
             }
         }
 
@@ -529,9 +612,9 @@ class DancePracticeTool {
         }
 
         // Random mode landmark completion
-        const isLastMove = playedBeat.moveIdx === this.landmarks[playedBeat.landmarkIdx].moves.length - 1;
+        const isLastActiveMove = (this.findNextActiveMoveIdx(playedBeat.landmarkIdx, playedBeat.moveIdx + 1) === -1);
         const isLastBeatOfMove = playedBeat.beat === playedBeat.beatsTotal - 1;
-        if (this.isRandomMode && isLastMove && isLastBeatOfMove) {
+        if (this.isRandomMode && isLastActiveMove && isLastBeatOfMove) {
             this.triggerRandomCountdown();
         }
     }
@@ -543,20 +626,23 @@ class DancePracticeTool {
         this.schedHoldingForRandom = false;
 
         const filtered = this.getFilteredLandmarkIndices();
-        if (filtered.length > 1) {
+        const validFiltered = filtered.filter(lIdx => this.findNextActiveMoveIdx(lIdx, 0) !== -1);
+
+        if (validFiltered.length > 1) {
             let nextIdx;
             do {
-                nextIdx = filtered[Math.floor(Math.random() * filtered.length)];
-            } while (nextIdx === this.currentLandmarkIdx && filtered.length > 1);
+                nextIdx = validFiltered[Math.floor(Math.random() * validFiltered.length)];
+            } while (nextIdx === this.currentLandmarkIdx && validFiltered.length > 1);
             this.currentLandmarkIdx = nextIdx;
-        } else if (filtered.length === 1) {
-            this.currentLandmarkIdx = filtered[0];
+        } else if (validFiltered.length === 1) {
+            this.currentLandmarkIdx = validFiltered[0];
         }
 
-        this.currentMoveIdx = 0;
+        const firstActive = this.findNextActiveMoveIdx(this.currentLandmarkIdx, 0);
+        this.currentMoveIdx = firstActive !== -1 ? firstActive : 0;
         this.beatIdx = 0;
         this.schedLandmarkIdx = this.currentLandmarkIdx;
-        this.schedMoveIdx = 0;
+        this.schedMoveIdx = this.currentMoveIdx;
         this.schedBeatIdx = 0;
 
         this.updateHUD();
@@ -612,6 +698,8 @@ class DancePracticeTool {
         const move = lm.moves[this.currentMoveIdx];
         const mastery = move.mastery || 'learning';
         const config = MASTERY_CONFIG[mastery] || MASTERY_CONFIG.learning;
+        const isInactive = (move.status === 'inactive');
+        const nameTextColor = isInactive ? 'text-stone-400 font-medium' : config.textColor;
 
         // Custom label based on dance type
         let labelTag = '';
@@ -625,10 +713,13 @@ class DancePracticeTool {
         let hintHtml = move.hint ? `<div class="text-xs sm:text-sm mt-2 text-center font-bold tracking-wider text-amber-300 bg-amber-950/60 border border-amber-500/30 px-3 py-1 rounded-xl shadow-lg">${move.hint}</div>` : '';
 
         let nextMoveHtml = "End of landmark list";
-        if (this.currentMoveIdx < lm.moves.length - 1) {
-            const next = lm.moves[this.currentMoveIdx + 1];
+        const nextActiveMIdx = this.findNextActiveMoveIdx(this.currentLandmarkIdx, this.currentMoveIdx + 1);
+        if (nextActiveMIdx !== -1) {
+            const next = lm.moves[nextActiveMIdx];
             const nextConf = MASTERY_CONFIG[next.mastery || 'learning'];
-            nextMoveHtml = `<span class="${nextConf.textColor} font-bold">${next.name}</span>`;
+            const nextIsInactive = (next.status === 'inactive');
+            const nextTextColor = nextIsInactive ? 'text-stone-400' : nextConf.textColor;
+            nextMoveHtml = `<span class="${nextTextColor} font-bold">${next.name}</span>`;
         }
 
         if (this.els.currentMoveLabel) {
@@ -637,7 +728,7 @@ class DancePracticeTool {
                 <div class="${animClass} ${this.isPaused ? 'paused-anim' : ''} flex flex-col items-center justify-center gap-2">
                     <div class="flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
                         <span class="text-lg sm:text-xl md:text-2xl font-black px-3.5 py-1.5 rounded-2xl bg-white border-2 border-stone-900 text-stone-900 shadow-[3px_3px_0px_#1c1917] flex items-center gap-1 font-mono">${labelTag}</span>
-                        <span class="text-lg sm:text-xl md:text-2xl font-black ${config.textColor} tracking-tight text-center leading-tight">${move.name}</span>
+                        <span class="text-lg sm:text-xl md:text-2xl font-black ${nameTextColor} tracking-tight text-center leading-tight">${move.name}</span>
                     </div>
                     ${hintHtml}
                 </div>
@@ -819,6 +910,7 @@ class DancePracticeTool {
         const mastery = m.mastery || 'learning';
         const config = MASTERY_CONFIG[mastery];
         const isCurrent = (lIdx === this.currentLandmarkIdx && mIdx === this.currentMoveIdx);
+        const isInactive = (m.status === 'inactive');
         
         const originalMastery = this.originalLandmarks[lIdx]?.moves?.[mIdx]?.mastery || 'learning';
         const isModified = mastery !== originalMastery;
@@ -830,10 +922,12 @@ class DancePracticeTool {
         const moveLink = m.link ? (lm.links || []).find(l => l.id === m.link) : null;
         const movieLinkHtml = moveLink ? `<a href="${moveLink.url}" target="_blank" class="ml-1.5 px-1.5 py-0.5 bg-white text-stone-900 border-2 border-[#1c1917] rounded-md shadow-[1.5px_1.5px_0px_#1c1917] hover:scale-110 hover:bg-stone-100 active:scale-95 transition-all inline-flex items-center leading-none text-[10px]" title="Watch video" onclick="event.stopPropagation()">🎬</a>` : '';
 
+        const nameColorClass = isInactive ? 'text-stone-400 font-medium' : (isCurrent ? 'text-slate-950 font-black' : 'text-stone-900 font-black');
+
         return `
             <div id="m-${lIdx}-${mIdx}" class="text-[11px] px-3 py-2 rounded-xl flex items-center justify-between gap-2.5 group cursor-pointer border-2 transition-all ${isCurrent ? 'move-active bg-[#fff1f2] text-slate-950 border-[#1c1917] shadow-[3px_3px_0px_#1c1917]' : 'bg-[#ffde59] text-stone-900 border-[#1c1917] hover:bg-[#ffc312] shadow-[2px_2px_0px_#1c1917]'} ${tooltipClass}" data-action="select" data-lidx="${lIdx}" data-midx="${mIdx}">
-                <span class="truncate flex-1 py-0.5 font-black ${isCurrent ? 'text-slate-950' : 'text-stone-900'}" data-lidx="${lIdx}" data-midx="${mIdx}">
-                    ${m.hint ? '<span class="bg-rose-500 border border-slate-900 px-1.5 py-0.5 rounded text-[9px] mr-1.5 text-white font-black shadow-[1px_1px_0px_#1c1917]">?</span>' : ''}${m.name} ${this.danceType === 'wcs' ? `<span class="${isCurrent ? 'bg-slate-950 text-white' : 'bg-[#1c1917] text-white'} px-1.5 py-0.5 rounded text-[9px] font-mono font-black ml-1.5">${m.beats}🥁</span>` : ''}${movieLinkHtml}
+                <span class="truncate flex-1 py-0.5 ${nameColorClass}" data-lidx="${lIdx}" data-midx="${mIdx}">
+                    ${m.hint ? '<span class="bg-rose-500 border border-slate-900 px-1.5 py-0.5 rounded text-[9px] mr-1.5 text-white font-black shadow-[1px_1px_0px_#1c1917]">?</span>' : ''}${m.name} ${this.danceType === 'wcs' ? `<span class="${isCurrent ? 'bg-slate-950 text-white' : 'bg-[#1c1917] text-white'} px-1.5 py-0.5 rounded text-[12px] font-mono font-black ml-1.5">${m.beats}</span>` : ''}${movieLinkHtml}
                 </span>
                 ${tooltipHtml}
                 <button class="shrink-0 text-[10px] font-black uppercase tracking-wider px-2.5 py-1.5 rounded-lg ${modifiedBorderClass} ${config.badgeColor} hover:brightness-110 transition-all active:scale-[0.97]" data-action="cycle" data-lidx="${lIdx}" data-midx="${mIdx}">
@@ -919,9 +1013,10 @@ class DancePracticeTool {
         this.phraseBeatIdx = isOdd ? 4 : 0;
         
         this.schedLandmarkIdx = lIdx;
-        this.schedMoveIdx = mIdx;
+        const activeSchedMIdx = this.findNextActiveMoveIdx(lIdx, mIdx);
+        this.schedMoveIdx = activeSchedMIdx !== -1 ? activeSchedMIdx : mIdx;
         this.schedBeatIdx = 0;
-        this.schedPhraseBeatIdx = isOdd ? 4 : 0;
+        this.schedPhraseBeatIdx = (this.schedMoveIdx % 2 !== 0) ? 4 : 0;
         this.beatsQueue = [];
         if (DanceAudio.isReady()) this.nextBeatTime = DanceAudio.getCurrentTime();
 
