@@ -538,3 +538,26 @@ test.describe('Inactive Moves Feature', () => {
   });
 });
 
+test.describe('Individual Move Selection Feature', () => {
+  test('allows selecting individual moves for practice sequence', async ({ page }) => {
+    await page.goto('/chunked_wcs.html');
+    await page.waitForSelector('#landmarkList');
+    
+    // Expand first chunk accordion
+    await page.locator('[data-action="toggle-accordion"]').first().click();
+    
+    // Move checkboxes should be present
+    const firstMoveCheck = page.locator('.move-checkbox').first();
+    await expect(firstMoveCheck).toBeVisible();
+    await expect(firstMoveCheck).not.toBeChecked();
+    
+    // Check first move
+    await firstMoveCheck.check();
+    await expect(firstMoveCheck).toBeChecked();
+    
+    // Chunk checkbox should show partial/checked state
+    const chunkCheck = page.locator('.chunk-checkbox').first();
+    await expect(chunkCheck).toBeVisible();
+  });
+});
+

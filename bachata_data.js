@@ -102,15 +102,23 @@ const BACHATA_LANDMARKS = [
             { name: "Madrid Step Forward", beats: 4, mastery: "learning", link: 1 },
             { name: "Madrid Step Back", beats: 4, mastery: "learning" },
             { name: "Madrid Step Forward", beats: 4, mastery: "learning", link: 3 },
-            { name: "Turn Follow Insider to Have Her On My Left", beats: 4, mastery: "learning" },
+            { name: "Turn Follow Inside to Have Her On My Left", beats: 4, mastery: "learning", hint: "Raise her left hand on four, step forward on five and then lead her back inside to your left" },
             { name: "Move Across Behind Her to Swap Sides", beats: 4, mastery: "learning" },
-            { name: "Raise Hands to Get Close and Exit With a Follow Outside (Away) Turn ", beats: 4, mastery: "learning" }
+            { name: "Raise Hands to Get Close and Exit With a Follow Outside (Away) Turn ", beats: 4, mastery: "learning", hint: "Get close and then gently lead her on outside turn to open handhold" },
+            { name: "Basic (Open Hold)", beats: 4, mastery: "learning" },
+            { name: "Basic (Open Hold)", beats: 4, mastery: "learning" },
+            { name: "Madrid Step Forward", beats: 4, mastery: "learning", link: 5 },
+            { name: "Woman Half Turn into Shadow Position", beats: 4, mastery: "learning" },
+            { name: "Shadow Position Basic", beats: 4, mastery: "learning", hint: "Throw her arms down to let her style and then place right hand on her right hip and extend yours and hers left hand out" },
+            { name: "Unwind Shadow Position", beats: 4, mastery: "learning", hint: "Use right hand on her hip and left hand to unwind the shadow position" },
 
         ],
         links: [
             { id: 1, url: "https://www.youtube.com/watch?v=Ti4qjrRqyAo", label: "Madrid 1" },
             { id: 2, url: "https://youtu.be/7Mu6fuGWqcw?si=9xs_bvgYrjD7GRGY&t=167", label: "Madrid 2" },
-            { id: 3, url: "https://youtu.be/WI0p6K8S4DE", label: "Madrid with Sensual Variations" }
+            { id: 3, url: "https://youtu.be/WI0p6K8S4DE", label: "Madrid with Sensual Variations" },
+            { id: 4, url: "https://youtu.be/DSPNWkxeQeU", label: "15 Madrid Variations" },
+            { id: 5, url: "https://youtu.be/DSPNWkxeQeU?t=260s", label: "Madrid with Woman Half Turn" }
 
         ]
     },

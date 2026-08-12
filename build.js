@@ -15,7 +15,8 @@ const filesToCopy = [
   'tts_announcer.js',
   'bachata_data.js',
   'wcs_data.js',
-  'salsa_data.js'
+  'salsa_data.js',
+  'favicon.svg'
 ];
 
 const directoriesToCopy = [

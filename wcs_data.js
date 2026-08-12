@@ -6,22 +6,18 @@ const WCS_LANDMARKS = [
         moves: [
             { name: "Sugar Push", beats: 6, mastery: "mastered", link: 1 },
             { name: "Sugar Tuck", beats: 6, mastery: "mastered" },
-            { name: "Right Side Pass to My Right to Her Left Hold", beats: 6, mastery: "mastered", link: 4 },
-            { name: "Sugar Pull Lead to Right, Shoulder Catch and Guide Back", beats: 6, mastery: "familiar", link: 4, hint: "Lead follow to your right in a half turn via her left hand. Gently guide her back out of the half turn", status: "inactive" },
-            { name: "Drama Sugar Push", beats: 6, mastery: "familiar", link: 6 },
-            { name: "Sugar Pull Waist Catch and Arm Free Spin Back", beats: 8, mastery: "familiar", link: 5, hint: "Follow should be sideways to make it side to side shadow position for free spin using her left arm" },
-            { name: "Sugar Tuck Ring Around The Rosie", beats: 10, mastery: "familiar", link: 7 },
-            { name: "Sugar Tuck Catch & Redirect", beats: 6, mastery: "familiar", link: 8 },
-            { name: "Sugar Tuck Arm Rock Play", beats: 6, mastery: "familiar", link: 9, hint: "Use your right hooky finger hand on follow lower arm to start the rock" },
-            { name: "Fakeout Whip into Double Handed Hold", beats: 6, mastery: "learning", link: 10 },
-            { name: "Double Handed Into Sling Shot x 2 with Sugar Tuck Exit", beats: 10, mastery: "learning", link: 10 },
-            { name: "Sugar Tuck Elbow Catch and Double Spin", beats: 10, mastery: "learning", hint: "Accelerate the follow out of tuck at beat 4", link: 3 },
-            { name: "Sugar Tuck Slow Side", beats: 8, mastery: "mastered", link: 11 },
-            { name: "Sugar Tuck With Follow Turn to Leader Right Side Var 1", beats: 8, mastery: "learning", link: 12 },
-            { name: "Sugar Tuck With Follow Turn to Leader Right Side Var 2", beats: 8, mastery: "learning", link: 12 },
+            { name: "Sugar Tuck Catch & Redirect", beats: 8, mastery: "learning", link: 8 },
+            { name: "Sugar Tuck Arm Rock Play", beats: 8, mastery: "learning", link: 9, hint: "Use your right hooky finger hand on follow lower arm to start the rock" },
+            { name: "Sugar Tuck, Accelerate Turn, Elbow Catch and Inside Turn", beats: 10, mastery: "learning", hint: "Accelerate the follow out of tuck at beat 4, catch elbow and then do a RSP with turn", link: 3 },
+            { name: "Sugar Tuck Slow Side", beats: 8, mastery: "mastered", link: 10 },
             { name: "Sugar Tuck with Both Hands", beats: 6, mastery: "learning", link: 2 },
             { name: "Left Side Turning Pass Both Hands Led by Leader Left Hand", beats: 6, mastery: "learning", link: 2 },
-            { name: "Right Side Pass Popout", beats: 6, mastery: "familiar", link: 2 }
+            { name: "Right Side Pass Popout", beats: 6, mastery: "familiar", link: 2 },
+            { name: "Right Side Pass to My Right to Her Left Hold", beats: 6, mastery: "mastered", link: 4 },
+            { name: "Drama Sugar Push", beats: 6, mastery: "learning", link: 6 },
+            { name: "Sugar Pull Waist Catch and Arm Free Spin Back", beats: 8, mastery: "learning", link: 5, hint: "Follow should be sideways to make it side to side shadow position for free spin using her left arm" },
+            { name: "Sugar Tuck Ring Around The Rosie", beats: 10, mastery: "familiar", link: 7, status: "inactive" },
+            { name: "Sugar Pull Lead to Right, Shoulder Catch and Guide Back", beats: 6, mastery: "familiar", link: 4, hint: "Lead follow to your right in a half turn via her left hand. Gently guide her back out of the half turn", status: "inactive" }
         ],
         links: [
             { id: 1, url: "https://youtu.be/vx1wmjgR124", label: "WCS Online 11 Patterns" },
@@ -33,9 +29,7 @@ const WCS_LANDMARKS = [
             { id: 7, url: "https://youtu.be/_maSWuiWhcE", label: "ST Ring Around the Rosie" },
             { id: 8, url: "https://youtu.be/_maSWuiWhcE?t=70s", label: "ST Catch and Reverse Spin" },
             { id: 9, url: "https://youtu.be/x61CN8EPdcY?t=50s", label: "ST Tuck Arm Rock Play" },
-            { id: 10, url: "https://youtu.be/wuyuGL2iE4U", label: "Fakeout Whip into 2 X Slingshot" },
-            { id: 11, url: "https://youtu.be/FdUcgrjn6Rs", label: "Sugar Tuck Slow Side + Leader Turn + Left Side Free Spin" },
-            { id: 12, url: "https://youtu.be/SxfmpYhmL6o?t=20s", label: "Sugar Tuck With Follow Turn to Leader Right Side Variations" }
+            { id: 10, url: "https://youtu.be/FdUcgrjn6Rs", label: "Sugar Tuck Slow Side + Leader Turn + Left Side Free Spin" }
         ]
     },
     {
@@ -45,8 +39,8 @@ const WCS_LANDMARKS = [
             { name: "LSP", beats: 6, mastery: "mastered" },
             { name: "LSP with Free Spin", beats: 6, mastery: "learning", link: 1 },
             { name: "Left Side Telemark with Inside Turns", beats: 6, mastery: "learning", link: 3 },
-            { name: "Sugar Push into Closed with Left Side Tap", beats: 6, mastery: "learning", link: 1 },
-            { name: "LSP Under Arm Send Out", beats: 6, mastery: "learning", link: 2 },
+            { name: "Sugar Push into Closed with Left Side Tap", beats: 6, mastery: "learning", link: 1, status: 'inactive' },
+            { name: "LSP Under Arm Send Out", beats: 6, mastery: "learning", link: 2, status: 'inactive' },
             { name: "LSP Hammer Roll-In / Out", beats: 6, mastery: "learning", link: 4 },
             { name: "LSP Double Hand Hammer Roll-In / Out", beats: 6, mastery: "learning", link: 5 },
             { name: "LSP Right Hand Led Roll-In/Out", beats: 6, mastery: "learning", link: 6 },
@@ -70,14 +64,17 @@ const WCS_LANDMARKS = [
             { name: "Right Side Pass with Turn", beats: 6, mastery: "familiar" },
             { name: "Right Side Pass with Outside Turn", beats: 6, mastery: "learning" },
             { name: "Right Side Pass with Follow Hand on Leader Left Shoulder Turn 5&6", beats: 6, mastery: "learning" },
-            { name: "Right turn catch and spin follow left arm", beats: 6, mastery: "learning" },
+            { name: "Sugar Tuck With Follow Turn to Leader Right Side Var 1", beats: 8, mastery: "learning", link: 4, hint: "Switch her right hand to your right hand at top of tuck, go beside her in shadow position, and free spin turn using your left hand hooky fingers on her left arm" },
+            { name: "Sugar Tuck With Follow Turn to Leader Right Side Var 2", beats: 8, mastery: "learning", link: 4, hint: "Switch her right hand to your left hand at top of tuck, go beside her in shadow position, allow her to groove and the use your right arm to spin back into anchor" },
             { name: "Right Side Pass into Closed", beats: 6, mastery: "mastered" },
             { name: "Reverse Whip / Double Spin", beats: 8, mastery: "familiar" },
+
         ],
         links: [
             { id: 1, url: "https://youtu.be/YuIWjdriiq4", label: "Right Side Pass with Lead Turn / Left Side Hammer Roll-in / Roll-out" },
             { id: 2, url: "https://youtube.com/shorts/4QJ0rxolzjA", label: "Right Side Pass into Closed with Double Spin" },
-            { id: 3, url: "https://youtu.be/vx1wmjgR124", label: "WCS Online 11 Patterns" }
+            { id: 3, url: "https://youtu.be/vx1wmjgR124", label: "WCS Online 11 Patterns" },
+            { id: 4, url: "https://youtu.be/SxfmpYhmL6o?t=20s", label: "Sugar Tuck With Follow Turn to Leader Right Side Variations" }
         ]
     },
     {
@@ -138,10 +135,13 @@ const WCS_LANDMARKS = [
         color: "#eab308",
         moves: [
             { name: "Cha Cha", beats: 6, mastery: "mastered" },
-            { name: "Cha with Spin Exit", beats: 8, mastery: "learning" }
+            { name: "Cha with Spin Exit", beats: 8, mastery: "learning" },
+            { name: "Fakeout Whip into Double Handed Hold", beats: 6, mastery: "learning", link: 2 },
+            { name: "Double Handed Into Sling Shot x 2 with Sugar Tuck Exit", beats: 10, mastery: "learning", link: 2 },
         ],
         links: [
-            { id: 1, url: "https://youtu.be/wuyuGL2iE4U?t=80s", label: "Cha Cha with Side by Side and Spin" }
+            { id: 1, url: "https://youtu.be/wuyuGL2iE4U?t=80s", label: "Cha Cha with Side by Side and Spin" },
+            { id: 2, url: "https://youtu.be/wuyuGL2iE4U", label: "Fakeout Whip into 2 X Slingshot" }
         ]
     }
 ];

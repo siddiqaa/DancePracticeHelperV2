@@ -198,8 +198,8 @@ class DancePracticeTool {
         this.lastRenderedLandmarkIdx = -1;
         this.lastRenderedMoveIdx = -1;
         
-        // Practice Session landmark selection state
-        this.selectedLandmarkIndices = [];
+        // Practice Session selection state
+        this.selectedMoveKeys = new Set();
         this.expandedLandmarks = new Set();
         this.searchQuery = '';
         
@@ -265,7 +265,7 @@ class DancePracticeTool {
         }
         
         // Initialize practice selection checkboxes as empty (unchecked by default)
-        this.selectedLandmarkIndices = [];
+        this.selectedMoveKeys.clear();
 
         this.updateHUD();
         this.renderSidebar();
@@ -285,6 +285,76 @@ class DancePracticeTool {
         }
 
         requestAnimationFrame(() => this.draw());
+    }
+
+    // --- Selection & Sequence Helpers ---
+    get selectedLandmarkIndices() {
+        const set = new Set();
+        if (this.selectedMoveKeys) {
+            this.selectedMoveKeys.forEach(key => {
+                const [lIdx] = key.split('-').map(Number);
+                set.add(lIdx);
+            });
+        }
+        return Array.from(set);
+    }
+
+    set selectedLandmarkIndices(arr) {
+        if (!this.selectedMoveKeys) return;
+        this.selectedMoveKeys.clear();
+        if (Array.isArray(arr) && arr.length > 0) {
+            arr.forEach(lIdx => {
+                const lm = this.landmarks?.[lIdx];
+                if (lm && lm.moves) {
+                    lm.moves.forEach((m, mIdx) => {
+                        if (this.isMoveActive(m)) {
+                            this.selectedMoveKeys.add(`${lIdx}-${mIdx}`);
+                        }
+                    });
+                }
+            });
+        }
+    }
+
+    isMoveActive(m) {
+        return m && m.status !== 'inactive';
+    }
+
+    getPracticeSequence() {
+        const filteredLandmarkIndices = window.getFilteredLandmarkIndices(this.landmarks, this.activeFilter);
+        const sequence = [];
+        const hasSelections = this.selectedMoveKeys.size > 0;
+
+        filteredLandmarkIndices.forEach(lIdx => {
+            const lm = this.landmarks[lIdx];
+            if (!lm || !lm.moves) return;
+
+            lm.moves.forEach((m, mIdx) => {
+                if (this.isMoveActive(m)) {
+                    const key = `${lIdx}-${mIdx}`;
+                    if (!hasSelections || this.selectedMoveKeys.has(key)) {
+                        sequence.push({ lIdx, mIdx, move: m });
+                    }
+                }
+            });
+        });
+
+        return sequence;
+    }
+
+    getNextPracticeItem(currentLIdx, currentMIdx) {
+        const seq = this.getPracticeSequence();
+        if (seq.length === 0) return null;
+
+        const currSeqIdx = seq.findIndex(item => item.lIdx === currentLIdx && item.mIdx === currentMIdx);
+
+        if (currSeqIdx !== -1) {
+            const nextSeqIdx = (currSeqIdx + 1) % seq.length;
+            return seq[nextSeqIdx];
+        } else {
+            const afterItem = seq.find(item => item.lIdx > currentLIdx || (item.lIdx === currentLIdx && item.mIdx > currentMIdx));
+            return afterItem || seq[0];
+        }
     }
 
     // --- State Persistence ---
@@ -446,22 +516,24 @@ class DancePracticeTool {
         
         if (this.schedBeatIdx >= beatsTotal) {
             this.schedBeatIdx = 0;
-            const nextActiveMIdx = this.findNextActiveMoveIdx(this.schedLandmarkIdx, this.schedMoveIdx + 1);
-            if (nextActiveMIdx === -1) {
-                if (this.isRandomMode) {
-                    this.schedHoldingForRandom = true;
-                } else if (this.isLoopMode) {
-                    const firstActiveMIdx = this.findNextActiveMoveIdx(this.schedLandmarkIdx, 0);
-                    if (firstActiveMIdx !== -1) {
-                        this.schedMoveIdx = firstActiveMIdx;
+            if (this.isLoopMode) {
+                // Loop current move
+            } else {
+                const nextItem = this.getNextPracticeItem(this.schedLandmarkIdx, this.schedMoveIdx);
+                if (nextItem) {
+                    const seq = this.getPracticeSequence();
+                    const currSeqIdx = seq.findIndex(item => item.lIdx === this.schedLandmarkIdx && item.mIdx === this.schedMoveIdx);
+                    const isLastInSeq = (currSeqIdx === seq.length - 1);
+
+                    if (this.isRandomMode && !this.selectedMoveKeys.size && isLastInSeq) {
+                        this.schedHoldingForRandom = true;
                     } else {
-                        this.advanceLandmarkInScheduler();
+                        this.schedLandmarkIdx = nextItem.lIdx;
+                        this.schedMoveIdx = nextItem.mIdx;
                     }
                 } else {
                     this.advanceLandmarkInScheduler();
                 }
-            } else {
-                this.schedMoveIdx = nextActiveMIdx;
             }
         }
 
@@ -556,40 +628,13 @@ class DancePracticeTool {
         }
 
         if (shouldPreempt) {
-            const lm = this.landmarks[displayLIdx];
-            const nextActiveInLm = this.findNextActiveMoveIdx(displayLIdx, displayMIdx + 1);
-            if (nextActiveInLm !== -1) {
-                displayMIdx = nextActiveInLm;
-            } else if (this.isLoopMode) {
-                const firstActiveInLm = this.findNextActiveMoveIdx(displayLIdx, 0);
-                if (firstActiveInLm !== -1) displayMIdx = firstActiveInLm;
-            } else if (!this.isRandomMode) {
-                const filtered = this.getFilteredLandmarkIndices();
-                const pos = filtered.indexOf(displayLIdx);
-                let foundNext = false;
-                if (filtered.length > 0) {
-                    let startPos = pos !== -1 ? pos : 0;
-                    for (let i = 1; i <= filtered.length; i++) {
-                        const candLIdx = filtered[(startPos + i) % filtered.length];
-                        const candMIdx = this.findNextActiveMoveIdx(candLIdx, 0);
-                        if (candMIdx !== -1) {
-                            displayLIdx = candLIdx;
-                            displayMIdx = candMIdx;
-                            foundNext = true;
-                            break;
-                        }
-                    }
-                }
-                if (!foundNext) {
-                    for (let i = 1; i <= this.landmarks.length; i++) {
-                        const candLIdx = (displayLIdx + i) % this.landmarks.length;
-                        const candMIdx = this.findNextActiveMoveIdx(candLIdx, 0);
-                        if (candMIdx !== -1) {
-                            displayLIdx = candLIdx;
-                            displayMIdx = candMIdx;
-                            break;
-                        }
-                    }
+            if (this.isLoopMode) {
+                // Keep displayMIdx
+            } else {
+                const nextItem = this.getNextPracticeItem(displayLIdx, displayMIdx);
+                if (nextItem) {
+                    displayLIdx = nextItem.lIdx;
+                    displayMIdx = nextItem.mIdx;
                 }
             }
         }
@@ -611,10 +656,10 @@ class DancePracticeTool {
             }
         }
 
-        // Random mode landmark completion
+        // Random mode landmark completion (only when no custom move/chunk selections exist)
         const isLastActiveMove = (this.findNextActiveMoveIdx(playedBeat.landmarkIdx, playedBeat.moveIdx + 1) === -1);
         const isLastBeatOfMove = playedBeat.beat === playedBeat.beatsTotal - 1;
-        if (this.isRandomMode && isLastActiveMove && isLastBeatOfMove) {
+        if (this.isRandomMode && !this.selectedMoveKeys.size && isLastActiveMove && isLastBeatOfMove) {
             this.triggerRandomCountdown();
         }
     }
@@ -693,7 +738,7 @@ class DancePracticeTool {
         }
     }
 
-    updateMoveDisplay(shouldRestart = true) {
+    updateMoveDisplay(shouldRestart = true, autoScroll = true) {
         const lm = this.landmarks[this.currentLandmarkIdx];
         const move = lm.moves[this.currentMoveIdx];
         const mastery = move.mastery || 'learning';
@@ -712,14 +757,16 @@ class DancePracticeTool {
 
         let hintHtml = move.hint ? `<div class="text-xs sm:text-sm mt-2 text-center font-bold tracking-wider text-amber-300 bg-amber-950/60 border border-amber-500/30 px-3 py-1 rounded-xl shadow-lg">${move.hint}</div>` : '';
 
-        let nextMoveHtml = "End of landmark list";
-        const nextActiveMIdx = this.findNextActiveMoveIdx(this.currentLandmarkIdx, this.currentMoveIdx + 1);
-        if (nextActiveMIdx !== -1) {
-            const next = lm.moves[nextActiveMIdx];
-            const nextConf = MASTERY_CONFIG[next.mastery || 'learning'];
+        let nextMoveHtml = "End of practice sequence";
+        const nextItem = this.getNextPracticeItem(this.currentLandmarkIdx, this.currentMoveIdx);
+        if (nextItem) {
+            const nextLm = this.landmarks[nextItem.lIdx];
+            const next = nextLm.moves[nextItem.mIdx];
+            const nextConf = MASTERY_CONFIG[next.mastery || 'learning'] || MASTERY_CONFIG.learning;
             const nextIsInactive = (next.status === 'inactive');
             const nextTextColor = nextIsInactive ? 'text-stone-400' : nextConf.textColor;
-            nextMoveHtml = `<span class="${nextTextColor} font-bold">${next.name}</span>`;
+            const chunkTag = (nextItem.lIdx !== this.currentLandmarkIdx) ? `<span class="text-[10px] text-stone-500 font-normal">(${nextLm.title})</span> ` : '';
+            nextMoveHtml = `${chunkTag}<span class="${nextTextColor} font-bold">${next.name}</span>`;
         }
 
         if (this.els.currentMoveLabel) {
@@ -744,7 +791,7 @@ class DancePracticeTool {
         const activeEl = document.getElementById(`m-${this.currentLandmarkIdx}-${this.currentMoveIdx}`);
         if (activeEl) {
             activeEl.classList.add('move-active');
-            if (window.innerWidth >= 768) activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            if (autoScroll && window.innerWidth >= 768) activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
         if (shouldRestart && !this.isPaused) this.startScheduler();
@@ -783,7 +830,11 @@ class DancePracticeTool {
                 this.expandedLandmarks.add(lIdx);
             }
 
-            const isSelected = this.selectedLandmarkIndices.includes(lIdx);
+            const activeMoves = lm.moves.filter(m => this.isMoveActive(m));
+            const selectedActiveCount = lm.moves.filter((m, mIdx) => this.isMoveActive(m) && this.selectedMoveKeys.has(`${lIdx}-${mIdx}`)).length;
+
+            const isSelected = activeMoves.length > 0 && selectedActiveCount === activeMoves.length;
+            const isSomeSelected = selectedActiveCount > 0 && selectedActiveCount < activeMoves.length;
             const isCurrent = (lIdx === this.currentLandmarkIdx);
             const isExpanded = this.expandedLandmarks.has(lIdx);
 
@@ -835,9 +886,9 @@ class DancePracticeTool {
                                    class="chunk-checkbox absolute opacity-0 cursor-pointer w-7 h-7 z-10" 
                                    data-lidx="${lIdx}" 
                                    ${isSelected ? 'checked' : ''}>
-                            <div class="w-4 h-4 rounded border-2 border-[#1c1917] flex items-center justify-center transition-all duration-200 group-hover/cb:scale-110 ${isSelected ? 'bg-[#1c1917] text-white shadow-sm' : 'bg-white text-transparent'}">
+                            <div class="w-4 h-4 rounded border-2 border-[#1c1917] flex items-center justify-center transition-all duration-200 group-hover/cb:scale-110 ${isSelected || isSomeSelected ? 'bg-[#1c1917] text-white shadow-sm' : 'bg-white text-transparent'}">
                                 <svg class="w-3 h-3 stroke-[3.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                    ${isSomeSelected ? '<path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14" />' : '<path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />'}
                                 </svg>
                             </div>
                         </div>
@@ -911,6 +962,8 @@ class DancePracticeTool {
         const config = MASTERY_CONFIG[mastery];
         const isCurrent = (lIdx === this.currentLandmarkIdx && mIdx === this.currentMoveIdx);
         const isInactive = (m.status === 'inactive');
+        const key = `${lIdx}-${mIdx}`;
+        const isMoveSelected = this.selectedMoveKeys.has(key);
         
         const originalMastery = this.originalLandmarks[lIdx]?.moves?.[mIdx]?.mastery || 'learning';
         const isModified = mastery !== originalMastery;
@@ -926,6 +979,18 @@ class DancePracticeTool {
 
         return `
             <div id="m-${lIdx}-${mIdx}" class="text-[11px] px-3 py-2 rounded-xl flex items-center justify-between gap-2.5 group cursor-pointer border-2 transition-all ${isCurrent ? 'move-active bg-[#fff1f2] text-slate-950 border-[#1c1917] shadow-[3px_3px_0px_#1c1917]' : 'bg-[#ffde59] text-stone-900 border-[#1c1917] hover:bg-[#ffc312] shadow-[2px_2px_0px_#1c1917]'} ${tooltipClass}" data-action="select" data-lidx="${lIdx}" data-midx="${mIdx}">
+                <div class="p-1 -m-1 flex items-center justify-center cursor-pointer select-none group/mcb relative shrink-0" data-action="toggle-move-check" data-lidx="${lIdx}" data-midx="${mIdx}" title="Select for practice">
+                    <input type="checkbox" 
+                           class="move-checkbox absolute opacity-0 cursor-pointer w-6 h-6 z-10" 
+                           data-lidx="${lIdx}" 
+                           data-midx="${mIdx}"
+                           ${isMoveSelected ? 'checked' : ''}>
+                    <div class="w-3.5 h-3.5 rounded border-2 border-[#1c1917] flex items-center justify-center transition-all duration-200 group-hover/mcb:scale-110 ${isMoveSelected ? 'bg-[#1c1917] text-white shadow-sm' : 'bg-white text-transparent'}">
+                        <svg class="w-2.5 h-2.5 stroke-[3.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </div>
+                </div>
                 <span class="truncate flex-1 py-0.5 ${nameColorClass}" data-lidx="${lIdx}" data-midx="${mIdx}">
                     ${m.hint ? '<span class="bg-rose-500 border border-slate-900 px-1.5 py-0.5 rounded text-[9px] mr-1.5 text-white font-black shadow-[1px_1px_0px_#1c1917]">?</span>' : ''}${m.name} ${this.danceType === 'wcs' ? `<span class="${isCurrent ? 'bg-slate-950 text-white' : 'bg-[#1c1917] text-white'} px-1.5 py-0.5 rounded text-[12px] font-mono font-black ml-1.5">${m.beats}</span>` : ''}${movieLinkHtml}
                 </span>
@@ -999,7 +1064,7 @@ class DancePracticeTool {
         }
     }
 
-    selectMove(lIdx, mIdx, expand = true) {
+    selectMove(lIdx, mIdx, expand = true, autoScroll = true) {
         const isNewLandmark = (this.currentLandmarkIdx !== lIdx);
         this.currentLandmarkIdx = lIdx;
         this.currentMoveIdx = mIdx;
@@ -1022,7 +1087,7 @@ class DancePracticeTool {
 
         this.updateHUD();
         this.renderSidebar();
-        this.updateMoveDisplay(true);
+        this.updateMoveDisplay(true, autoScroll);
         if (this.switchToPracticeTab) this.switchToPracticeTab();
 
         if (window.ChunkSpeech && (isNewLandmark || mIdx === 0)) {
@@ -1052,20 +1117,52 @@ class DancePracticeTool {
         }
     }
 
-    toggleLandmarkSelection(lIdx, isChecked) {
-        if (isChecked) {
-            if (!this.selectedLandmarkIndices.includes(lIdx)) {
-                this.selectedLandmarkIndices.push(lIdx);
+    toggleLandmarkSelection(lIdx) {
+        const lm = this.landmarks[lIdx];
+        if (!lm || !lm.moves) return;
+
+        const activeMoves = lm.moves.filter(m => this.isMoveActive(m));
+        const selectedActiveCount = lm.moves.filter((m, mIdx) => this.isMoveActive(m) && this.selectedMoveKeys.has(`${lIdx}-${mIdx}`)).length;
+
+        const shouldCheckAll = selectedActiveCount < activeMoves.length;
+
+        lm.moves.forEach((m, mIdx) => {
+            if (this.isMoveActive(m)) {
+                if (shouldCheckAll) {
+                    this.selectedMoveKeys.add(`${lIdx}-${mIdx}`);
+                } else {
+                    this.selectedMoveKeys.delete(`${lIdx}-${mIdx}`);
+                }
             }
+        });
+
+        this.onSelectionChanged();
+    }
+
+    toggleMoveSelection(lIdx, mIdx) {
+        const key = `${lIdx}-${mIdx}`;
+        if (this.selectedMoveKeys.has(key)) {
+            this.selectedMoveKeys.delete(key);
         } else {
-            this.selectedLandmarkIndices = this.selectedLandmarkIndices.filter(idx => idx !== lIdx);
+            this.selectedMoveKeys.add(key);
         }
 
+        this.onSelectionChanged();
+    }
+
+    onSelectionChanged() {
         this.renderSidebar();
 
-        const filtered = this.getFilteredLandmarkIndices();
-        if (filtered.length > 0 && !filtered.includes(this.currentLandmarkIdx)) {
-            this.selectMove(filtered[0], 0);
+        const seq = this.getPracticeSequence();
+        if (seq.length > 0) {
+            const isCurrentInSeq = seq.some(item => item.lIdx === this.currentLandmarkIdx && item.mIdx === this.currentMoveIdx);
+            if (!isCurrentInSeq) {
+                this.selectMove(seq[0].lIdx, seq[0].mIdx, false);
+            } else {
+                this.updateMoveDisplay(false);
+            }
+        } else {
+            this.updateMoveDisplay(false);
         }
     }
 
@@ -1203,6 +1300,7 @@ class DancePracticeTool {
 
         // Sidebar clicks
         this.els.landmarkList.onclick = (e) => {
+            const moveCheckbox = e.target.closest('.move-checkbox') || e.target.closest('[data-action="toggle-move-check"]');
             const checkbox = e.target.closest('.chunk-checkbox') || e.target.closest('[data-action="toggle-check"]');
             const cycle = e.target.closest('[data-action="cycle"]');
             const sPrev = e.target.closest('[data-action="scroll-prev"]');
@@ -1210,10 +1308,17 @@ class DancePracticeTool {
             const select = e.target.closest('[data-action="select"]');
             const toggleAcc = e.target.closest('[data-action="toggle-accordion"]');
             
+            if (moveCheckbox) {
+                e.stopPropagation();
+                const lIdx = parseInt(moveCheckbox.dataset.lidx);
+                const mIdx = parseInt(moveCheckbox.dataset.midx);
+                this.toggleMoveSelection(lIdx, mIdx);
+                return;
+            }
             if (checkbox) {
                 e.stopPropagation();
                 const lIdx = parseInt(checkbox.dataset.lidx);
-                this.toggleLandmarkSelection(lIdx, checkbox.checked);
+                this.toggleLandmarkSelection(lIdx);
                 return;
             }
             if (cycle) { e.stopPropagation(); this.cycleMastery(parseInt(cycle.dataset.lidx), parseInt(cycle.dataset.midx)); return; }
@@ -1233,7 +1338,7 @@ class DancePracticeTool {
             }
             if (select) {
                 e.stopPropagation();
-                this.selectMove(parseInt(select.dataset.lidx), parseInt(select.dataset.midx));
+                this.selectMove(parseInt(select.dataset.lidx), parseInt(select.dataset.midx), true, false);
                 return;
             }
             if (toggleAcc) {
