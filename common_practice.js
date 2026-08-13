@@ -1088,7 +1088,6 @@ class DancePracticeTool {
         this.updateHUD();
         this.renderSidebar();
         this.updateMoveDisplay(true, autoScroll);
-        if (this.switchToPracticeTab) this.switchToPracticeTab();
 
         if (window.ChunkSpeech && (isNewLandmark || mIdx === 0)) {
             const lm = this.landmarks[lIdx];
