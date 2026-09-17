@@ -50,7 +50,7 @@ const WCS_LANDMARKS = [
         links: [
             { id: 1, url: "https://youtu.be/HYaWbVi3xWk", label: "SP into Closed position side tap and LSP turn send out" },
             { id: 2, url: "https://youtu.be/vx1wmjgR124", label: "WCS Online 11 Patterns" },
-            { id: 3, url: "https://www.youtube.com/watch?v=Ae9OTEZ60yY", label: "Telemark with Inside Turns" },
+            { id: 3, url: "https://youtu.be/Ae9OTEZ60yY?t=60s", label: "Telemark with Inside Turns" },
             { id: 4, url: "https://www.youtube.com/watch?v=YuIWjdriiq4&t=90s", label: "LSP Hammer Roll-in / Roll-out" },
             { id: 5, url: "https://youtu.be/8A1IRTHhADo?t=50s", label: "LSP Hammer Double Hand Roll-in / Roll-out" },
             { id: 6, url: "https://youtu.be/0RpK_Cm1sNk", label: "LSP Right Hand Led Roll-In/Out" },
