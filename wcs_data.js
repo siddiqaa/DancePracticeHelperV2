@@ -37,11 +37,11 @@ const WCS_LANDMARKS = [
         color: "#3b82f6",
         moves: [
             { name: "LSP", beats: 6, mastery: "mastered" },
-            { name: "LSP with Free Spin", beats: 6, mastery: "learning", link: 1 },
+            { name: "LSP with Free Spin", beats: 6, mastery: "mastered", link: 8 },
             { name: "Left Side Telemark with Inside Turns", beats: 8, mastery: "learning", link: 3, hint: "Prep and lead an inside turn with left hand, place right hand on follow back by 4, quick whip by 6, anchor 7 and 8" },
             { name: "Sugar Push into Closed with Left Side Tap", beats: 6, mastery: "learning", link: 1, status: 'inactive' },
             { name: "LSP Under Arm Send Out", beats: 6, mastery: "learning", link: 2, status: 'inactive' },
-            { name: "LSP Right Hand To Follow Right Hand Hammer Roll-In / Out", beats: 6, mastery: "learning", link: 4 , hint: "Move your right hand down to allow follow to hammer in. Move down again to un-wind"},
+            { name: "LSP Lead RH - Follow RH Conxn Hammer Roll-In/Out", beats: 6, mastery: "learning", link: 4 , hint: "Move your right hand down to allow follow to hammer in. Move down again to un-wind"},
             { name: "LSP Double Hand Hammer Roll-In / Out", beats: 6, mastery: "learning", link: 5 },
             { name: "LSP Right Hand To Follow Left Hand Roll-In/Out", beats: 6, mastery: "learning", link: 6 },
             { name: "LSP Right Hand Led Roll-In/Out with Catch and Follow Turn", beats: 6, mastery: "learning", link: 7 },
@@ -54,7 +54,8 @@ const WCS_LANDMARKS = [
             { id: 4, url: "https://www.youtube.com/watch?v=YuIWjdriiq4&t=90s", label: "LSP Hammer Roll-in / Roll-out" },
             { id: 5, url: "https://youtu.be/8A1IRTHhADo?t=50s", label: "LSP Hammer Double Hand Roll-in / Roll-out" },
             { id: 6, url: "https://youtu.be/0RpK_Cm1sNk", label: "LSP Right Hand Led Roll-In/Out" },
-            { id: 7, url: "https://youtu.be/0RpK_Cm1sNk?t=36s", label: "LSP Right Hand Led Roll-In/Out with Catch and Follow Turn" }
+            { id: 7, url: "https://youtu.be/0RpK_Cm1sNk?t=36s", label: "LSP Right Hand Led Roll-In/Out with Catch and Follow Turn" },
+            { id: 8, url: "https://youtu.be/bzvy-xeiCjM?t=59", label: "Turn Variaitions"}
         ]
     },
     {
@@ -123,7 +124,7 @@ const WCS_LANDMARKS = [
 
         ],
         links: [
-            { id: 1, url: "https://youtu.be/q80NN7oEYL4?t=25s", label: "Reverse Whip" },
+            { id: 1, url: "https://youtu.be/OLXJylMWZto?t=32", label: "Reverse Whip" },
             { id: 2, url: "https://youtu.be/q80NN7oEYL4?t=37s", label: "Wren Reverse Whip with Lead Cross the Slot" },
             { id: 3, url: "https://youtu.be/PIuJGK59rmg?t=60s", label: "Mike Reverse Whip with Lead Cross the Slot" },
             { id: 4, url: "https://youtu.be/q80NN7oEYL4?t=50s", label: "Reverse Whip with Lead Turn Along" },
