@@ -8,7 +8,7 @@ const WCS_LANDMARKS = [
             { name: "Sugar Tuck", beats: 6, mastery: "mastered" },
             { name: "Sugar Tuck Catch & Redirect", beats: 8, mastery: "learning", link: 8 },
             { name: "Sugar Tuck Arm Rock Play", beats: 10, mastery: "learning", link: 9, hint: "Use your right hooky finger hand on follow lower arm to start the rock" },
-            { name: "Sugar Tuck, Accelerate Turn, Elbow Catch and Inside Turn", beats: 10, mastery: "learning", hint: "Accelerate the follow out of tuck at beat 4, catch elbow and then do a RSP with turn", link: 3 },
+            { name: "ST, Accelerate Turn, Elbow Catch and Inside Turn", beats: 10, mastery: "learning", hint: "Accelerate the follow out of tuck at beat 4, catch elbow and then do a RSP with turn", link: 3 },
             { name: "Sugar Tuck Slow Side", beats: 8, mastery: "mastered", link: 10 },
             { name: "Sugar Tuck with Both Hands", beats: 6, mastery: "learning", link: 2 },
             { name: "Left Side Turning Pass Both Hands Led by Leader Left Hand", beats: 6, mastery: "learning", link: 2 },
