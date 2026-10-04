@@ -973,7 +973,13 @@ class DancePracticeTool {
         const tooltipClass = m.hint ? 'has-move-tooltip' : '';
 
         const moveLink = m.link ? (lm.links || []).find(l => l.id === m.link) : null;
-        const movieLinkHtml = moveLink ? `<a href="${moveLink.url}" target="_blank" class="ml-1.5 px-1.5 py-0.5 bg-white text-stone-900 border-2 border-[#1c1917] rounded-md shadow-[1.5px_1.5px_0px_#1c1917] hover:scale-110 hover:bg-stone-100 active:scale-95 transition-all inline-flex items-center leading-none text-[10px]" title="Watch video" onclick="event.stopPropagation()">🎬</a>` : '';
+        const movieLinkHtml = moveLink ? `<a href="${moveLink.url}" target="_blank" rel="noopener noreferrer" class="shrink-0 px-1.5 py-0.5 bg-white text-stone-900 border-2 border-[#1c1917] rounded-md shadow-[1.5px_1.5px_0px_#1c1917] hover:scale-110 hover:bg-stone-100 active:scale-95 transition-all inline-flex items-center leading-none text-[10px]" title="Watch video${moveLink.label ? ': ' + moveLink.label : ''}" onclick="event.stopPropagation()">🎬</a>` : '';
+
+        const stepCountHtml = (this.danceType === 'wcs' && m.beats)
+            ? `<span class="shrink-0 min-w-[20px] text-center ${isCurrent ? 'bg-slate-950 text-white' : 'bg-[#1c1917] text-white'} px-1.5 py-0.5 rounded text-[11px] font-mono font-black leading-none shadow-[1px_1px_0px_#1c1917]" title="${m.beats} counts">${m.beats}</span>`
+            : '';
+
+        const hintBadgeHtml = m.hint ? `<span class="shrink-0 bg-rose-500 border border-slate-900 px-1.5 py-0.5 rounded text-[9px] text-white font-black shadow-[1px_1px_0px_#1c1917]" title="Hint available">?</span>` : '';
 
         const nameColorClass = isInactive ? 'text-stone-400 font-medium' : (isCurrent ? 'text-slate-950 font-black' : 'text-stone-900 font-black');
 
@@ -991,9 +997,12 @@ class DancePracticeTool {
                         </svg>
                     </div>
                 </div>
-                <span class="truncate flex-1 py-0.5 ${nameColorClass}" data-lidx="${lIdx}" data-midx="${mIdx}">
-                    ${m.hint ? '<span class="bg-rose-500 border border-slate-900 px-1.5 py-0.5 rounded text-[9px] mr-1.5 text-white font-black shadow-[1px_1px_0px_#1c1917]">?</span>' : ''}${m.name} ${this.danceType === 'wcs' ? `<span class="${isCurrent ? 'bg-slate-950 text-white' : 'bg-[#1c1917] text-white'} px-1.5 py-0.5 rounded text-[12px] font-mono font-black ml-1.5">${m.beats}</span>` : ''}${movieLinkHtml}
-                </span>
+                <div class="flex items-center gap-1.5 flex-1 min-w-0" data-lidx="${lIdx}" data-midx="${mIdx}">
+                    ${stepCountHtml}
+                    ${movieLinkHtml}
+                    ${hintBadgeHtml}
+                    <span class="truncate flex-1 py-0.5 ${nameColorClass}" data-lidx="${lIdx}" data-midx="${mIdx}">${m.name}</span>
+                </div>
                 ${tooltipHtml}
                 <button class="shrink-0 text-[10px] font-black uppercase tracking-wider px-2.5 py-1.5 rounded-lg ${modifiedBorderClass} ${config.badgeColor} hover:brightness-110 transition-all active:scale-[0.97]" data-action="cycle" data-lidx="${lIdx}" data-midx="${mIdx}">
                     ${config.text}
