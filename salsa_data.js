@@ -26,8 +26,6 @@ const SALSA_LANDMARKS = [
             { name: "Basic (Back)", beats: 4, mastery: "mastered" },
             { name: "Left Turn (Lead)", beats: 4, mastery: "familiar" },
             { name: "Left Turn (Follow)", beats: 4, mastery: "familiar" },
-            { name: "Underarm Right", beats: 4, mastery: "familiar" },
-            { name: "Underarm Left", beats: 4, mastery: "familiar" }
         ],
         links: [
             { id: 1, url: "https://www.youtube.com/watch?v=2n-1_eXk03s", label: "Turns Guide" }
@@ -38,15 +36,18 @@ const SALSA_LANDMARKS = [
         color: "#8b5cf6",
         moves: [
             { name: "Basic (Front)", beats: 4, mastery: "mastered" },
-            { name: "CBL Setup", beats: 4, mastery: "mastered", link: 1 },
-            { name: "CBL Finish", beats: 4, mastery: "mastered", link: 1 },
-            { name: "CBL Inside Turn (Start)", beats: 4, mastery: "learning" },
-            { name: "CBL Inside Turn (Finish)", beats: 4, mastery: "learning" },
-            { name: "CBL Outside Turn (Start)", beats: 4, mastery: "learning" },
-            { name: "CBL Outside Turn (Finish)", beats: 4, mastery: "learning" }
+            { name: "CBL Setup", beats: 4, mastery: "mastered"},
+            { name: "CBL Finish", beats: 4, mastery: "mastered"},
+            { name: "CBL Inside Turn (Start)", beats: 4, mastery: "familiar", link: 1},
+            { name: "CBL Inside Turn (Finish)", beats: 4, mastery: "familiar", link: 1},
+            { name: "CBL Outside Turn (Start)", beats: 4, mastery: "familiar", link: 1},
+            { name: "CBL Outside Turn (Finish)", beats: 4, mastery: "familiar", link: 1},
+            { name: "CBL With Leader Spin", beats: 4, mastery:"learning", link: 2},
+            { name: "CBL With Leader Spin", beats: 4, mastery:"learning", link: 2},
         ],
         links: [
-            { id: 1, url: "https://www.youtube.com/watch?v=7kI589C7mYc", label: "Cross Body Lead Patterns" }
+            { id: 1, url: "https://www.youtube.com/shorts/e9veH6foCSw", label: "CBL w Turns" },
+            { id: 2, url: "https://youtu.be/SwKSjUdKv0k?t=13", label: "CBL with Leader Spin"}
         ]
     },
     {
@@ -102,10 +103,12 @@ const SALSA_LANDMARKS = [
             { name: "Titanic Setup", beats: 4, mastery: "learning" },
             { name: "Titanic Finish", beats: 4, mastery: "learning" },
             { name: "Double Right Setup", beats: 4, mastery: "learning" },
-            { name: "Double Right Finish", beats: 4, mastery: "learning" }
+            { name: "Double Right Finish", beats: 4, mastery: "learning" },
+            { name: "Combo 20", beats: 4, mastery: "learning", link: 2}
         ],
         links: [
-            { id: 1, url: "https://www.youtube.com/watch?v=M9-sB4oA9-A", label: "Titanic & Copa Patterns" }
+            { id: 1, url: "https://www.youtube.com/watch?v=M9-sB4oA9-A", label: "Titanic & Copa Patterns" },
+            { id: 2, url: "https://www.youtube.com/shorts/6OZ3YRb5u54", label: "Combo 28"}
         ]
     }
 ];
