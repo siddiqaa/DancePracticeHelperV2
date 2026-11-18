@@ -13,7 +13,7 @@ const WCS_LANDMARKS = [
             { name: "Sugar Tuck with Both Hands", beats: 6, mastery: "learning", link: 2 },
             { name: "Left Side Turning Pass Both Hands Led by Leader Left Hand", beats: 6, mastery: "learning", link: 2 },
             { name: "Right Side Pass Popout", beats: 6, mastery: "familiar", link: 2 },
-            { name: "Right Side Pass to My Right to Her Left Hold", beats: 6, mastery: "mastered", link: 4 },
+            { name: "Right Side Pass to My Right to Her Left Hold", beats: 6, mastery: "mastered", link: 4, status: "inactive" },
             { name: "Drama Sugar Push", beats: 6, mastery: "learning", link: 6 },
             { name: "Sugar Pull Waist Catch and Arm Free Spin Back", beats: 8, mastery: "learning", link: 5, hint: "Follow should be sideways to make it side to side shadow position for free spin using her left arm" },
             { name: "Sugar Tuck Ring Around The Rosie", beats: 10, mastery: "familiar", link: 7, status: "inactive" },
