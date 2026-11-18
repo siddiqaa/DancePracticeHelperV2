@@ -51,13 +51,33 @@ test.describe('West Coast Swing Practice Tool', () => {
 
   test('mastery filter buttons', async ({ page }) => {
     const filterAll = page.locator('#filterAllBtn');
-    const filterLow = page.locator('#filterLowBtn');
+    const filterLearning = page.locator('#filterLearningBtn');
+    const filterFamiliar = page.locator('#filterFamiliarBtn');
+    const filterMastered = page.locator('#filterMasteredBtn');
     
     await expect(filterAll).toBeVisible();
-    await filterLow.click();
-    
-    // Verify filter changed visual styling (bg-slate-700/80 etc) - we just ensure they don't throw errors
+    await expect(filterLearning).toBeVisible();
+    await expect(filterFamiliar).toBeVisible();
+    await expect(filterMastered).toBeVisible();
+
+    // Expand first chunk and filter by Learning
+    await page.locator('[data-action="toggle-accordion"]').first().click();
+    await filterLearning.click();
+
+    // Only Learning moves should be displayed in the chunk (e.g., Sugar Push is mastered, so hidden)
+    await expect(page.locator('#m-0-0')).toBeHidden();
+    await expect(page.locator('#m-0-2')).toBeVisible();
+
+    // Switch to Mastered: Sugar Push (m-0-0) should be visible, Learning move (m-0-2) hidden
+    await filterMastered.click();
+    await expect(page.locator('#m-0-0')).toBeVisible();
+    await expect(page.locator('#m-0-2')).toBeHidden();
+
+    // Switch to Familiar and back to All
+    await filterFamiliar.click();
     await filterAll.click();
+    await expect(page.locator('#m-0-0')).toBeVisible();
+    await expect(page.locator('#m-0-2')).toBeVisible();
   });
 
   test('sync progress modal opens and closes', async ({ page }) => {
@@ -337,10 +357,14 @@ test.describe('Bachata - Additional Comprehensive Tests', () => {
   
   test('mastery filter buttons', async ({ page }) => {
     const filterAll = page.locator('#filterAllBtn');
-    const filterLow = page.locator('#filterLowBtn');
+    const filterLearning = page.locator('#filterLearningBtn');
+    const filterFamiliar = page.locator('#filterFamiliarBtn');
+    const filterMastered = page.locator('#filterMasteredBtn');
     
     await expect(filterAll).toBeVisible();
-    await filterLow.click();
+    await filterLearning.click();
+    await filterFamiliar.click();
+    await filterMastered.click();
     
     // Switch back to all
     await filterAll.click();
@@ -436,8 +460,8 @@ test.describe('Salsa Practice Tool', () => {
     await expect(firstCheckbox).toBeChecked();
     
     // Changing the mastery filter resets selection checkboxes
-    const filterLow = page.locator('#filterLowBtn');
-    await filterLow.click();
+    const filterLearning = page.locator('#filterLearningBtn');
+    await filterLearning.click();
     
     const filterAll = page.locator('#filterAllBtn');
     await filterAll.click();

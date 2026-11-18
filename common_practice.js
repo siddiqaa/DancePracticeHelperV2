@@ -43,23 +43,19 @@ function getLandmarkMastery(lm) {
 }
 
 /**
- * Filter the landmark list based on active filter range.
+ * Filter the landmark list based on active move mastery filter.
  * @param {Array} landmarks - The full list of landmarks.
- * @param {string} activeFilter - 'all' | 'low' | 'med' | 'high'
- * @returns {Array<number>} - List of indices of the matching landmarks.
+ * @param {string} activeFilter - 'all' | 'learning' | 'familiar' | 'mastered'
+ * @returns {Array<number>} - List of indices of landmarks containing at least one matching move.
  */
 function getFilteredLandmarkIndices(landmarks, activeFilter) {
+    if (!activeFilter || activeFilter === 'all') {
+        return landmarks.map((_, idx) => idx);
+    }
     return landmarks.map((lm, idx) => {
-        const mastery = getLandmarkMastery(lm);
-        let range = 'low';
-        if (mastery >= 75) range = 'high';
-        else if (mastery >= 40) range = 'med';
-        
-        return { idx, range };
-    }).filter(item => {
-        if (activeFilter === 'all') return true;
-        return item.range === activeFilter;
-    }).map(item => item.idx);
+        const hasMatch = Boolean(lm.moves && lm.moves.some(m => (m.mastery || 'learning') === activeFilter));
+        return { idx, hasMatch };
+    }).filter(item => item.hasMatch).map(item => item.idx);
 }
 
 /**
@@ -320,6 +316,45 @@ class DancePracticeTool {
         return m && m.status !== 'inactive';
     }
 
+    doesMoveMatchFilter(m) {
+        if (!m) return false;
+        if (!this.activeFilter || this.activeFilter === 'all') return true;
+        return (m.mastery || 'learning') === this.activeFilter;
+    }
+
+    doesMoveMatchQuery(m) {
+        if (!m) return false;
+        const query = (this.searchQuery || '').trim().toLowerCase();
+        return !query || m.name.toLowerCase().includes(query);
+    }
+
+    doesMoveMatchSidebar(m) {
+        return this.doesMoveMatchFilter(m) && this.doesMoveMatchQuery(m);
+    }
+
+    findNextPracticeMoveIdx(lIdx, startMIdx = 0) {
+        const lm = this.landmarks[lIdx];
+        if (!lm || !lm.moves) return -1;
+        for (let i = startMIdx; i < lm.moves.length; i++) {
+            if (this.isMoveActive(lm.moves[i]) && this.doesMoveMatchFilter(lm.moves[i])) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    getVisibleLandmarkIndices() {
+        let visibleLandmarks = window.getFilteredLandmarkIndices(this.landmarks, this.activeFilter);
+        const query = (this.searchQuery || '').trim().toLowerCase();
+        if (query) {
+            visibleLandmarks = visibleLandmarks.filter(lIdx => {
+                const lm = this.landmarks[lIdx];
+                return lm.moves.some(m => this.doesMoveMatchSidebar(m));
+            });
+        }
+        return visibleLandmarks;
+    }
+
     getPracticeSequence() {
         const filteredLandmarkIndices = window.getFilteredLandmarkIndices(this.landmarks, this.activeFilter);
         const sequence = [];
@@ -330,7 +365,7 @@ class DancePracticeTool {
             if (!lm || !lm.moves) return;
 
             lm.moves.forEach((m, mIdx) => {
-                if (this.isMoveActive(m)) {
+                if (this.isMoveActive(m) && this.doesMoveMatchFilter(m)) {
                     const key = `${lIdx}-${mIdx}`;
                     if (!hasSelections || this.selectedMoveKeys.has(key)) {
                         sequence.push({ lIdx, mIdx, move: m });
@@ -418,26 +453,45 @@ class DancePracticeTool {
 
     applyFilter(filterVal) {
         this.activeFilter = filterVal;
-        const btnPrefix = 'filter' + filterVal.charAt(0).toUpperCase() + filterVal.slice(1) + 'Btn';
-        const buttons = ['filterAllBtn', 'filterLowBtn', 'filterMedBtn', 'filterHighBtn'];
-        
-        buttons.forEach(id => {
-            const btn = document.getElementById(id);
+        const btnMap = {
+            all: { id: 'filterAllBtn', activeClass: 'bg-stone-900 text-white border-stone-900 shadow-sm' },
+            learning: { id: 'filterLearningBtn', activeClass: 'bg-rose-400 text-rose-950 border-stone-900 shadow-sm' },
+            familiar: { id: 'filterFamiliarBtn', activeClass: 'bg-amber-300 text-amber-950 border-stone-900 shadow-sm' },
+            mastered: { id: 'filterMasteredBtn', activeClass: 'bg-emerald-400 text-emerald-950 border-stone-900 shadow-sm' }
+        };
+
+        Object.entries(btnMap).forEach(([key, cfg]) => {
+            const btn = document.getElementById(cfg.id);
             if (!btn) return;
-            if (id === btnPrefix) {
-                btn.className = `py-1 text-[9px] font-bold uppercase rounded transition-all bg-${this.accentColor}-600 text-white shadow-sm border border-${this.accentColor}-500/10`;
+            if (key === filterVal) {
+                btn.className = `py-1.5 px-1 text-[10px] font-black uppercase rounded-lg transition-all border ${cfg.activeClass}`;
             } else {
-                btn.className = "py-1 text-[9px] font-bold uppercase rounded transition-all text-slate-400 hover:text-slate-100 hover:bg-slate-900/40";
+                btn.className = 'py-1.5 px-1 text-[10px] font-bold uppercase rounded-lg transition-all text-stone-800 hover:text-stone-950 hover:bg-[#fefae0] border border-transparent';
             }
         });
 
         // Reset the selection checkboxes as empty (unchecked after filter is changed)
-        this.selectedLandmarkIndices = [];
+        this.selectedMoveKeys.clear();
 
         this.renderSidebar();
-        const filtered = this.getFilteredLandmarkIndices();
-        if (filtered.length > 0 && !filtered.includes(this.currentLandmarkIdx)) {
-            this.selectMove(filtered[0], 0);
+
+        const seq = this.getPracticeSequence();
+        if (seq.length > 0) {
+            const isCurrentInSeq = seq.some(item => item.lIdx === this.currentLandmarkIdx && item.mIdx === this.currentMoveIdx);
+            if (!isCurrentInSeq) {
+                this.selectMove(seq[0].lIdx, seq[0].mIdx, false, false);
+            } else {
+                this.updateMoveDisplay(false, false);
+            }
+        } else {
+            const visible = window.getFilteredLandmarkIndices(this.landmarks, this.activeFilter);
+            if (visible.length > 0) {
+                const lm = this.landmarks[visible[0]];
+                const firstMatchMIdx = lm.moves.findIndex(m => this.doesMoveMatchFilter(m));
+                this.selectMove(visible[0], firstMatchMIdx !== -1 ? firstMatchMIdx : 0, false, false);
+            } else {
+                this.updateMoveDisplay(false, false);
+            }
         }
     }
 
@@ -475,9 +529,10 @@ class DancePracticeTool {
         const secondsPerBeat = 60.0 / bpm;
 
         while (this.nextBeatTime < DanceAudio.getCurrentTime() + this.scheduleAheadTime) {
-            // Ensure schedMoveIdx points to an active move
-            if (!this.isMoveActive(this.landmarks[this.schedLandmarkIdx]?.moves?.[this.schedMoveIdx])) {
-                const nextActiveMIdx = this.findNextActiveMoveIdx(this.schedLandmarkIdx, this.schedMoveIdx);
+            // Ensure schedMoveIdx points to an active, filter-matching move
+            const schedCandMove = this.landmarks[this.schedLandmarkIdx]?.moves?.[this.schedMoveIdx];
+            if (!this.isMoveActive(schedCandMove) || !this.doesMoveMatchFilter(schedCandMove)) {
+                const nextActiveMIdx = this.findNextPracticeMoveIdx(this.schedLandmarkIdx, this.schedMoveIdx);
                 if (nextActiveMIdx !== -1) {
                     this.schedMoveIdx = nextActiveMIdx;
                 } else {
@@ -556,7 +611,7 @@ class DancePracticeTool {
             let startPos = currentFilteredPos !== -1 ? currentFilteredPos : 0;
             for (let i = 1; i <= filtered.length; i++) {
                 const candLIdx = filtered[(startPos + i) % filtered.length];
-                const candMIdx = this.findNextActiveMoveIdx(candLIdx, 0);
+                const candMIdx = this.findNextPracticeMoveIdx(candLIdx, 0);
                 if (candMIdx !== -1) {
                     nextLIdx = candLIdx;
                     nextMIdx = candMIdx;
@@ -657,7 +712,7 @@ class DancePracticeTool {
         }
 
         // Random mode landmark completion (only when no custom move/chunk selections exist)
-        const isLastActiveMove = (this.findNextActiveMoveIdx(playedBeat.landmarkIdx, playedBeat.moveIdx + 1) === -1);
+        const isLastActiveMove = (this.findNextPracticeMoveIdx(playedBeat.landmarkIdx, playedBeat.moveIdx + 1) === -1);
         const isLastBeatOfMove = playedBeat.beat === playedBeat.beatsTotal - 1;
         if (this.isRandomMode && !this.selectedMoveKeys.size && isLastActiveMove && isLastBeatOfMove) {
             this.triggerRandomCountdown();
@@ -670,8 +725,10 @@ class DancePracticeTool {
         this.beatsQueue = [];
         this.schedHoldingForRandom = false;
 
-        const filtered = this.getFilteredLandmarkIndices();
-        const validFiltered = filtered.filter(lIdx => this.findNextActiveMoveIdx(lIdx, 0) !== -1);
+        const filtered = this.selectedMoveKeys.size > 0
+            ? this.getFilteredLandmarkIndices()
+            : window.getFilteredLandmarkIndices(this.landmarks, this.activeFilter);
+        const validFiltered = filtered.filter(lIdx => this.findNextPracticeMoveIdx(lIdx, 0) !== -1);
 
         if (validFiltered.length > 1) {
             let nextIdx;
@@ -683,7 +740,7 @@ class DancePracticeTool {
             this.currentLandmarkIdx = validFiltered[0];
         }
 
-        const firstActive = this.findNextActiveMoveIdx(this.currentLandmarkIdx, 0);
+        const firstActive = this.findNextPracticeMoveIdx(this.currentLandmarkIdx, 0);
         this.currentMoveIdx = firstActive !== -1 ? firstActive : 0;
         this.beatIdx = 0;
         this.schedLandmarkIdx = this.currentLandmarkIdx;
@@ -802,19 +859,16 @@ class DancePracticeTool {
         this.els.landmarkList.innerHTML = '';
 
         const query = (this.searchQuery || '').trim().toLowerCase();
-        let visibleLandmarks = window.getFilteredLandmarkIndices(this.landmarks, this.activeFilter);
-
-        if (query) {
-            visibleLandmarks = visibleLandmarks.filter(lIdx => {
-                const lm = this.landmarks[lIdx];
-                return lm.moves.some(m => m.name.toLowerCase().includes(query));
-            });
-        }
+        const isFiltered = Boolean(query || (this.activeFilter && this.activeFilter !== 'all'));
+        const visibleLandmarks = this.getVisibleLandmarkIndices();
 
         if (visibleLandmarks.length === 0) {
+            const emptyMsg = query
+                ? `No moves matching "${this.searchQuery}"`
+                : (this.activeFilter && this.activeFilter !== 'all' ? `No ${this.activeFilter} moves found!` : 'No chunks found!');
             this.els.landmarkList.innerHTML = `
                 <div class="p-6 bg-[#fdfbf7] rounded-2xl border-2 border-[#1c1917] text-stone-700 text-center flex flex-col items-center justify-center gap-2 shadow-[4px_4px_0px_#1c1917]">
-                    <p class="font-black text-xs text-stone-900">${query ? 'No moves matching "' + this.searchQuery + '"' : 'No chunks in this range!'}</p>
+                    <p class="font-black text-xs text-stone-900">${emptyMsg}</p>
                 </div>
             `;
             this.updateCollapseExpandBtn();
@@ -830,11 +884,12 @@ class DancePracticeTool {
                 this.expandedLandmarks.add(lIdx);
             }
 
-            const activeMoves = lm.moves.filter(m => this.isMoveActive(m));
-            const selectedActiveCount = lm.moves.filter((m, mIdx) => this.isMoveActive(m) && this.selectedMoveKeys.has(`${lIdx}-${mIdx}`)).length;
+            const matchingMovesCount = lm.moves.filter(m => this.doesMoveMatchSidebar(m)).length;
+            const activeMatchingMoves = lm.moves.filter(m => this.isMoveActive(m) && this.doesMoveMatchSidebar(m));
+            const selectedActiveCount = lm.moves.filter((m, mIdx) => this.isMoveActive(m) && this.doesMoveMatchSidebar(m) && this.selectedMoveKeys.has(`${lIdx}-${mIdx}`)).length;
 
-            const isSelected = activeMoves.length > 0 && selectedActiveCount === activeMoves.length;
-            const isSomeSelected = selectedActiveCount > 0 && selectedActiveCount < activeMoves.length;
+            const isSelected = activeMatchingMoves.length > 0 && selectedActiveCount === activeMatchingMoves.length;
+            const isSomeSelected = selectedActiveCount > 0 && selectedActiveCount < activeMatchingMoves.length;
             const isCurrent = (lIdx === this.currentLandmarkIdx);
             const isExpanded = this.expandedLandmarks.has(lIdx);
 
@@ -847,6 +902,7 @@ class DancePracticeTool {
             section.style.color = lm.color;
 
             const masteryPct = window.getLandmarkMastery(lm);
+            const movesCountLabel = isFiltered ? `${matchingMovesCount}/${lm.moves.length} moves` : `${lm.moves.length} moves`;
             
             // Move rendering (Bachata groups by 2)
             let movesHtml = '';
@@ -854,8 +910,8 @@ class DancePracticeTool {
                 for (let mIdx = 0; mIdx < lm.moves.length; mIdx += 2) {
                     const m1 = lm.moves[mIdx];
                     const m2 = lm.moves[mIdx + 1];
-                    const m1Matches = !query || (m1 && m1.name.toLowerCase().includes(query));
-                    const m2Matches = !query || (m2 && m2.name.toLowerCase().includes(query));
+                    const m1Matches = this.doesMoveMatchSidebar(m1);
+                    const m2Matches = this.doesMoveMatchSidebar(m2);
                     if (!m1Matches && !m2Matches) continue;
 
                     movesHtml += `<div class="border-2 border-[#1c1917] rounded-2xl p-1.5 mb-2 bg-[#fdfbf7] space-y-1.5 shadow-[2px_2px_0px_#1c1917]">
@@ -866,8 +922,7 @@ class DancePracticeTool {
             } else {
                 let moveItemsHtml = '';
                 lm.moves.forEach((m, mIdx) => {
-                    const matches = !query || m.name.toLowerCase().includes(query);
-                    if (matches) {
+                    if (this.doesMoveMatchSidebar(m)) {
                         moveItemsHtml += this.renderMoveItem(lIdx, mIdx);
                     }
                 });
@@ -896,7 +951,7 @@ class DancePracticeTool {
                         <div class="flex-1 min-w-0 flex items-center justify-between gap-1.5">
                             <span class="text-xs font-black text-[#1c1917] truncate group-hover/hdr:underline transition-colors">${lm.title}</span>
                             <div class="flex items-center gap-1.5 shrink-0">
-                                <span class="text-[10px] font-black text-[#1c1917] bg-[#fdfbf7] px-1.5 py-0.5 rounded border-2 border-[#1c1917] uppercase tracking-wide shadow-[1px_1px_0px_#1c1917]">${lm.moves.length} moves</span>
+                                <span class="text-[10px] font-black text-[#1c1917] bg-[#fdfbf7] px-1.5 py-0.5 rounded border-2 border-[#1c1917] uppercase tracking-wide shadow-[1px_1px_0px_#1c1917]">${movesCountLabel}</span>
                                 <span class="text-[11px] font-mono font-black px-2 py-0.5 rounded-xl shrink-0 border-2 border-[#1c1917] shadow-[2px_2px_0px_#1c1917] ${masteryPct >= 75 ? 'bg-emerald-300 text-emerald-950' : masteryPct >= 40 ? 'bg-amber-300 text-amber-950' : 'bg-rose-300 text-rose-950'}">${masteryPct}%</span>
                             </div>
                         </div>
@@ -1018,7 +1073,8 @@ class DancePracticeTool {
         } else {
             this.expandedLandmarks.add(lIdx);
             if (this.currentLandmarkIdx !== lIdx) {
-                this.selectMove(lIdx, 0);
+                const firstMatchIdx = this.findNextPracticeMoveIdx(lIdx, 0);
+                this.selectMove(lIdx, firstMatchIdx !== -1 ? firstMatchIdx : 0);
                 return;
             }
         }
@@ -1026,15 +1082,7 @@ class DancePracticeTool {
     }
 
     toggleExpandCollapseAll() {
-        const query = (this.searchQuery || '').trim().toLowerCase();
-        let visibleLandmarks = window.getFilteredLandmarkIndices(this.landmarks, this.activeFilter);
-        if (query) {
-            visibleLandmarks = visibleLandmarks.filter(lIdx => {
-                const lm = this.landmarks[lIdx];
-                return lm.moves.some(m => m.name.toLowerCase().includes(query));
-            });
-        }
-
+        const visibleLandmarks = this.getVisibleLandmarkIndices();
         const hasExpanded = visibleLandmarks.some(lIdx => this.expandedLandmarks.has(lIdx));
 
         if (hasExpanded) {
@@ -1047,15 +1095,7 @@ class DancePracticeTool {
 
     updateCollapseExpandBtn() {
         if (!this.els.collapseAllBtn) return;
-        const query = (this.searchQuery || '').trim().toLowerCase();
-        let visibleLandmarks = window.getFilteredLandmarkIndices(this.landmarks, this.activeFilter);
-        if (query) {
-            visibleLandmarks = visibleLandmarks.filter(lIdx => {
-                const lm = this.landmarks[lIdx];
-                return lm.moves.some(m => m.name.toLowerCase().includes(query));
-            });
-        }
-
+        const visibleLandmarks = this.getVisibleLandmarkIndices();
         const hasExpanded = visibleLandmarks.some(lIdx => this.expandedLandmarks.has(lIdx));
 
         if (hasExpanded) {
@@ -1087,7 +1127,7 @@ class DancePracticeTool {
         this.phraseBeatIdx = isOdd ? 4 : 0;
         
         this.schedLandmarkIdx = lIdx;
-        const activeSchedMIdx = this.findNextActiveMoveIdx(lIdx, mIdx);
+        const activeSchedMIdx = this.findNextPracticeMoveIdx(lIdx, mIdx);
         this.schedMoveIdx = activeSchedMIdx !== -1 ? activeSchedMIdx : mIdx;
         this.schedBeatIdx = 0;
         this.schedPhraseBeatIdx = (this.schedMoveIdx % 2 !== 0) ? 4 : 0;
@@ -1109,18 +1149,24 @@ class DancePracticeTool {
         if (move.mastery === 'mastered') move.mastery = 'learning';
         else if (move.mastery === 'familiar') move.mastery = 'mastered';
         else move.mastery = 'familiar';
+
+        if (!this.doesMoveMatchFilter(move)) {
+            this.selectedMoveKeys.delete(`${lIdx}-${mIdx}`);
+        }
         
         this.saveMasteryState();
         const visible = window.getFilteredLandmarkIndices(this.landmarks, this.activeFilter);
         if (visible.length === 0) {
             this.applyFilter('all');
         } else {
-            const practiceFiltered = this.getFilteredLandmarkIndices();
-            if (practiceFiltered.length > 0 && !practiceFiltered.includes(this.currentLandmarkIdx)) {
-                this.selectMove(practiceFiltered[0], 0);
+            const seq = this.getPracticeSequence();
+            const isCurrentInSeq = seq.some(item => item.lIdx === this.currentLandmarkIdx && item.mIdx === this.currentMoveIdx);
+            if (seq.length > 0 && !isCurrentInSeq) {
+                this.selectMove(seq[0].lIdx, seq[0].mIdx, false, false);
             } else {
                 this.renderSidebar();
                 this.updateMasteryStats();
+                this.updateMoveDisplay(false, false);
             }
         }
     }
@@ -1129,13 +1175,13 @@ class DancePracticeTool {
         const lm = this.landmarks[lIdx];
         if (!lm || !lm.moves) return;
 
-        const activeMoves = lm.moves.filter(m => this.isMoveActive(m));
-        const selectedActiveCount = lm.moves.filter((m, mIdx) => this.isMoveActive(m) && this.selectedMoveKeys.has(`${lIdx}-${mIdx}`)).length;
+        const activeMoves = lm.moves.filter(m => this.isMoveActive(m) && this.doesMoveMatchSidebar(m));
+        const selectedActiveCount = lm.moves.filter((m, mIdx) => this.isMoveActive(m) && this.doesMoveMatchSidebar(m) && this.selectedMoveKeys.has(`${lIdx}-${mIdx}`)).length;
 
         const shouldCheckAll = selectedActiveCount < activeMoves.length;
 
         lm.moves.forEach((m, mIdx) => {
-            if (this.isMoveActive(m)) {
+            if (this.isMoveActive(m) && this.doesMoveMatchSidebar(m)) {
                 if (shouldCheckAll) {
                     this.selectedMoveKeys.add(`${lIdx}-${mIdx}`);
                 } else {
@@ -1301,9 +1347,14 @@ class DancePracticeTool {
         }
 
         // Filter Buttons
-        ['filterAllBtn', 'filterLowBtn', 'filterMedBtn', 'filterHighBtn'].forEach(id => {
+        [
+            { id: 'filterAllBtn', val: 'all' },
+            { id: 'filterLearningBtn', val: 'learning' },
+            { id: 'filterFamiliarBtn', val: 'familiar' },
+            { id: 'filterMasteredBtn', val: 'mastered' }
+        ].forEach(({ id, val }) => {
             const btn = document.getElementById(id);
-            if (btn) btn.onclick = () => this.applyFilter(id.replace('filter', '').replace('Btn', '').toLowerCase());
+            if (btn) btn.onclick = () => this.applyFilter(val);
         });
 
         // Sidebar clicks
@@ -1333,13 +1384,14 @@ class DancePracticeTool {
             if (sPrev || sNext) {
                 e.stopPropagation();
                 const lIdx = parseInt((sPrev || sNext).dataset.lidx);
-                const filtered = window.getFilteredLandmarkIndices(this.landmarks, this.activeFilter);
+                const filtered = this.getVisibleLandmarkIndices();
                 const pos = filtered.indexOf(lIdx);
                 let targetIdx = -1;
                 if (sPrev && pos > 0) targetIdx = filtered[pos - 1];
                 if (sNext && pos < filtered.length - 1) targetIdx = filtered[pos + 1];
                 if (targetIdx !== -1) {
-                    this.selectMove(targetIdx, 0);
+                    const firstMatchIdx = this.findNextPracticeMoveIdx(targetIdx, 0);
+                    this.selectMove(targetIdx, firstMatchIdx !== -1 ? firstMatchIdx : 0);
                     document.getElementById(`lm-section-${targetIdx}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }
                 return;
