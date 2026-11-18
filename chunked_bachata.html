@@ -13,9 +13,9 @@
 <body class="bg-[#fbf9f5] text-stone-900 min-h-screen flex flex-col items-center p-4 md:p-6 font-sans relative overflow-x-hidden selection:bg-indigo-500 selection:text-white">
 
     <!-- Top Banner Nav -->
-    <header class="w-full max-w-7xl bg-gradient-to-r from-[#ff5733] via-[#ff6b4a] to-[#ff8c42] text-white px-6 py-3.5 rounded-2xl shadow-[4px_4px_0px_#1c1917] border-2 border-stone-900 mb-6 flex items-center justify-between">
+    <header class="w-full max-w-7xl bg-gradient-to-r from-[#ff5733] via-[#ff6b4a] to-[#ff8c42] text-white px-4 sm:px-6 py-3.5 rounded-2xl shadow-[4px_4px_0px_#1c1917] border-2 border-stone-900 mb-6 flex flex-wrap items-center justify-between gap-3">
         <div class="flex items-center gap-3">
-            <a href="index.html" class="h-9 w-9 rounded-xl bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition border border-white/30">
+            <a href="index.html" class="h-9 w-9 rounded-xl bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition border border-white/30 shrink-0">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
                 </svg>
@@ -28,8 +28,14 @@
                 <span class="text-xs font-bold text-white/90">Interactive Practice & Metronome Drills</span>
             </div>
         </div>
-        <div class="flex items-center gap-3">
-            <a href="index.html" class="hidden sm:inline-flex px-3.5 py-1.5 bg-stone-900 text-white rounded-xl text-xs font-bold hover:bg-stone-800 transition shadow-sm">
+        <div class="flex flex-wrap items-center gap-2 sm:gap-2.5 shrink-0">
+            <button id="learningMotdBtn" type="button" class="px-3 py-1.5 bg-[#fefae0] text-stone-900 border-2 border-stone-900 rounded-xl text-xs font-black hover:bg-[#ffe4e6] transition-all shadow-[2px_2px_0px_#1c1917] active:scale-[0.97] whitespace-nowrap cursor-pointer">
+                Learning MotD
+            </button>
+            <button id="familiarMotdBtn" type="button" class="px-3 py-1.5 bg-[#fefae0] text-stone-900 border-2 border-stone-900 rounded-xl text-xs font-black hover:bg-[#fef3c7] transition-all shadow-[2px_2px_0px_#1c1917] active:scale-[0.97] whitespace-nowrap cursor-pointer">
+                Familiar MotD
+            </button>
+            <a href="index.html" class="hidden sm:inline-flex px-3.5 py-1.5 bg-stone-900 text-white rounded-xl text-xs font-bold hover:bg-stone-800 transition shadow-sm whitespace-nowrap">
                 Dashboard
             </a>
         </div>
@@ -123,6 +129,22 @@
 
             <div
                 class="bg-[#ffde59] rounded-3xl border-3 border-stone-900 p-6 md:p-8 flex-1 flex flex-col items-center justify-center relative overflow-hidden shadow-[6px_6px_0px_#1c1917]">
+                <!-- Active MotD Banner -->
+                <div id="motdBanner" class="hidden w-full max-w-lg mb-3 px-3.5 py-2 rounded-2xl bg-[#fefae0] border-2 border-stone-900 shadow-[3px_3px_0px_#1c1917] flex flex-wrap items-center justify-between gap-2 text-xs">
+                    <div class="flex items-center gap-2 min-w-0">
+                        <span id="motdBadge" class="px-2 py-0.5 rounded-lg border-2 border-stone-900 text-[10px] font-black uppercase tracking-wider shrink-0"></span>
+                        <span id="motdSourceLabel" class="font-bold text-stone-800 truncate text-[11px]"></span>
+                    </div>
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        <button id="motdRerollBtn" type="button" class="px-2.5 py-1 bg-[#ffde59] hover:bg-[#ffc312] text-stone-950 font-black text-[10px] uppercase tracking-wider rounded-lg border-2 border-stone-900 shadow-[1.5px_1.5px_0px_#1c1917] active:scale-95 transition cursor-pointer" title="Pick a different move for today">
+                            ↻ Reroll
+                        </button>
+                        <button id="motdExitBtn" type="button" class="px-2 py-1 bg-white hover:bg-stone-100 text-stone-900 font-black text-[10px] uppercase tracking-wider rounded-lg border-2 border-stone-900 shadow-[1.5px_1.5px_0px_#1c1917] active:scale-95 transition cursor-pointer" title="Exit MotD drill">
+                            ✕
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Current move display stage -->
                 <div id="displayContainer"
                     class="flex flex-col items-center justify-center text-center px-4 mb-4 min-h-[11rem] md:h-44 py-4 w-full relative">

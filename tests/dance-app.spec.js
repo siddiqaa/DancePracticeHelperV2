@@ -585,3 +585,132 @@ test.describe('Individual Move Selection Feature', () => {
   });
 });
 
+test.describe('Move of the Day (MotD) Feature', () => {
+  test('displays Learning MotD and Familiar MotD buttons to the left of Dashboard on all pages', async ({ page }) => {
+    for (const route of ['/chunked_wcs.html', '/chunked_bachata.html', '/chunked_salsa.html']) {
+      await page.goto(route);
+      const learningBtn = page.locator('#learningMotdBtn');
+      const familiarBtn = page.locator('#familiarMotdBtn');
+      const dashboardLink = page.locator('header a', { hasText: 'Dashboard' });
+
+      await expect(learningBtn).toBeVisible();
+      await expect(familiarBtn).toBeVisible();
+      await expect(dashboardLink).toBeVisible();
+
+      const learningBox = await learningBtn.boundingBox();
+      const familiarBox = await familiarBtn.boundingBox();
+      const dashboardBox = await dashboardLink.boundingBox();
+
+      expect(learningBox).not.toBeNull();
+      expect(familiarBox).not.toBeNull();
+      expect(dashboardBox).not.toBeNull();
+      expect(learningBox.x).toBeLessThan(familiarBox.x);
+      expect(familiarBox.x).toBeLessThan(dashboardBox.x);
+    }
+  });
+
+  test('WCS Learning MotD starts with 6-count Sugar Push, locks daily pick, rerolls, and toggles off', async ({ page }) => {
+    await page.goto('/chunked_wcs.html');
+
+    const learningBtn = page.locator('#learningMotdBtn');
+    const familiarBtn = page.locator('#familiarMotdBtn');
+    const motdBanner = page.locator('#motdBanner');
+    const motdBadge = page.locator('#motdBadge');
+    const motdSourceLabel = page.locator('#motdSourceLabel');
+
+    await expect(motdBanner).toBeHidden();
+    await learningBtn.click();
+
+    await expect(learningBtn).toHaveAttribute('aria-pressed', 'true');
+    await expect(familiarBtn).toHaveAttribute('aria-pressed', 'false');
+    await expect(motdBanner).toBeVisible();
+    await expect(motdBadge).toHaveText('Learning MotD');
+
+    await expect(page.locator('#currentMoveLabel')).toContainText('6🥁');
+    await expect(page.locator('#currentMoveLabel')).toContainText('Sugar Push');
+
+    const firstPickSource = await motdSourceLabel.innerText();
+    const firstMoveName = firstPickSource.split(' · ')[0];
+    await expect(page.locator('#nextMoveLabel')).toContainText(firstMoveName);
+
+    const savedBeforeReload = await page.evaluate(() => JSON.parse(localStorage.getItem('dance_motd_wcs')));
+    expect(savedBeforeReload).toBeTruthy();
+    expect(savedBeforeReload.learning).toBeTruthy();
+
+    // Reload and verify daily lock returns the exact same Learning MotD
+    await page.reload();
+    await page.locator('#learningMotdBtn').click();
+    await expect(page.locator('#motdSourceLabel')).toHaveText(firstPickSource);
+
+    // Reroll selects a different move for today and updates localStorage
+    await page.locator('#motdRerollBtn').click();
+    const rerolledSource = await page.locator('#motdSourceLabel').innerText();
+    expect(rerolledSource).not.toBe(firstPickSource);
+
+    const savedAfterReroll = await page.evaluate(() => JSON.parse(localStorage.getItem('dance_motd_wcs')));
+    expect(savedAfterReroll.learning).not.toEqual(savedBeforeReload.learning);
+
+    // Re-clicking active Learning MotD toggles it off
+    await page.locator('#learningMotdBtn').click();
+    await expect(motdBanner).toBeHidden();
+    await expect(page.locator('#learningMotdBtn')).toHaveAttribute('aria-pressed', 'false');
+
+    // Picking a move in sidebar also exits active Familiar MotD
+    await page.locator('#familiarMotdBtn').click();
+    await expect(motdBadge).toHaveText('Familiar MotD');
+    await page.locator('[data-action="toggle-accordion"]').first().click();
+    await page.locator('#landmarkList [data-lidx="0"][data-midx="0"]').first().click({ force: true });
+    await expect(motdBanner).toBeHidden();
+    await expect(page.locator('#familiarMotdBtn')).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  test('Bachata MotD pairs 2 Basics with paired moves or trailing Basic for solo moves and exits cleanly', async ({ page }) => {
+    await page.goto('/chunked_bachata.html');
+
+    const today = await page.evaluate(() => new Date().toLocaleDateString('en-CA'));
+    await page.evaluate((dateStr) => {
+      localStorage.setItem('dance_motd_bachata', JSON.stringify({
+        date: dateStr,
+        learning: { lIdx: 4, mIdx: 2 }, // Madrids: Madrid Step Forward (paired with Madrid Step Back)
+        familiar: { lIdx: 2, mIdx: 3 }  // Pretzels: Enter pretzel (Var 1) (paired with Basic -> solo move)
+      }));
+    }, today);
+    await page.reload();
+
+    // Learning MotD (paired move)
+    await page.locator('#learningMotdBtn').click();
+    await expect(page.locator('#motdBanner')).toBeVisible();
+    await expect(page.locator('#motdSourceLabel')).toContainText('Madrid Step Forward');
+    await expect(page.locator('#currentMoveLabel')).toContainText('1-4');
+    await expect(page.locator('#currentMoveLabel')).toContainText('Basic');
+    await expect(page.locator('#nextMoveLabel')).toContainText('Basic');
+
+    // Switch to Familiar MotD (solo move) and exit via stage X button
+    await page.locator('#familiarMotdBtn').click();
+    await expect(page.locator('#motdBadge')).toHaveText('Familiar MotD');
+    await expect(page.locator('#motdSourceLabel')).toContainText('Enter pretzel (Var 1)');
+
+    await page.locator('#motdExitBtn').click();
+    await expect(page.locator('#motdBanner')).toBeHidden();
+    await expect(page.locator('#familiarMotdBtn')).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  test('Salsa MotD starts with 8-count Basic prep and switches smoothly between categories', async ({ page }) => {
+    await page.goto('/chunked_salsa.html');
+
+    const learningBtn = page.locator('#learningMotdBtn');
+    const familiarBtn = page.locator('#familiarMotdBtn');
+
+    await learningBtn.click();
+    await expect(page.locator('#motdBanner')).toBeVisible();
+    await expect(page.locator('#motdBadge')).toHaveText('Learning MotD');
+    await expect(page.locator('#currentMoveLabel')).toContainText('1-4');
+    await expect(page.locator('#currentMoveLabel')).toContainText('Basic (Front Part)');
+    await expect(page.locator('#nextMoveLabel')).toContainText('Basic (Back Part)');
+
+    await familiarBtn.click();
+    await expect(learningBtn).toHaveAttribute('aria-pressed', 'false');
+    await expect(familiarBtn).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('#motdBadge')).toHaveText('Familiar MotD');
+  });
+});

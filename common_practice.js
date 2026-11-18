@@ -198,6 +198,11 @@ class DancePracticeTool {
         this.selectedMoveKeys = new Set();
         this.expandedLandmarks = new Set();
         this.searchQuery = '';
+
+        // Move of the Day (MotD) state
+        this.activeMotd = null; // { category, lIdx, mIdx, sequence, currentSlotIdx, schedSlotIdx, lastRenderedSlotIdx }
+        this.preMotdState = null;
+        this.motdNoticeTimer = null;
         
         // DOM Elements
         this.els = {
@@ -221,6 +226,14 @@ class DancePracticeTool {
             loopToggle: document.getElementById('loopToggle'),
             panicBtn: document.getElementById('panicBtn'),
             collapseAllBtn: document.getElementById('collapseAllBtn'),
+            // MotD Controls
+            learningMotdBtn: document.getElementById('learningMotdBtn'),
+            familiarMotdBtn: document.getElementById('familiarMotdBtn'),
+            motdBanner: document.getElementById('motdBanner'),
+            motdBadge: document.getElementById('motdBadge'),
+            motdSourceLabel: document.getElementById('motdSourceLabel'),
+            motdRerollBtn: document.getElementById('motdRerollBtn'),
+            motdExitBtn: document.getElementById('motdExitBtn'),
             // Modals
             resetModal: document.getElementById('resetModal'),
             syncModal: document.getElementById('syncModal'),
@@ -356,6 +369,10 @@ class DancePracticeTool {
     }
 
     getPracticeSequence() {
+        if (this.activeMotd && Array.isArray(this.activeMotd.sequence) && this.activeMotd.sequence.length > 0) {
+            return this.activeMotd.sequence;
+        }
+
         const filteredLandmarkIndices = window.getFilteredLandmarkIndices(this.landmarks, this.activeFilter);
         const sequence = [];
         const hasSelections = this.selectedMoveKeys.size > 0;
@@ -378,6 +395,11 @@ class DancePracticeTool {
     }
 
     getNextPracticeItem(currentLIdx, currentMIdx) {
+        if (this.activeMotd && Array.isArray(this.activeMotd.sequence) && this.activeMotd.sequence.length > 0) {
+            const nextSlotIdx = (this.activeMotd.currentSlotIdx + 1) % this.activeMotd.sequence.length;
+            return this.activeMotd.sequence[nextSlotIdx];
+        }
+
         const seq = this.getPracticeSequence();
         if (seq.length === 0) return null;
 
@@ -389,6 +411,434 @@ class DancePracticeTool {
         } else {
             const afterItem = seq.find(item => item.lIdx > currentLIdx || (item.lIdx === currentLIdx && item.mIdx > currentMIdx));
             return afterItem || seq[0];
+        }
+    }
+
+    // --- Move of the Day (MotD) Helpers ---
+    getMotdStorageKey() {
+        return `dance_motd_${this.danceType || 'general'}`;
+    }
+
+    isPrepMoveName(name) {
+        if (!name) return false;
+        const n = name.trim().toLowerCase();
+        if (this.danceType === 'wcs') {
+            return n === 'sugar push';
+        }
+        if (this.danceType === 'bachata') {
+            return n === 'basic' || n === 'closed basic' || n === 'open basic' || n === 'basic (open hold)';
+        }
+        if (this.danceType === 'salsa') {
+            return n === 'basic' || n.startsWith('basic (');
+        }
+        return false;
+    }
+
+    getMotdCandidates(category) {
+        const all = [];
+        const nonPrep = [];
+        this.landmarks.forEach((lm, lIdx) => {
+            if (!lm || !lm.moves) return;
+            lm.moves.forEach((move, mIdx) => {
+                if (this.isMoveActive(move) && (move.mastery || 'learning') === category) {
+                    const entry = { lIdx, mIdx, move };
+                    all.push(entry);
+                    if (!this.isPrepMoveName(move.name)) {
+                        nonPrep.push(entry);
+                    }
+                }
+            });
+        });
+        return nonPrep.length > 0 ? nonPrep : all;
+    }
+
+    findPrepMoveRef(preferredNames = []) {
+        for (const targetName of preferredNames) {
+            const lowerTarget = targetName.toLowerCase();
+            for (let lIdx = 0; lIdx < this.landmarks.length; lIdx++) {
+                const lm = this.landmarks[lIdx];
+                if (!lm || !lm.moves) continue;
+                for (let mIdx = 0; mIdx < lm.moves.length; mIdx++) {
+                    const m = lm.moves[mIdx];
+                    if (m && m.name && m.name.trim().toLowerCase() === lowerTarget) {
+                        return { lIdx, mIdx, move: m };
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    findSalsaPair(lIdx, mIdx) {
+        const lm = this.landmarks[lIdx];
+        if (!lm || !lm.moves) return null;
+        const move = lm.moves[mIdx];
+        if (!move || this.isPrepMoveName(move.name)) return null;
+
+        const name = move.name.trim();
+        const lower = name.toLowerCase();
+        const isStartLike = lower.endsWith('setup') || lower.endsWith('(start)') || lower === 'enchufla';
+        const isFinishLike = lower.endsWith('finish') || lower.endsWith('(finish)');
+
+        if (isStartLike && mIdx + 1 < lm.moves.length) {
+            const next = lm.moves[mIdx + 1];
+            if (next && this.isMoveActive(next)) {
+                const nextLower = next.name.trim().toLowerCase();
+                if (nextLower.endsWith('finish') || nextLower.endsWith('(finish)')) {
+                    return [mIdx, mIdx + 1];
+                }
+            }
+        }
+
+        if (isFinishLike && mIdx - 1 >= 0) {
+            const prev = lm.moves[mIdx - 1];
+            if (prev && this.isMoveActive(prev)) {
+                const prevLower = prev.name.trim().toLowerCase();
+                if (prevLower.endsWith('setup') || prevLower.endsWith('(start)') || prevLower === 'enchufla') {
+                    return [mIdx - 1, mIdx];
+                }
+            }
+        }
+
+        // Consecutive identical two-part Salsa move (e.g., "CBL With Leader Spin" x 2)
+        if (mIdx + 1 < lm.moves.length) {
+            const next = lm.moves[mIdx + 1];
+            if (next && this.isMoveActive(next) && next.name.trim().toLowerCase() === lower) {
+                return [mIdx, mIdx + 1];
+            }
+        }
+        if (mIdx - 1 >= 0) {
+            const prev = lm.moves[mIdx - 1];
+            if (prev && this.isMoveActive(prev) && prev.name.trim().toLowerCase() === lower) {
+                return [mIdx - 1, mIdx];
+            }
+        }
+
+        // Symmetric 8-count pairs aligned to phrase boundary (e.g., Mambo (Front)/(Back), Left Turn (Lead)/(Follow))
+        const symmetricPairs = [
+            ['(front)', '(back)'],
+            ['(left)', '(right)'],
+            ['(lead)', '(follow)']
+        ];
+        for (const [firstTag, secondTag] of symmetricPairs) {
+            if (lower.endsWith(firstTag) && mIdx % 2 === 0 && mIdx + 1 < lm.moves.length) {
+                const next = lm.moves[mIdx + 1];
+                if (next && this.isMoveActive(next)) {
+                    const base = lower.slice(0, -firstTag.length).trim();
+                    const nextLower = next.name.trim().toLowerCase();
+                    if (nextLower.endsWith(secondTag) && nextLower.slice(0, -secondTag.length).trim() === base) {
+                        return [mIdx, mIdx + 1];
+                    }
+                }
+            }
+            if (lower.endsWith(secondTag) && mIdx % 2 === 1 && mIdx - 1 >= 0) {
+                const prev = lm.moves[mIdx - 1];
+                if (prev && this.isMoveActive(prev)) {
+                    const base = lower.slice(0, -secondTag.length).trim();
+                    const prevLower = prev.name.trim().toLowerCase();
+                    if (prevLower.endsWith(firstTag) && prevLower.slice(0, -firstTag.length).trim() === base) {
+                        return [mIdx - 1, mIdx];
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    buildMotdSequence(lIdx, mIdx) {
+        const lm = this.landmarks[lIdx];
+        const targetMove = lm?.moves?.[mIdx];
+        if (!targetMove) return [];
+
+        if (this.danceType === 'wcs') {
+            const prep = this.findPrepMoveRef(['Sugar Push']) || {
+                lIdx: 0,
+                mIdx: 0,
+                move: { name: 'Sugar Push', beats: 6, mastery: 'mastered' }
+            };
+            return [
+                { lIdx: prep.lIdx, mIdx: prep.mIdx, move: prep.move, motdSlotIdx: 0, isPrep: true, isTarget: false },
+                { lIdx, mIdx, move: targetMove, motdSlotIdx: 1, isPrep: false, isTarget: true }
+            ];
+        }
+
+        if (this.danceType === 'bachata') {
+            const basicRef = this.findPrepMoveRef(['Basic']) || {
+                lIdx: 0,
+                mIdx: 0,
+                move: { name: 'Basic', beats: 4, mastery: 'mastered' }
+            };
+            const pairStart = mIdx - (mIdx % 2);
+            const mA = lm.moves[pairStart];
+            const mB = lm.moves[pairStart + 1];
+            const isBachataPair = Boolean(
+                mA && mB &&
+                this.isMoveActive(mA) && this.isMoveActive(mB) &&
+                !this.isPrepMoveName(mA.name) && !this.isPrepMoveName(mB.name)
+            );
+
+            if (isBachataPair) {
+                return [
+                    { lIdx: basicRef.lIdx, mIdx: basicRef.mIdx, move: basicRef.move, motdSlotIdx: 0, isPrep: true, isTarget: false },
+                    { lIdx: basicRef.lIdx, mIdx: basicRef.mIdx, move: basicRef.move, motdSlotIdx: 1, isPrep: true, isTarget: false },
+                    { lIdx, mIdx: pairStart, move: mA, motdSlotIdx: 2, isPrep: false, isTarget: pairStart === mIdx },
+                    { lIdx, mIdx: pairStart + 1, move: mB, motdSlotIdx: 3, isPrep: false, isTarget: pairStart + 1 === mIdx }
+                ];
+            }
+
+            return [
+                { lIdx: basicRef.lIdx, mIdx: basicRef.mIdx, move: basicRef.move, motdSlotIdx: 0, isPrep: true, isTarget: false },
+                { lIdx: basicRef.lIdx, mIdx: basicRef.mIdx, move: basicRef.move, motdSlotIdx: 1, isPrep: true, isTarget: false },
+                { lIdx, mIdx, move: targetMove, motdSlotIdx: 2, isPrep: false, isTarget: true },
+                { lIdx: basicRef.lIdx, mIdx: basicRef.mIdx, move: basicRef.move, motdSlotIdx: 3, isPrep: true, isTarget: false }
+            ];
+        }
+
+        // Salsa (default 8-count prep + move)
+        const basicFront = this.findPrepMoveRef(['Basic (Front Part)', 'Basic (Front)', 'Basic']) || {
+            lIdx: 0,
+            mIdx: 0,
+            move: { name: 'Basic (Front)', beats: 4, mastery: 'mastered' }
+        };
+        const basicBack = this.findPrepMoveRef(['Basic (Back Part)', 'Basic (Back)', 'Basic']) || {
+            lIdx: 0,
+            mIdx: 1,
+            move: { name: 'Basic (Back)', beats: 4, mastery: 'mastered' }
+        };
+
+        const salsaPair = this.findSalsaPair(lIdx, mIdx);
+        if (salsaPair) {
+            const [p1, p2] = salsaPair;
+            return [
+                { lIdx: basicFront.lIdx, mIdx: basicFront.mIdx, move: basicFront.move, motdSlotIdx: 0, isPrep: true, isTarget: false },
+                { lIdx: basicBack.lIdx, mIdx: basicBack.mIdx, move: basicBack.move, motdSlotIdx: 1, isPrep: true, isTarget: false },
+                { lIdx, mIdx: p1, move: lm.moves[p1], motdSlotIdx: 2, isPrep: false, isTarget: p1 === mIdx },
+                { lIdx, mIdx: p2, move: lm.moves[p2], motdSlotIdx: 3, isPrep: false, isTarget: p2 === mIdx }
+            ];
+        }
+
+        return [
+            { lIdx: basicFront.lIdx, mIdx: basicFront.mIdx, move: basicFront.move, motdSlotIdx: 0, isPrep: true, isTarget: false },
+            { lIdx: basicBack.lIdx, mIdx: basicBack.mIdx, move: basicBack.move, motdSlotIdx: 1, isPrep: true, isTarget: false },
+            { lIdx, mIdx, move: targetMove, motdSlotIdx: 2, isPrep: false, isTarget: true },
+            { lIdx: basicBack.lIdx, mIdx: basicBack.mIdx, move: basicBack.move, motdSlotIdx: 3, isPrep: true, isTarget: false }
+        ];
+    }
+
+    loadSavedMotdEntry() {
+        const today = new Date().toLocaleDateString('en-CA');
+        try {
+            const raw = localStorage.getItem(this.getMotdStorageKey());
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                if (parsed && parsed.date === today) {
+                    return parsed;
+                }
+            }
+        } catch (e) {
+            console.warn('Error reading MotD state', e);
+        }
+        return { date: today, learning: null, familiar: null };
+    }
+
+    saveMotdEntry(category, lIdx, mIdx) {
+        const entry = this.loadSavedMotdEntry();
+        entry[category] = { lIdx, mIdx };
+        try {
+            localStorage.setItem(this.getMotdStorageKey(), JSON.stringify(entry));
+        } catch (e) {
+            console.warn('Error saving MotD state', e);
+        }
+    }
+
+    resolveMotdTarget(category, forceReroll = false) {
+        const candidates = this.getMotdCandidates(category);
+        if (candidates.length === 0) return null;
+
+        if (!forceReroll) {
+            const saved = this.loadSavedMotdEntry();
+            const pick = saved[category];
+            if (pick && typeof pick.lIdx === 'number' && typeof pick.mIdx === 'number') {
+                const stillValid = candidates.find(c => c.lIdx === pick.lIdx && c.mIdx === pick.mIdx);
+                if (stillValid) {
+                    return stillValid;
+                }
+            }
+        }
+
+        let pool = candidates;
+        if (forceReroll && this.activeMotd && this.activeMotd.category === category && candidates.length > 1) {
+            const filteredPool = candidates.filter(c => !(c.lIdx === this.activeMotd.lIdx && c.mIdx === this.activeMotd.mIdx));
+            if (filteredPool.length > 0) {
+                pool = filteredPool;
+            }
+        }
+
+        const chosen = pool[Math.floor(Math.random() * pool.length)];
+        this.saveMotdEntry(category, chosen.lIdx, chosen.mIdx);
+        return chosen;
+    }
+
+    showMotdEmptyNotice(category) {
+        if (!this.els.motdBanner) return;
+        if (this.motdNoticeTimer) clearTimeout(this.motdNoticeTimer);
+
+        this.els.motdBanner.classList.remove('hidden');
+        if (this.els.motdBadge) {
+            const label = category === 'learning' ? 'Learning MotD' : 'Familiar MotD';
+            const cls = category === 'learning'
+                ? 'bg-rose-400 text-rose-950'
+                : 'bg-amber-300 text-amber-950';
+            this.els.motdBadge.className = `px-2 py-0.5 rounded-lg border-2 border-stone-900 text-[10px] font-black uppercase tracking-wider shrink-0 ${cls}`;
+            this.els.motdBadge.textContent = label;
+        }
+        if (this.els.motdSourceLabel) {
+            this.els.motdSourceLabel.textContent = `No active ${category} moves available!`;
+        }
+        if (this.els.motdRerollBtn) {
+            this.els.motdRerollBtn.classList.add('hidden');
+        }
+
+        this.motdNoticeTimer = setTimeout(() => {
+            if (!this.activeMotd) {
+                this.updateMotdUI();
+            }
+        }, 3500);
+    }
+
+    activateMotd(category, forceReroll = false) {
+        if (!forceReroll && this.activeMotd && this.activeMotd.category === category) {
+            this.exitMotd(true);
+            return;
+        }
+
+        const target = this.resolveMotdTarget(category, forceReroll);
+        if (!target) {
+            this.showMotdEmptyNotice(category);
+            return;
+        }
+
+        if (this.motdNoticeTimer) {
+            clearTimeout(this.motdNoticeTimer);
+            this.motdNoticeTimer = null;
+        }
+
+        if (!this.activeMotd) {
+            this.preMotdState = {
+                lIdx: this.currentLandmarkIdx,
+                mIdx: this.currentMoveIdx
+            };
+        }
+
+        const sequence = this.buildMotdSequence(target.lIdx, target.mIdx);
+        if (sequence.length === 0) return;
+
+        this.activeMotd = {
+            category,
+            lIdx: target.lIdx,
+            mIdx: target.mIdx,
+            sequence,
+            currentSlotIdx: 0,
+            schedSlotIdx: 0,
+            lastRenderedSlotIdx: 0
+        };
+
+        const firstSlot = sequence[0];
+        this.currentLandmarkIdx = firstSlot.lIdx;
+        this.currentMoveIdx = firstSlot.mIdx;
+        this.beatIdx = 0;
+        this.phraseBeatIdx = 0;
+        this.schedLandmarkIdx = firstSlot.lIdx;
+        this.schedMoveIdx = firstSlot.mIdx;
+        this.schedBeatIdx = 0;
+        this.schedPhraseBeatIdx = 0;
+        this.beatsQueue = [];
+        if (DanceAudio.isReady()) this.nextBeatTime = DanceAudio.getCurrentTime();
+
+        this.updateMotdUI();
+        this.updateHUD();
+        this.renderSidebar();
+        this.updateMoveDisplay(true, false);
+
+        if (window.ChunkSpeech) {
+            window.ChunkSpeech.announceChunk(target.move.name);
+        }
+    }
+
+    exitMotd(restoreSelection = true) {
+        if (this.motdNoticeTimer) {
+            clearTimeout(this.motdNoticeTimer);
+            this.motdNoticeTimer = null;
+        }
+
+        const wasActive = Boolean(this.activeMotd);
+        this.activeMotd = null;
+        this.updateMotdUI();
+
+        if (!wasActive) return;
+
+        if (restoreSelection) {
+            let nextL = this.preMotdState ? this.preMotdState.lIdx : 0;
+            let nextM = this.preMotdState ? this.preMotdState.mIdx : 0;
+            const seq = this.getPracticeSequence();
+            if (seq.length > 0 && !seq.some(item => item.lIdx === nextL && item.mIdx === nextM)) {
+                nextL = seq[0].lIdx;
+                nextM = seq[0].mIdx;
+            }
+            this.preMotdState = null;
+            this.selectMove(nextL, nextM, false, false);
+        } else {
+            this.preMotdState = null;
+        }
+    }
+
+    updateMotdUI() {
+        const learningBtn = this.els.learningMotdBtn;
+        const familiarBtn = this.els.familiarMotdBtn;
+
+        const activeCategory = this.activeMotd ? this.activeMotd.category : null;
+
+        if (learningBtn) {
+            if (activeCategory === 'learning') {
+                learningBtn.className = 'px-3 py-1.5 bg-rose-400 text-rose-950 border-2 border-stone-900 rounded-xl text-xs font-black transition-all shadow-[2px_2px_0px_#1c1917] active:scale-[0.97] whitespace-nowrap cursor-pointer ring-2 ring-white/80';
+                learningBtn.setAttribute('aria-pressed', 'true');
+            } else {
+                learningBtn.className = 'px-3 py-1.5 bg-[#fefae0] text-stone-900 border-2 border-stone-900 rounded-xl text-xs font-black hover:bg-[#ffe4e6] transition-all shadow-[2px_2px_0px_#1c1917] active:scale-[0.97] whitespace-nowrap cursor-pointer';
+                learningBtn.setAttribute('aria-pressed', 'false');
+            }
+        }
+
+        if (familiarBtn) {
+            if (activeCategory === 'familiar') {
+                familiarBtn.className = 'px-3 py-1.5 bg-amber-300 text-amber-950 border-2 border-stone-900 rounded-xl text-xs font-black transition-all shadow-[2px_2px_0px_#1c1917] active:scale-[0.97] whitespace-nowrap cursor-pointer ring-2 ring-white/80';
+                familiarBtn.setAttribute('aria-pressed', 'true');
+            } else {
+                familiarBtn.className = 'px-3 py-1.5 bg-[#fefae0] text-stone-900 border-2 border-stone-900 rounded-xl text-xs font-black hover:bg-[#fef3c7] transition-all shadow-[2px_2px_0px_#1c1917] active:scale-[0.97] whitespace-nowrap cursor-pointer';
+                familiarBtn.setAttribute('aria-pressed', 'false');
+            }
+        }
+
+        if (this.els.motdBanner) {
+            if (this.activeMotd) {
+                const lm = this.landmarks[this.activeMotd.lIdx];
+                const move = lm?.moves?.[this.activeMotd.mIdx];
+                const isLearning = this.activeMotd.category === 'learning';
+
+                this.els.motdBanner.classList.remove('hidden');
+                if (this.els.motdBadge) {
+                    this.els.motdBadge.className = `px-2 py-0.5 rounded-lg border-2 border-stone-900 text-[10px] font-black uppercase tracking-wider shrink-0 ${isLearning ? 'bg-rose-400 text-rose-950' : 'bg-amber-300 text-amber-950'}`;
+                    this.els.motdBadge.textContent = isLearning ? 'Learning MotD' : 'Familiar MotD';
+                }
+                if (this.els.motdSourceLabel) {
+                    this.els.motdSourceLabel.textContent = move ? `${move.name} · ${lm.title}` : lm?.title || '';
+                }
+                if (this.els.motdRerollBtn) {
+                    this.els.motdRerollBtn.classList.remove('hidden');
+                }
+            } else {
+                this.els.motdBanner.classList.add('hidden');
+            }
         }
     }
 
@@ -452,6 +902,9 @@ class DancePracticeTool {
     }
 
     applyFilter(filterVal) {
+        if (this.activeMotd) {
+            this.exitMotd(false);
+        }
         this.activeFilter = filterVal;
         const btnMap = {
             all: { id: 'filterAllBtn', activeClass: 'bg-stone-900 text-white border-stone-900 shadow-sm' },
@@ -529,6 +982,29 @@ class DancePracticeTool {
         const secondsPerBeat = 60.0 / bpm;
 
         while (this.nextBeatTime < DanceAudio.getCurrentTime() + this.scheduleAheadTime) {
+            if (this.activeMotd && Array.isArray(this.activeMotd.sequence) && this.activeMotd.sequence.length > 0) {
+                const slotIdx = this.activeMotd.schedSlotIdx % this.activeMotd.sequence.length;
+                const slotItem = this.activeMotd.sequence[slotIdx];
+                const currentMove = slotItem.move;
+
+                this.onPlayBeat(this.nextBeatTime, this.schedBeatIdx, this.schedPhraseBeatIdx, currentMove);
+
+                this.beatsQueue.push({
+                    beat: this.schedBeatIdx,
+                    phraseBeat: this.schedPhraseBeatIdx,
+                    time: this.nextBeatTime,
+                    moveIdx: slotItem.mIdx,
+                    landmarkIdx: slotItem.lIdx,
+                    motdSlotIdx: slotIdx,
+                    landmarkColor: this.landmarks[this.activeMotd.lIdx]?.color || this.landmarks[slotItem.lIdx]?.color,
+                    moveName: currentMove.name,
+                    beatsTotal: currentMove.beats || 4
+                });
+
+                this.advanceBeat(secondsPerBeat);
+                continue;
+            }
+
             // Ensure schedMoveIdx points to an active, filter-matching move
             const schedCandMove = this.landmarks[this.schedLandmarkIdx]?.moves?.[this.schedMoveIdx];
             if (!this.isMoveActive(schedCandMove) || !this.doesMoveMatchFilter(schedCandMove)) {
@@ -565,6 +1041,25 @@ class DancePracticeTool {
     advanceBeat(secondsPerBeat) {
         this.nextBeatTime += secondsPerBeat;
         this.schedBeatIdx++;
+
+        if (this.activeMotd && Array.isArray(this.activeMotd.sequence) && this.activeMotd.sequence.length > 0) {
+            const currentSlot = this.activeMotd.sequence[this.activeMotd.schedSlotIdx];
+            const beatsTotal = currentSlot?.move?.beats || 4;
+            if (this.schedBeatIdx >= beatsTotal) {
+                this.schedBeatIdx = 0;
+                if (!this.isLoopMode) {
+                    this.activeMotd.schedSlotIdx = (this.activeMotd.schedSlotIdx + 1) % this.activeMotd.sequence.length;
+                    const nextSlot = this.activeMotd.sequence[this.activeMotd.schedSlotIdx];
+                    this.schedLandmarkIdx = nextSlot.lIdx;
+                    this.schedMoveIdx = nextSlot.mIdx;
+                }
+            }
+            if (this.danceType === 'salsa' || this.danceType === 'bachata') {
+                const isOddSlot = (this.activeMotd.schedSlotIdx % 2 !== 0);
+                this.schedPhraseBeatIdx = isOddSlot ? (this.schedBeatIdx + 4) % 8 : this.schedBeatIdx % 8;
+            }
+            return;
+        }
 
         const currentMove = this.landmarks[this.schedLandmarkIdx].moves[this.schedMoveIdx];
         const beatsTotal = currentMove.beats || 4;
@@ -682,6 +1177,26 @@ class DancePracticeTool {
             shouldPreempt = (playedBeat.phraseBeat === 3 || playedBeat.phraseBeat === 7);
         }
 
+        if (this.activeMotd && typeof playedBeat.motdSlotIdx === 'number') {
+            let displaySlotIdx = playedBeat.motdSlotIdx;
+            if (shouldPreempt && !this.isLoopMode) {
+                displaySlotIdx = (displaySlotIdx + 1) % this.activeMotd.sequence.length;
+            }
+
+            if (displaySlotIdx !== this.activeMotd.lastRenderedSlotIdx) {
+                this.activeMotd.lastRenderedSlotIdx = displaySlotIdx;
+                this.activeMotd.currentSlotIdx = displaySlotIdx;
+                const slotItem = this.activeMotd.sequence[displaySlotIdx];
+                this.currentLandmarkIdx = slotItem.lIdx;
+                this.currentMoveIdx = slotItem.mIdx;
+
+                this.updateHUD();
+                this.renderSidebar();
+                this.updateMoveDisplay(false, false);
+            }
+            return;
+        }
+
         if (shouldPreempt) {
             if (this.isLoopMode) {
                 // Keep displayMIdx
@@ -777,7 +1292,9 @@ class DancePracticeTool {
 
     // --- UI Rendering ---
     updateHUD() {
-        const lm = this.landmarks[this.currentLandmarkIdx];
+        const hudLIdx = this.activeMotd ? this.activeMotd.lIdx : this.currentLandmarkIdx;
+        const lm = this.landmarks[hudLIdx];
+        if (!lm) return;
         if (this.els.landmarkHUD) this.els.landmarkHUD.style.borderColor = lm.color;
         if (this.els.landmarkTitle) this.els.landmarkTitle.textContent = lm.title;
 
@@ -796,8 +1313,16 @@ class DancePracticeTool {
     }
 
     updateMoveDisplay(shouldRestart = true, autoScroll = true) {
-        const lm = this.landmarks[this.currentLandmarkIdx];
-        const move = lm.moves[this.currentMoveIdx];
+        let move;
+        let slotIdx = null;
+        if (this.activeMotd && Array.isArray(this.activeMotd.sequence) && this.activeMotd.sequence.length > 0) {
+            slotIdx = this.activeMotd.currentSlotIdx % this.activeMotd.sequence.length;
+            move = this.activeMotd.sequence[slotIdx].move;
+        } else {
+            const lm = this.landmarks[this.currentLandmarkIdx];
+            move = lm.moves[this.currentMoveIdx];
+        }
+
         const mastery = move.mastery || 'learning';
         const config = MASTERY_CONFIG[mastery] || MASTERY_CONFIG.learning;
         const isInactive = (move.status === 'inactive');
@@ -808,8 +1333,9 @@ class DancePracticeTool {
         if (this.danceType === 'wcs') {
             labelTag = `${move.beats}🥁`;
         } else {
-            // Label is aligned with the displayed move index parity to keep 1-4 / 5-8 solid
-            labelTag = (this.currentMoveIdx % 2 !== 0) ? "5-8" : "1-4";
+            // In MotD mode, align 1-4 / 5-8 with the MotD sequence slot index
+            const effectiveIdx = slotIdx !== null ? slotIdx : this.currentMoveIdx;
+            labelTag = (effectiveIdx % 2 !== 0) ? "5-8" : "1-4";
         }
 
         let hintHtml = move.hint ? `<div class="text-xs sm:text-sm mt-2 text-center font-bold tracking-wider text-amber-300 bg-amber-950/60 border border-amber-500/30 px-3 py-1 rounded-xl shadow-lg">${move.hint}</div>` : '';
@@ -818,12 +1344,14 @@ class DancePracticeTool {
         const nextItem = this.getNextPracticeItem(this.currentLandmarkIdx, this.currentMoveIdx);
         if (nextItem) {
             const nextLm = this.landmarks[nextItem.lIdx];
-            const next = nextLm.moves[nextItem.mIdx];
-            const nextConf = MASTERY_CONFIG[next.mastery || 'learning'] || MASTERY_CONFIG.learning;
-            const nextIsInactive = (next.status === 'inactive');
-            const nextTextColor = nextIsInactive ? 'text-stone-400' : nextConf.textColor;
-            const chunkTag = (nextItem.lIdx !== this.currentLandmarkIdx) ? `<span class="text-[10px] text-stone-500 font-normal">(${nextLm.title})</span> ` : '';
-            nextMoveHtml = `${chunkTag}<span class="${nextTextColor} font-bold">${next.name}</span>`;
+            const next = nextItem.move || nextLm?.moves?.[nextItem.mIdx];
+            if (next) {
+                const nextConf = MASTERY_CONFIG[next.mastery || 'learning'] || MASTERY_CONFIG.learning;
+                const nextIsInactive = (next.status === 'inactive');
+                const nextTextColor = nextIsInactive ? 'text-stone-400' : nextConf.textColor;
+                const chunkTag = (!this.activeMotd && nextItem.lIdx !== this.currentLandmarkIdx) ? `<span class="text-[10px] text-stone-500 font-normal">(${nextLm.title})</span> ` : '';
+                nextMoveHtml = `${chunkTag}<span class="${nextTextColor} font-bold">${next.name}</span>`;
+            }
         }
 
         if (this.els.currentMoveLabel) {
@@ -848,7 +1376,7 @@ class DancePracticeTool {
         const activeEl = document.getElementById(`m-${this.currentLandmarkIdx}-${this.currentMoveIdx}`);
         if (activeEl) {
             activeEl.classList.add('move-active');
-            if (autoScroll && window.innerWidth >= 768) activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            if (autoScroll && !this.activeMotd && window.innerWidth >= 768) activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
         if (shouldRestart && !this.isPaused) this.startScheduler();
@@ -1114,6 +1642,9 @@ class DancePracticeTool {
     }
 
     selectMove(lIdx, mIdx, expand = true, autoScroll = true) {
+        if (this.activeMotd) {
+            this.exitMotd(false);
+        }
         const isNewLandmark = (this.currentLandmarkIdx !== lIdx);
         this.currentLandmarkIdx = lIdx;
         this.currentMoveIdx = mIdx;
@@ -1205,6 +1736,9 @@ class DancePracticeTool {
     }
 
     onSelectionChanged() {
+        if (this.activeMotd) {
+            this.exitMotd(false);
+        }
         this.renderSidebar();
 
         const seq = this.getPracticeSequence();
@@ -1228,6 +1762,23 @@ class DancePracticeTool {
 
     // --- Event Listeners ---
     setupEventListeners() {
+        if (this.els.learningMotdBtn) {
+            this.els.learningMotdBtn.onclick = () => this.activateMotd('learning', false);
+        }
+        if (this.els.familiarMotdBtn) {
+            this.els.familiarMotdBtn.onclick = () => this.activateMotd('familiar', false);
+        }
+        if (this.els.motdRerollBtn) {
+            this.els.motdRerollBtn.onclick = () => {
+                if (this.activeMotd) {
+                    this.activateMotd(this.activeMotd.category, true);
+                }
+            };
+        }
+        if (this.els.motdExitBtn) {
+            this.els.motdExitBtn.onclick = () => this.exitMotd(true);
+        }
+
         this.els.playPauseBtn.onclick = (e) => {
             DanceAudio.init();
             this.isPaused = !this.isPaused;
@@ -1236,14 +1787,26 @@ class DancePracticeTool {
                 this.beatsQueue = [];
                 if (window.ChunkSpeech) window.ChunkSpeech.cancel();
             } else {
-                this.schedLandmarkIdx = this.currentLandmarkIdx;
-                this.schedMoveIdx = this.currentMoveIdx;
-                this.schedBeatIdx = this.beatIdx;
-                this.schedPhraseBeatIdx = this.phraseBeatIdx;
+                if (this.activeMotd && Array.isArray(this.activeMotd.sequence) && this.activeMotd.sequence.length > 0) {
+                    this.activeMotd.schedSlotIdx = this.activeMotd.currentSlotIdx;
+                    const slotItem = this.activeMotd.sequence[this.activeMotd.schedSlotIdx];
+                    this.schedLandmarkIdx = slotItem.lIdx;
+                    this.schedMoveIdx = slotItem.mIdx;
+                    this.schedBeatIdx = this.beatIdx;
+                    if (this.danceType === 'salsa' || this.danceType === 'bachata') {
+                        const isOddSlot = (this.activeMotd.schedSlotIdx % 2 !== 0);
+                        this.schedPhraseBeatIdx = isOddSlot ? (this.schedBeatIdx + 4) % 8 : this.schedBeatIdx % 8;
+                    }
+                } else {
+                    this.schedLandmarkIdx = this.currentLandmarkIdx;
+                    this.schedMoveIdx = this.currentMoveIdx;
+                    this.schedBeatIdx = this.beatIdx;
+                    this.schedPhraseBeatIdx = this.phraseBeatIdx;
+                }
                 this.startScheduler();
 
                 if (window.ChunkSpeech) {
-                    const lm = this.landmarks[this.currentLandmarkIdx];
+                    const lm = this.landmarks[this.activeMotd ? this.activeMotd.lIdx : this.currentLandmarkIdx];
                     if (lm) window.ChunkSpeech.announceChunk(lm.title);
                 }
             }
@@ -1251,6 +1814,26 @@ class DancePracticeTool {
         };
 
         this.els.panicBtn.onclick = () => {
+            if (this.activeMotd && Array.isArray(this.activeMotd.sequence) && this.activeMotd.sequence.length > 0) {
+                this.activeMotd.currentSlotIdx = 0;
+                this.activeMotd.schedSlotIdx = 0;
+                this.activeMotd.lastRenderedSlotIdx = 0;
+                const firstSlot = this.activeMotd.sequence[0];
+                this.currentLandmarkIdx = firstSlot.lIdx;
+                this.currentMoveIdx = firstSlot.mIdx;
+                this.beatIdx = 0;
+                this.phraseBeatIdx = 0;
+                this.schedLandmarkIdx = firstSlot.lIdx;
+                this.schedMoveIdx = firstSlot.mIdx;
+                this.schedBeatIdx = 0;
+                this.schedPhraseBeatIdx = 0;
+                this.beatsQueue = [];
+                if (DanceAudio.isReady()) this.nextBeatTime = DanceAudio.getCurrentTime();
+                this.updateHUD();
+                this.renderSidebar();
+                this.updateMoveDisplay(true, false);
+                return;
+            }
             this.selectMove(this.currentLandmarkIdx, 0);
         };
 
